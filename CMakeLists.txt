@@ -8,5 +8,4 @@ include_directories(src)
 
 add_executable(IFJ
         src/main.c
-        src/test.c
-        src/test.h)
+        src/stack.c src/stack.h)
