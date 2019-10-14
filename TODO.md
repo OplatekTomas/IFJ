@@ -1,0 +1,23 @@
+# TODO LIST
+- rozeznat tyhle znaky
+  - [ ] \:
+  - [ ] \+
+  - [ ] /
+  - [ ] \*
+  - [ ] \-
+  - [ ] \&
+  - [ ] \=
+  - [ ] ==
+  - [ ] !=
+  - [ ] //
+  - [ ] \> a dalsi znaminka na porovnavani
+  - kdyztak nekdo doplnte
+- presunout vypis keywordu z lexikalni analyzy do syntaxe
+- rozeznat 
+  - [ ] integery
+  - [ ] floaty
+  - [ ] stringy
+  - [ ] multiline stringy
+  - [ ] ciselne literaly
+- kdyztak nekdo doplne dalsi nebo zapiste ze si zabirate neco
+  

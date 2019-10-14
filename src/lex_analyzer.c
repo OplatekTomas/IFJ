@@ -116,6 +116,7 @@ Token get_next_token(FILE* source, IndentStack* is){
         c = (char)getc(source);
         switch (c) {
             case '\n':;
+            // nebude fungovat poradne dokud nebudem rozpoznavat vsechno
             //case ' ':;
                 int value = handle_indent(source, is, &t);
                 if (value == 0) {
