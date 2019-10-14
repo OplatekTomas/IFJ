@@ -7,6 +7,7 @@
 #define IFJ_LEX_ANALYZER_H
 
 #include "lex_analyzer.h"
+#include "tokens.h"
 #include "stack.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +15,7 @@
 
 int count_spaces(FILE*);
 
-void get_next_token(FILE*);
+token get_next_token(FILE*);
 
 
 #endif //IFJ_LEX_ANALYZER_H

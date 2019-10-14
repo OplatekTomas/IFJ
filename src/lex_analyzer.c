@@ -56,7 +56,8 @@ void handle_singleline_comments(FILE * source) {
     } while (true);
 }
 
-void get_next_token(FILE* source){
+token get_next_token(FILE* source){
+    token t;
     char c;
     indentStack is;
     stack_init(&is);
@@ -72,6 +73,7 @@ void get_next_token(FILE* source){
             case '#':
                 handle_singleline_comments(source);
             default:
+                if((c >= 'a' && c <= 'z') || )
                 break;
         }
     } while (c != EOF);
