@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "keywords.h"
 
 
 //PRO DEJVA ZÁKAZ VSTUPU!
@@ -14,12 +15,17 @@ typedef enum{
     BOOL,
     FLOAT,
     STRING,
-    NIL,
-    END_OF_FILE
-} token_types;
+    KEYWORD,
+    INDENT,
+    DEDENT,
+    END_OF_FILE,
+    NIL
+} TokenTypes;
+
 
 typedef struct{
-    token_types type;
+    TokenTypes type;
+    KeywordValue keywordValue;
 
-}token;
+}Token;
 
