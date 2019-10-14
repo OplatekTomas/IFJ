@@ -11,6 +11,8 @@ typedef enum{
     FLOAT,
     STRING,
     NIL,
+    INDENT,
+    DEDENT,
     END_OF_FILE
 } token_types;
 
