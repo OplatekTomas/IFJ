@@ -13,7 +13,7 @@ int main (int argc, char *argv[]) {
         get_derivation_tree(f);
         fclose(f);
     }else{
-        get_next_token(stdin);
+        get_derivation_tree(stdin);
     }
 
     return 0;

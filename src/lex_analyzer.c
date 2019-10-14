@@ -64,13 +64,14 @@ int handle_indent(FILE* source, IndentStack *is, Token* t){
 
     // je stejny indent
     if (indent == stack_top(is)) {
-        return false;
+        return 0;
     } else if (indent > stack_top(is)) {
         // je vetsi indent nez predtim
         stack_push(is, indent);
         t->type = INDENT;
-        return true;
-    } else if (indent < stack_top(is)) {
+        return 1;
+    } else {
+        // je mensi hodnota nez predtim
         stack_pop(is);
         if (stack_top(is) < indent) {
             return 2;
@@ -80,45 +81,16 @@ int handle_indent(FILE* source, IndentStack *is, Token* t){
             }
         }
         t->type = DEDENT;
-        return true;
+        return 1;
     }
-    // je jiny indent nez na topu
-    /*if (indent != stack_top(is)) {
-        // pridani indentu
-        if (indent > stack_top(is)) {
-            stack_push(is, indent);
-<<<<<<< HEAD
-            t->type = INDENT;
-            return true;
-=======
-            token->type = INDENT;
-            printf("INDENT\n");
->>>>>>> master
-        } else if (indent < stack_top(is)) {
-            // ubrani indentu
-            do {
-                stack_pop(is);
-                token->type = DEDENT;
-                printf("DEDENT\n");
-                // jsme na spravne urovni dedentu?
-                if (stack_top(is) == indent) {
-                    break;
-                } else if (stack_top(is) < indent) {
-                    // indent muze byt mensi nez top jedine v pripade ze se popovalo a nenasla se hodnota topu, takze nastala indent chyba
-                    exit(1);
-                }
-            } while (stack_top(is) != 0);
-        }
-    }*/
 }
 
 void handle_singleline_comments(FILE * source) {
     do {
         char c = (char)getc(source);
-        if (c == EOF) {
-            ungetc(EOF, source);
-        } else if (c == '\n') {
-            break;
+        if (c == EOF || c == '\n') {
+            ungetc(c, source);
+            return;
         }
     } while (true);
 }
@@ -134,23 +106,25 @@ void handle_eof(FILE* source, IndentStack* is, Token* t) {
 }
 
 
-Token get_next_token(FILE* source){
+Token get_next_token(FILE* source, IndentStack* is){
     Token t;
+    t.type = ERROR;
+    t.keywordValue = NON_KEYWORD;
     char c;
-    IndentStack is;
-    stack_init(&is);
     // cteni souboru znak po znaku
     do {
         c = (char)getc(source);
         switch (c) {
             case '\n':;
-                int value = handle_indent(source, &is, &t);
+            //case ' ':;
+                int value = handle_indent(source, is, &t);
                 if (value == 0) {
                     continue;
                 } else if (value == 1) {
                     return t;
                 } else {
-                    // chyba
+                    t.type = ERROR;
+                    return t;
                 }
             case '"':
                 break;
@@ -158,7 +132,7 @@ Token get_next_token(FILE* source){
                 handle_singleline_comments(source);
                 break;
             case EOF:
-                handle_eof(source, &is, &t);
+                handle_eof(source, is, &t);
                 return t;
             default:
                 //Všechny znaky kterými může začínát indentifier

@@ -19,7 +19,8 @@ typedef enum{
     INDENT,
     DEDENT,
     END_OF_FILE,
-    NIL
+    NIL,
+    ERROR,
 } TokenTypes;
 
 typedef struct{
