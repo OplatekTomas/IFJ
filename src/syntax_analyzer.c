@@ -5,6 +5,6 @@ char token_type[10][100] = {"ID", "COMP", "OPEN_PARENTHES", "CLOSE_PARENTHES", "
 void get_derivation_tree(FILE *source){
     token t;
     while((t = get_next_token(source)).type != END_OF_FILE){
-        printf("%c\n", token_type[t.type]);
-    };
+        printf("%s\n", token_type[t.type]);
+    }
 }
