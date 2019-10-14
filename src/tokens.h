@@ -10,12 +10,11 @@ typedef enum{
     BOOL,
     FLOAT,
     STRING,
-    NIL
+    NIL,
+    END_OF_FILE
 } token_types;
 
 typedef struct{
     token_types type;
 
 }token;
-
-
