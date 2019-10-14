@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
+//PRO DEJVA ZÁKAZ VSTUPU!
+
+
 typedef enum{
     ID,
     COMP,
@@ -18,3 +22,4 @@ typedef struct{
     token_types type;
 
 }token;
+
