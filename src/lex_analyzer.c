@@ -45,7 +45,8 @@ void handle_indent(FILE* source, indentStack *is){
     }
 }
 
-void get_next_token(FILE* source){
+token get_next_token(FILE* source){
+    token t;
     char c;
     indentStack is;
     stack_init(&is);
@@ -59,6 +60,7 @@ void get_next_token(FILE* source){
             case '"':
                 break;
             default:
+                if((c >= 'a' && c <= 'z') || )
                 break;
         }
     } while (c != EOF);
