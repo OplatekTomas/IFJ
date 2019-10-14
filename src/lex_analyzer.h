@@ -15,7 +15,7 @@
 
 int count_spaces(FILE*);
 
-Token get_next_token(FILE*);
+Token get_next_token(FILE*, IndentStack* is);
 
 
 #endif //IFJ_LEX_ANALYZER_H

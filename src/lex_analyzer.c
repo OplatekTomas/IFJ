@@ -55,63 +55,94 @@ int count_spaces(FILE* source) {
     return spaces;
 }
 
-void handle_indent(FILE* source, IndentStack *is, Token *token){
+// Vraci:
+// 0 - kdyz jen zkonzumuje mezery a nechce vratit token
+// 1 - kdyz chce vratit token
+// 2 - kdyz najde chybu
+int handle_indent(FILE* source, IndentStack *is, Token* t){
     int indent = count_spaces(source);
-    // je jiny indent nez na topu
-    if (indent != stack_top(is)) {
-        // pridani indentu
-        if (indent > stack_top(is)) {
-            stack_push(is, indent);
-            token->type = INDENT;
-            printf("INDENT\n");
-        } else if (indent < stack_top(is)) {
-            // ubrani indentu
-            do {
-                stack_pop(is);
-                token->type = DEDENT;
-                printf("DEDENT\n");
-                // jsme na spravne urovni dedentu?
-                if (stack_top(is) == indent) {
-                    break;
-                } else if (stack_top(is) < indent) {
-                    // indent muze byt mensi nez top jedine v pripade ze se popovalo a nenasla se hodnota topu, takze nastala indent chyba
-                    exit(1);
-                }
-            } while (stack_top(is) != 0);
+
+    // je stejny indent
+    if (indent == stack_top(is)) {
+        return 0;
+    } else if (indent > stack_top(is)) {
+        // je vetsi indent nez predtim
+        stack_push(is, indent);
+        t->type = INDENT;
+        return 1;
+    } else {
+        // je mensi hodnota nez predtim
+        stack_pop(is);
+        if (stack_top(is) < indent) {
+            return 2;
+        } else if (stack_top(is) > indent) {
+            for (int i = 0; i < indent; i++) {
+                ungetc(' ', source);
+            }
         }
+        t->type = DEDENT;
+        return 1;
+    }
+}
+
+void handle_singleline_comments(FILE * source) {
+    do {
+        char c = (char)getc(source);
+        if (c == EOF || c == '\n') {
+            ungetc(c, source);
+            return;
+        }
+    } while (true);
+}
+
+void handle_eof(FILE* source, IndentStack* is, Token* t) {
+    if (stack_top(is) == 0) {
+        t->type = END_OF_FILE;
+    } else {
+        stack_pop(is);
+        t->type = DEDENT;
+        ungetc(EOF, source);
     }
 }
 
 
-Token get_next_token(FILE* source){
+Token get_next_token(FILE* source, IndentStack* is){
     Token t;
+    t.type = ERROR;
+    t.keywordValue = NON_KEYWORD;
     char c;
-    IndentStack is;
-    stack_init(&is);
     // cteni souboru znak po znaku
     do {
         c = (char)getc(source);
         switch (c) {
-            case '\n':
-                handle_indent(source, &is, &t);
-                break;
+            case '\n':;
+            //case ' ':;
+                int value = handle_indent(source, is, &t);
+                if (value == 0) {
+                    continue;
+                } else if (value == 1) {
+                    return t;
+                } else {
+                    t.type = ERROR;
+                    return t;
+                }
             case '"':
                 break;
+            case '#':
+                handle_singleline_comments(source);
+                break;
+            case EOF:
+                handle_eof(source, is, &t);
+                return t;
             default:
                 //Všechny znaky kterými může začínát indentifier
                 if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'){
                     ungetc(c, source);
                     handle_word(source, &t);
                 }
-
                 break;
         }
-    } while (c != EOF);
+    } while (t.type == END_OF_FILE);
 
-    // pridani dedentu na konci pro vyrovani s indentama
-    while (stack_top(&is) != 0) {
-        stack_pop(&is);
-        printf("DEDENT\n");
-    }
     return t;
 }
