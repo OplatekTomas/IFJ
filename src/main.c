@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "stack.h"
+#include "keywords.h"
 
 int count_spaces(FILE* in) {
     int spaces = 0;
