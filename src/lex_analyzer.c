@@ -60,7 +60,6 @@ token get_next_token(FILE* source){
             case '"':
                 break;
             default:
-                if((c >= 'a' && c <= 'z') || )
                 break;
         }
     } while (c != EOF);
