@@ -54,3 +54,5 @@ dkms.conf
 workspace.xml
 
 .idea/git_toolbox_prj.xml
+
+.idea/deployment.xml

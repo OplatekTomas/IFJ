@@ -8,12 +8,12 @@
 typedef struct {
     unsigned level;
     int data[STACK_MAX_SIZE];
-} indentStack;
+} IndentStack;
 
-void stack_init(indentStack* is);
-void stack_pop(indentStack* is);
-int stack_top(indentStack* is);
-void stack_push(indentStack* is, int value);
-bool stack_empty(indentStack* is);
+void stack_init(IndentStack* is);
+void stack_pop(IndentStack* is);
+int stack_top(IndentStack* is);
+void stack_push(IndentStack* is, int value);
+bool stack_empty(IndentStack* is);
 
 #endif //IFJ_STACK_H
