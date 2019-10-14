@@ -103,6 +103,7 @@ Token get_next_token(FILE* source){
                     ungetc(c, source);
                     handle_word(source, &t);
                 }
+
                 break;
         }
     } while (c != EOF);

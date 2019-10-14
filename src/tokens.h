@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include "keywords.h"
 
+
+//PRO DEJVA ZÁKAZ VSTUPU!
+
+
 typedef enum{
     ID,
     COMP,
@@ -14,13 +18,14 @@ typedef enum{
     KEYWORD,
     INDENT,
     DEDENT,
+    END_OF_FILE,
     NIL
 } TokenTypes;
+
 
 typedef struct{
     TokenTypes type;
     KeywordValue keywordValue;
 
 }Token;
-
 
