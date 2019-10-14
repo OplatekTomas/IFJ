@@ -45,6 +45,17 @@ void handle_indent(FILE* source, indentStack *is){
     }
 }
 
+void handle_singleline_comments(FILE * source) {
+    do {
+        char c = (char)getc(source);
+        if (c == EOF) {
+            ungetc(EOF, source);
+        } else if (c == '\n') {
+            break;
+        }
+    } while (true);
+}
+
 void get_next_token(FILE* source){
     char c;
     indentStack is;
@@ -58,6 +69,8 @@ void get_next_token(FILE* source){
                 break;
             case '"':
                 break;
+            case '#':
+                handle_singleline_comments(source);
             default:
                 break;
         }
