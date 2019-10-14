@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "keywords.h"
 
 typedef enum{
     ID,
@@ -10,12 +11,16 @@ typedef enum{
     BOOL,
     FLOAT,
     STRING,
+    KEYWORD,
+    INDENT,
+    DEDENT,
     NIL
-} token_types;
+} TokenTypes;
 
 typedef struct{
-    token_types type;
+    TokenTypes type;
+    KeywordValue keywordValue;
 
-}token;
+}Token;
 
 
