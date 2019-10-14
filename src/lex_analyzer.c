@@ -8,15 +8,19 @@
 //Načte z stdin další alfanumerické slovo (může obsahovat i '_')
 int read_next_word(FILE* source, char* word, int size){
     if(word == NULL){
-        //throw
+        throw_err(INTERN_ERR);
     }
     int counter = 0;
     char c = 0;
     //Všechny znaky které můžou obsahovat identifier.
     while(((c = getc(source)) >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c<= '9') || c == '_'){
+        //size není dostatečně velký pro načítaný identifier -> zvětším velikost.
         if(counter-1 == size){
             size += 128;
             word = realloc(word , size*sizeof(char));
+            if(word == NULL){
+                throw_err(INTERN_ERR);
+            }
         }
         word[counter] = c;
         counter++;
@@ -27,7 +31,7 @@ int read_next_word(FILE* source, char* word, int size){
 void handle_word(FILE* source ,Token *token){
     char* word = calloc(256, sizeof(char));
     if(word == NULL){
-        //throw
+        throw_err(INTERN_ERR);
     }
     int len = read_next_word(source, word, 256);
     token->keywordValue = is_keyword(word);
@@ -37,6 +41,13 @@ void handle_word(FILE* source ,Token *token){
         free(word);
         return;
     }
+    char c = getc(source);
+    if(c == '('){
+        printf("Function call: %s\n", word);
+        token->type = ID;
+        //TODO: Přidat arguemnty k tokenům.
+    }
+
     free(word);
 }
 
