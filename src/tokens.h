@@ -23,9 +23,14 @@ typedef enum{
     ERROR,
 } TokenTypes;
 
+typedef union{
+    int i;
+    double d;
+} NumberVal;
+
 typedef struct{
     TokenTypes type;
     KeywordValue keywordValue;
-
+    NumberVal numberVal;
 }Token;
 

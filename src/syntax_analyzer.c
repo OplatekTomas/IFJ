@@ -22,8 +22,13 @@ void get_derivation_tree(FILE *source){
     IndentStack is;
     stack_init(&is);
     while((t = get_next_token(source, &is)).type != END_OF_FILE){
-        if (t.type!= ERROR) {
+        if (t.type == INT) {
+            printf("INT %i\n", t.numberVal.i);
+        } else if (t.type == FLOAT) {
+            printf("FLOAT %f\n", t.numberVal.d);
+        } else if (t.type!= ERROR) {
             printf("%s\n", token_type[t.type]);
         }
+
     }
 }

@@ -105,6 +105,49 @@ void handle_eof(FILE* source, IndentStack* is, Token* t) {
     }
 }
 
+bool is_num(char c) {
+    return (c >= '0' && c <= '9');
+}
+
+void handle_number(FILE* source, Token* t) {
+    char c;
+    // 20 cisel bude snad stacit, kdyztak se prida
+    int var_len = 20;
+    char* variable = malloc(var_len);
+    int num_len = 0;
+    // precist cislo
+    bool dot = false;
+    do {
+        c = (char)getc(source);
+        if (is_num(c) || c == '.') {
+            if (num_len + 1 == var_len) {
+                variable = realloc(variable, var_len * 10);
+                var_len*= 10;
+            }
+            if (c == '.') {
+                dot = true;
+            }
+            variable[num_len] = c;
+            num_len++;
+        } else if (c == ' ') {
+            continue;
+        } else {
+            ungetc(c, source);
+            break;
+        }
+    } while(true);
+    variable[num_len + 1] = '\0';
+    // tady uz jsou prectene cisla
+    if (dot) {
+        double d = strtod(variable, NULL);
+        t->numberVal.d = d;
+        t->type = FLOAT;
+    } else {
+        int i = (int)strtol(variable, NULL, 10);
+        t->numberVal.i = i;
+        t->type = INT;
+    }
+}
 
 Token get_next_token(FILE* source, IndentStack* is){
     Token t;
@@ -140,6 +183,11 @@ Token get_next_token(FILE* source, IndentStack* is){
                 if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'){
                     ungetc(c, source);
                     handle_word(source, &t);
+                    return t;
+                } else if (is_num(c)) {
+                    ungetc(c, source);
+                    handle_number(source, &t);
+                    return t;
                 }
                 break;
         }
