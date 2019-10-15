@@ -14,8 +14,8 @@
   - kdyztak nekdo doplnte
 - presunout vypis keywordu z lexikalni analyzy do syntaxe
 - rozeznat 
-  - [ ] integery
-  - [ ] floaty
+  - [x] integery
+  - [x] floaty
   - [ ] stringy
   - [ ] multiline stringy
   - [ ] ciselne literaly
