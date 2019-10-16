@@ -26,7 +26,8 @@ char token_type[][100] = {
         "ADD",
         "SUB",
         "MUL",
-        "DIV"
+        "DIV",
+        "DOUBLE_DIV"
 };
 
 void get_derivation_tree(FILE *source){

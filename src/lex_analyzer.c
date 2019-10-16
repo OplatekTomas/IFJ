@@ -330,8 +330,14 @@ Token get_next_token(FILE* source, IndentStack* is){
                 count_spaces(source);
                 return t;
             case '/':
-                t.type = DIV;
-                count_spaces(source);
+                if(getc(source) == '/'){
+                    t.type = DOUBLE_DIV;
+                    count_spaces(source);
+                }
+                else{
+                    t.type = DIV;
+                    count_spaces(source);
+                }
                 return t;
             case '\'':
                 t.type = STRING;
