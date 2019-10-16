@@ -22,7 +22,11 @@ typedef enum{
     NIL,
     ERROR,
     COLON,
-    COMMA
+    COMMA,
+    ADD,
+    SUB,
+    MUL,
+    DIV
 } TokenTypes;
 
 typedef union{
