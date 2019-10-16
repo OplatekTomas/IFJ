@@ -40,14 +40,6 @@ void get_derivation_tree(FILE *source){
             printf("FLOAT %f\n", t.numberVal.d);
         } else if (t.type == STRING) {
             printf("STRING '%s'\n", t.stringValue);
-        } else if (t.type == ADD) {
-            printf("ADDITION\n");
-        } else if (t.type == SUB) {
-            printf("SUBTRACTION\n");
-        } else if (t.type == MUL) {
-            printf("MULTIPLICATION\n");
-        } else if (t.type == DIV){
-            printf("DIVISION\n");
         } else if (t.type!= ERROR) {
             printf("%s\n", token_type[t.type]);
         }
