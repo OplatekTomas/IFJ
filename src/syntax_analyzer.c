@@ -14,7 +14,9 @@ char token_type[][100] = {
         "DEDENT",
         "END_OF_FILE",
         "NIL",
-        "ERROR"
+        "ERROR",
+        "COLON",
+        "COMMA"
 };
 
 void get_derivation_tree(FILE *source){

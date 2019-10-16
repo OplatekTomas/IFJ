@@ -4,6 +4,24 @@
 
 #include "lex_analyzer.h"
 
+int count_spaces(FILE* source) {
+    int spaces = 0;
+    char c;
+    do {
+        c = (char)getc(source);
+        if (c == ' ') {
+            spaces++;
+        } else {
+            ungetc(c, source);
+            break;
+        }
+    } while (true);
+    return spaces;
+}
+
+bool is_ident_char(char c) {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c<= '9') || c == '_';
+}
 
 //Načte z stdin další alfanumerické slovo (může obsahovat i '_')
 int read_next_word(FILE* source, char* word, int size){
@@ -13,7 +31,7 @@ int read_next_word(FILE* source, char* word, int size){
     int counter = 0;
     char c = 0;
     //Všechny znaky které můžou obsahovat identifier.
-    while(((c = getc(source)) >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c<= '9') || c == '_'){
+    while(is_ident_char(c = (char)getc(source))){
         if(counter-1 == size){
             size += 128;
             word = realloc(word , size*sizeof(char));
@@ -21,6 +39,9 @@ int read_next_word(FILE* source, char* word, int size){
         word[counter] = c;
         counter++;
     }
+    ungetc(c, source);
+    count_spaces(source);
+
     return counter;
 }
 
@@ -40,27 +61,21 @@ void handle_word(FILE* source ,Token *token){
     free(word);
 }
 
-int count_spaces(FILE* source) {
-    int spaces = 0;
-    char c;
-    do {
-        c = (char)getc(source);
-        if (c == ' ') {
-            spaces++;
-        } else {
-            ungetc(c, source);
-            break;
-        }
-    } while (true);
-    return spaces;
-}
-
 // Vraci:
 // 0 - kdyz jen zkonzumuje mezery a nechce vratit token
 // 1 - kdyz chce vratit token
 // 2 - kdyz najde chybu
 int handle_indent(FILE* source, IndentStack *is, Token* t){
     int indent = count_spaces(source);
+
+    //znak po mezerach
+    char c = (char)getc(source);
+    if (c == '#') {
+        // nastal jednoradkovy komentar, nedelat indent
+        ungetc(c, source);
+        return 0;
+    }
+    ungetc(c, source);
 
     // je stejny indent
     if (indent == stack_top(is)) {
@@ -170,6 +185,22 @@ Token get_next_token(FILE* source, IndentStack* is){
                     t.type = ERROR;
                     return t;
                 }
+            case ':':
+                t.type = COLON;
+                count_spaces(source);
+                return t;
+            case ',':
+                t.type = COMMA;
+                count_spaces(source);
+                return t;
+            case '(':
+                t.type = OPEN_PARENTHES;
+                count_spaces(source);
+                return t;
+            case ')':
+                t.type = CLOSE_PARENTHES;
+                count_spaces(source);
+                return t;
             case '"':
                 break;
             case '#':
