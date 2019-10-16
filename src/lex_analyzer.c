@@ -64,18 +64,11 @@ void handle_word(FILE* source ,Token *token){
     int len = read_next_word(source, word, 256);
     token->keywordValue = is_keyword(word);
     if(token->keywordValue != NON_KEYWORD){
-        printf("Keyword: %s\n",word);
+        //printf("Keyword: %s\n",word);
         token->type = KEYWORD;
-        free(word);
-        return;
-    }
-    char c = getc(source);
-    if(c == '('){
-        printf("Function call: %s\n", word);
+    }else{
         token->type = ID;
-        //TODO: Přidat arguemnty k tokenům.
     }
-
     free(word);
 }
 
