@@ -28,6 +28,8 @@ void get_derivation_tree(FILE *source){
             printf("INT %i\n", t.numberVal.i);
         } else if (t.type == FLOAT) {
             printf("FLOAT %f\n", t.numberVal.d);
+        } else if (t.type == STRING) {
+            printf("STRING '%s'\n", t.stringValue);
         } else if (t.type!= ERROR) {
             printf("%s\n", token_type[t.type]);
         }

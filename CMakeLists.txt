@@ -8,4 +8,6 @@ include_directories(src)
 
 add_executable(IFJ
         src/main.c
-        src/stack.c src/stack.h src/keywords.h src/keywords.c src/lex_analyzer.h src/lex_analyzer.c src/tokens.h src/syntax_analyzer.c src/syntax_analyzer.h)
+        src/stack.c src/stack.h src/error.c src/error.h
+        src/keywords.h src/keywords.c src/lex_analyzer.h src/lex_analyzer.c src/tokens.h
+        src/syntax_analyzer.c src/syntax_analyzer.h)
