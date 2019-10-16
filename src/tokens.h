@@ -8,7 +8,13 @@
 
 typedef enum{
     ID,
-    COMP,
+    ASSIGN,
+    GREATER,
+    LESSER,
+    GREATER_OR_EQ,
+    LESSER_OR_EQ,
+    EQ,
+    NON_EQ,
     OPEN_PARENTHES,
     CLOSE_PARENTHES,
     INT,
