@@ -128,6 +128,39 @@ void handle_eof(FILE* source, IndentStack* is, Token* t) {
     }
 }
 
+void handle_singleline_string(FILE* source, Token* t){
+    t->type = STRING;
+    int string_len = 256;
+    int real_string_len = 0;
+    int i = 2;
+    char c;
+    char *word = calloc(string_len, sizeof(char));
+
+
+    while(true){
+
+        c = getc(source);
+
+        if(c == '\n'){
+            t->type = ERROR;
+            free(word);
+            return;
+        }
+
+        if(c == '\'' && word[real_string_len - 1] != '\\'){
+            //ungetc(c, source);
+            t->stringValue = word;
+            return;
+        }
+
+        if(real_string_len == string_len){
+            word = realloc(word, i++ *string_len * sizeof(char));
+        }
+
+        word[real_string_len++] = c;
+    }
+}
+
 void handle_number(FILE* source, Token* t) {
     char c;
     // 20 cisel bude snad stacit, kdyztak se prida
@@ -274,7 +307,8 @@ Token get_next_token(FILE* source, IndentStack* is){
                 t.type = CLOSE_PARENTHES;
                 count_spaces(source);
                 return t;
-            case '"':
+            case '\'':
+                handle_singleline_string(source, &t);
                 break;
             case '=':
             case '<':

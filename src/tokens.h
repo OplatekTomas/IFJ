@@ -40,5 +40,6 @@ typedef struct{
     TokenTypes type;
     KeywordValue keywordValue;
     NumberVal numberVal;
+    char *stringValue;
 }Token;
 
