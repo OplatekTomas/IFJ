@@ -21,6 +21,8 @@ typedef enum{
     END_OF_FILE,
     NIL,
     ERROR,
+    COLON,
+    COMMA
 } TokenTypes;
 
 typedef union{

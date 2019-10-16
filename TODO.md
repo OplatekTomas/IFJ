@@ -1,6 +1,7 @@
 # TODO LIST
 - rozeznat tyhle znaky
-  - [ ] \:
+  - [x] \:
+  - [x] ,
   - [ ] \+
   - [ ] /
   - [ ] \*
