@@ -34,7 +34,7 @@ bool is_ident_char(char c) {
 //Načte z stdin další alfanumerické slovo (může obsahovat i '_')
 int read_next_word(FILE* source, char* word, int size){
     if(word == NULL){
-        //throw
+        throw_err(INTERN_ERR);
     }
     int counter = 0;
     char c = 0;
@@ -43,6 +43,9 @@ int read_next_word(FILE* source, char* word, int size){
         if(counter-1 == size){
             size += 128;
             word = realloc(word , size*sizeof(char));
+            if(word == NULL){
+                throw_err(INTERN_ERR);
+            }
         }
         word[counter] = c;
         counter++;
@@ -56,15 +59,15 @@ int read_next_word(FILE* source, char* word, int size){
 void handle_word(FILE* source ,Token *token){
     char* word = calloc(256, sizeof(char));
     if(word == NULL){
-        //throw
+        throw_err(INTERN_ERR);
     }
     int len = read_next_word(source, word, 256);
     token->keywordValue = is_keyword(word);
     if(token->keywordValue != NON_KEYWORD){
-        printf("Keyword: %s\n",word);
+        //printf("Keyword: %s\n",word);
         token->type = KEYWORD;
-        free(word);
-        return;
+    }else{
+        token->type = ID;
     }
     free(word);
 }
@@ -129,34 +132,41 @@ void handle_eof(FILE* source, IndentStack* is, Token* t) {
 }
 
 void handle_singleline_string(FILE* source, Token* t){
-    t->type = STRING;
-    int string_len = 256;
-    int real_string_len = 0;
-    int i = 2;
-    char c;
-    char *word = calloc(string_len, sizeof(char));
+    //inicializace pomocných proměnných
+    int string_len = 256;                               //dočasná délka stringu... pokud se tato velikost přeroste, paměť se realokuje
+    int real_string_len = 0;                            //počet znaků ve stringu
+    int i = 2;                                          //číslo, kterým se bude násobit velikost při realokaci
+    char c;                                             //čtený znak
+    char *word = calloc(string_len, sizeof(char));      //alokace paměti pro pole charů
 
 
+    //opakované čtení znaků z stdin
     while(true){
 
         c = getc(source);
 
+        //pokud je čtený znak nový řádek, vrátí se error
         if(c == '\n'){
             t->type = ERROR;
-            free(word);
+            free(word);         //a uvolní se alokovaná paměť
             return;
         }
 
+        //pokud narazí na jednoduchou uvozovku, která není escapovaná... (' --- neescapovaná uvozovka;      \' --- escapovaná uvozovka)
+        //tak se vrátí token s obsahem stringu
         if(c == '\'' && word[real_string_len - 1] != '\\'){
-            //ungetc(c, source);
             t->stringValue = word;
             return;
         }
 
+
+        //Pokud je počet znaků stejný, jako alokovaná paměť (další znak už se do alokované paměti nevejde),
+        //tak se "přialokuje" dalších 255.
         if(real_string_len == string_len){
             word = realloc(word, i++ *string_len * sizeof(char));
         }
 
+        //Nakonec se načtený znak přidá do pole charů (stringu)
         word[real_string_len++] = c;
     }
 }
@@ -299,8 +309,26 @@ Token get_next_token(FILE* source, IndentStack* is){
                 t.type = CLOSE_PARENTHES;
                 count_spaces(source);
                 return t;
+            case '+':
+                t.type = ADD;
+                count_spaces(source);
+                return t;
+            case '-':
+                t.type = SUB;
+                count_spaces(source);
+                return t;
+            case '*':
+                t.type = MUL;
+                count_spaces(source);
+                return t;
+            case '/':
+                t.type = DIV;
+                count_spaces(source);
+                return t;
             case '\'':
+                t.type = STRING;
                 handle_singleline_string(source, &t);
+                count_spaces(source);
                 break;
             case '=':
             case '<':
