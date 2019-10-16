@@ -19,14 +19,22 @@ int count_spaces(FILE* source) {
     return spaces;
 }
 
+bool is_letter(char c) {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+}
+
+bool is_num_char(char c) {
+    return (c >= '0' && c<= '9');
+}
+
 bool is_ident_char(char c) {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c<= '9') || c == '_';
+    return is_letter(c) || is_num_char(c) || c == '_';
 }
 
 //Načte z stdin další alfanumerické slovo (může obsahovat i '_')
 int read_next_word(FILE* source, char* word, int size){
     if(word == NULL){
-        //throw
+        throw_err(INTERN_ERR);
     }
     int counter = 0;
     char c = 0;
@@ -35,6 +43,9 @@ int read_next_word(FILE* source, char* word, int size){
         if(counter-1 == size){
             size += 128;
             word = realloc(word , size*sizeof(char));
+            if(word == NULL){
+                throw_err(INTERN_ERR);
+            }
         }
         word[counter] = c;
         counter++;
@@ -48,7 +59,7 @@ int read_next_word(FILE* source, char* word, int size){
 void handle_word(FILE* source ,Token *token){
     char* word = calloc(256, sizeof(char));
     if(word == NULL){
-        //throw
+        throw_err(INTERN_ERR);
     }
     int len = read_next_word(source, word, 256);
     token->keywordValue = is_keyword(word);
@@ -58,6 +69,13 @@ void handle_word(FILE* source ,Token *token){
         free(word);
         return;
     }
+    char c = getc(source);
+    if(c == '('){
+        printf("Function call: %s\n", word);
+        token->type = ID;
+        //TODO: Přidat arguemnty k tokenům.
+    }
+
     free(word);
 }
 
@@ -160,10 +178,6 @@ void handle_singleline_string(FILE* source, Token* t){
     }
 }
 
-bool is_num(char c) {
-    return (c >= '0' && c <= '9');
-}
-
 void handle_number(FILE* source, Token* t) {
     char c;
     // 20 cisel bude snad stacit, kdyztak se prida
@@ -174,7 +188,7 @@ void handle_number(FILE* source, Token* t) {
     bool dot = false;
     do {
         c = (char)getc(source);
-        if (is_num(c) || c == '.') {
+        if (is_num_char(c) || c == '.') {
             if (num_len + 1 == var_len) {
                 variable = realloc(variable, var_len * 10);
                 var_len*= 10;
@@ -201,6 +215,75 @@ void handle_number(FILE* source, Token* t) {
         int i = (int)strtol(variable, NULL, 10);
         t->numberVal.i = i;
         t->type = INT;
+    }
+}
+
+void handle_comparison(FILE* source, Token* t, char c) {
+    char next = (char)getc(source);
+    switch (c) {
+        case '<':
+            if (next == ' ' || is_ident_char(c)) {
+                ungetc(next, source);
+                t->type = LESSER;
+            } else if (next == '=') {
+                next = (char)getc(source);
+                if (next == ' ' || is_ident_char(c)) {
+                    ungetc(next, source);
+                    t->type = LESSER_OR_EQ;
+                } else {
+                    t->type = ERROR;
+                }
+            } else {
+                t->type = ERROR;
+            }
+            break;
+        case '>':
+            if (next == ' ' || is_ident_char(c)) {
+                ungetc(next, source);
+                t->type = GREATER;
+            } else if (next == '=') {
+                next = (char)getc(source);
+                if (next == ' ' || is_ident_char(c)) {
+                    ungetc(next, source);
+                    t->type = GREATER_OR_EQ;
+                } else {
+                    t->type = ERROR;
+                }
+            } else {
+                t->type = ERROR;
+            }
+            break;
+        case '=':
+            if (next == ' ' || is_ident_char(c)) {
+                ungetc(next, source);
+                t->type = ASSIGN;
+            } else if (next == '=') {
+                next = (char)getc(source);
+                if (next == ' ' || is_ident_char(c)) {
+                    ungetc(next, source);
+                    t->type = EQ;
+                } else {
+                    t->type = ERROR;
+                }
+            } else {
+                t->type = ERROR;
+            }
+            break;
+        case '!':
+            if (next == '=') {
+                next = (char)getc(source);
+                if (next == ' ' || is_ident_char(c)) {
+                    ungetc(next, source);
+                    t->type = NON_EQ;
+                } else {
+                    t->type = ERROR;
+                }
+            } else {
+                t->type = ERROR;
+            }
+            break;
+        default:
+            break;
     }
 }
 
@@ -262,6 +345,13 @@ Token get_next_token(FILE* source, IndentStack* is){
                 handle_singleline_string(source, &t);
                 count_spaces(source);
                 break;
+            case '=':
+            case '<':
+            case '>':
+            case '!':
+                handle_comparison(source, &t, c);
+                count_spaces(source);
+                return t;
             case '#':
                 handle_singleline_comments(source);
                 break;
@@ -270,11 +360,11 @@ Token get_next_token(FILE* source, IndentStack* is){
                 return t;
             default:
                 //Všechny znaky kterými může začínát indentifier
-                if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'){
+                if(is_letter(c) || c == '_'){
                     ungetc(c, source);
                     handle_word(source, &t);
                     return t;
-                } else if (is_num(c)) {
+                } else if (is_num_char(c)) {
                     ungetc(c, source);
                     handle_number(source, &t);
                     return t;

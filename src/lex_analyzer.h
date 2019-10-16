@@ -9,6 +9,7 @@
 #include "lex_analyzer.h"
 #include "tokens.h"
 #include "stack.h"
+#include "error.h"
 #include <stdio.h>
 #include <stdlib.h>
 

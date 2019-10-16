@@ -7,17 +7,17 @@
   - [ ] \*
   - [ ] \-
   - [ ] \&
-  - [ ] \=
-  - [ ] ==
-  - [ ] !=
+  - [X] \=
+  - [X] ==
+  - [X] !=
   - [ ] //
-  - [ ] \> a dalsi znaminka na porovnavani
+  - [X] \> a dalsi znaminka na porovnavani
   - kdyztak nekdo doplnte
 - presunout vypis keywordu z lexikalni analyzy do syntaxe
 - rozeznat 
   - [x] integery
   - [x] floaty
-  - [ ] stringy
+  - [X] stringy
   - [ ] multiline stringy
   - [ ] ciselne literaly
 - kdyztak nekdo doplne dalsi nebo zapiste ze si zabirate neco
