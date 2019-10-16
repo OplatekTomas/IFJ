@@ -40,6 +40,8 @@ void get_derivation_tree(FILE *source){
             printf("FLOAT %f\n", t.numberVal.d);
         } else if (t.type == STRING) {
             printf("STRING '%s'\n", t.stringValue);
+        } else if (t.type == KEYWORD) {
+            printf("%s\n", KEYWORDS[t.keywordValue]);
         } else if (t.type!= ERROR) {
             printf("%s\n", token_type[t.type]);
         }
