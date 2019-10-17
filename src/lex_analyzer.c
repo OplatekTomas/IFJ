@@ -142,7 +142,7 @@ void handle_multline_string(FILE* source, Token* t){
     t->stringValue = calloc(max_len, sizeof(char));
     //Kontrola jestli poslední 3 znaky jsou " a poslední z nich není escape hodnota
     while(t->stringValue[len-1] != '"' || t->stringValue[len-2] != '"' || t->stringValue[len-3] != '"' || t->stringValue[len-4] == '\\'){
-        if(len-2 == max_len){ //Realloc při nedostatečné velikosti původního pole
+        if(len+2 == max_len){ //Realloc při nedostatečné velikosti původního pole
             max_len += 128;
             t->stringValue = realloc(t->stringValue, max_len);
         }
@@ -198,7 +198,7 @@ void handle_number(FILE* source, Token* t) {
     char c;
     // 20 cisel bude snad stacit, kdyztak se prida
     int var_len = 20;
-    char* variable = malloc(var_len);
+    char* variable = calloc(var_len, sizeof(char));
     int num_len = 0;
     // precist cislo
     bool dot = false;
@@ -206,8 +206,8 @@ void handle_number(FILE* source, Token* t) {
         c = (char)getc(source);
         if (is_num_char(c) || c == '.') {
             if (num_len + 1 == var_len) {
-                variable = realloc(variable, var_len * 10);
-                var_len*= 10;
+                var_len *= 10;
+                variable = realloc(variable, var_len);
             }
             if (c == '.') {
                 dot = true;
@@ -221,7 +221,7 @@ void handle_number(FILE* source, Token* t) {
             break;
         }
     } while(true);
-    variable[num_len + 1] = '\0';
+    variable[num_len] = '\0';
     // tady uz jsou prectene cisla
     if (dot) {
         double d = strtod(variable, NULL);
@@ -232,6 +232,7 @@ void handle_number(FILE* source, Token* t) {
         t->numberVal.i = i;
         t->type = INT;
     }
+    free(variable);
 }
 
 void handle_comparison(FILE* source, Token* t, char c) {
