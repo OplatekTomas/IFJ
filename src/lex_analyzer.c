@@ -206,7 +206,7 @@ void handle_number(FILE* source, Token* t) {
             var_len *= 10;
             variable = realloc(variable, var_len);
         }
-        if(c == '.'){
+        if(c == '.'){ //v pripadě detekování '.' bude číslo konvertováno na float místo int
             dot = true;
         }
         variable[num_len] = c;
