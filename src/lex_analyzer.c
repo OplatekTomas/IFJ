@@ -200,29 +200,19 @@ void handle_number(FILE* source, Token* t) {
     int var_len = 20;
     char* variable = calloc(var_len, sizeof(char));
     int num_len = 0;
-    // precist cislo
     bool dot = false;
-    do {
-        c = (char)getc(source);
-        if (is_num_char(c) || c == '.') {
-            if (num_len + 1 == var_len) {
-                var_len *= 10;
-                variable = realloc(variable, var_len);
-            }
-            if (c == '.') {
-                dot = true;
-            }
-            variable[num_len] = c;
-            num_len++;
-        } else if (c == ' ') {
-            continue;
-        } else {
-            ungetc(c, source);
-            break;
+    while(is_num_char(c = (char)getc(source)) || c == '.'){
+        if (num_len + 1 == var_len) {
+            var_len *= 10;
+            variable = realloc(variable, var_len);
         }
-    } while(true);
-    variable[num_len] = '\0';
-    // tady uz jsou prectene cisla
+        if(c == '.'){
+            dot = true;
+        }
+        variable[num_len] = c;
+        num_len++;
+    }
+    ungetc(c, source);
     if (dot) {
         double d = strtod(variable, NULL);
         t->numberVal.d = d;
