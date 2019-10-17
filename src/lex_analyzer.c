@@ -131,6 +131,29 @@ void handle_eof(FILE* source, IndentStack* is, Token* t) {
     }
 }
 
+void handle_multline_string(FILE* source, Token* t){
+    int max_len = 256;
+    int len = 0;
+    //Drobná prasárna která kontroluje jestli jsou na začátku multiline stringu opravdu 3 " za sebou
+    if(getc(source) != '"' || getc(source) != '"' || getc(source) != '"'){
+        t->type = ERROR;
+        return;
+    }
+    t->stringValue = calloc(max_len, sizeof(char));
+    //Kontrola jestli poslední 3 znaky jsou " a poslední z nich není escape hodnota
+    while(t->stringValue[len-1] != '"' || t->stringValue[len-2] != '"' || t->stringValue[len-3] != '"' || t->stringValue[len-4] == '\\'){
+        if(len-2 == max_len){ //Realloc při nedostatečné velikosti původního pole
+            max_len += 128;
+            t->stringValue = realloc(t->stringValue, max_len);
+        }
+        t->stringValue[len] = (char)getc(source);
+        len++;
+    }
+    //Useknutí stringu tak, aby neobsahoval poslední 3 zaky (uvozovky) - ty nejsou potřeba
+    t->stringValue[len-3] = 0;
+    t->type = STRING;
+}
+
 void handle_singleline_string(FILE* source, Token* t){
     //inicializace pomocných proměnných
     int string_len = 256;                               //dočasná délka stringu... pokud se tato velikost přeroste, paměť se realokuje
@@ -346,6 +369,10 @@ Token get_next_token(FILE* source, IndentStack* is){
             case '#':
                 handle_singleline_comments(source);
                 break;
+            case '"':
+                ungetc(c, source);
+                handle_multline_string(source, &t);
+                return t;
             case EOF:
                 handle_eof(source, is, &t);
                 return t;
