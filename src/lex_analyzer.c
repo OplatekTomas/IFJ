@@ -144,7 +144,7 @@ void handle_multline_string(FILE* source, Token* t){
     while(t->stringValue[len-1] != '"' || t->stringValue[len-2] != '"' || t->stringValue[len-3] != '"' || t->stringValue[len-4] == '\\'){
         if(len+2 == max_len){ //Realloc při nedostatečné velikosti původního pole
             max_len += 128;
-            t->stringValue = realloc(t->stringValue, max_len);
+            t->stringValue = realloc(t->stringValue, max_len*sizeof(char));
         }
         t->stringValue[len] = (char)getc(source);
         len++;
@@ -156,42 +156,23 @@ void handle_multline_string(FILE* source, Token* t){
 
 void handle_singleline_string(FILE* source, Token* t){
     //inicializace pomocných proměnných
-    int string_len = 256;                               //dočasná délka stringu... pokud se tato velikost přeroste, paměť se realokuje
-    int real_string_len = 0;                            //počet znaků ve stringu
-    int i = 2;                                          //číslo, kterým se bude násobit velikost při realokaci
-    char c;                                             //čtený znak
-    char *word = calloc(string_len, sizeof(char));      //alokace paměti pro pole charů
-
-
-    //opakované čtení znaků z stdin
-    while(true){
-
-        c = getc(source);
-
-        //pokud je čtený znak nový řádek, vrátí se error
-        if(c == '\n'){
+    int string_len = 256;
+    int real_string_len = 0;
+    char c;
+    t->stringValue = calloc(string_len, sizeof(char));
+    while((c = (char)getc(source)) != '\'' && t->stringValue[real_string_len-1] != '\\'){       //načítáme znak dokuď to není ' bez escape sekvence
+        if(real_string_len - 1 == string_len){      //při nedostatečné velikosti původního pole ho zvětšíme.
+            string_len += 128;
+            t->stringValue = realloc(t->stringValue, string_len* sizeof(char));
+        }
+        if(c == '\n'){      //V případě nového řádku nastala chyba z toho důvodu, že string nebyl ukončen, ale pokračuje se na další řádek
             t->type = ERROR;
-            free(word);         //a uvolní se alokovaná paměť
+            free(t->stringValue);
             return;
         }
-
-        //pokud narazí na jednoduchou uvozovku, která není escapovaná... (' --- neescapovaná uvozovka;      \' --- escapovaná uvozovka)
-        //tak se vrátí token s obsahem stringu
-        if(c == '\'' && word[real_string_len - 1] != '\\'){
-            t->stringValue = word;
-            return;
-        }
-
-
-        //Pokud je počet znaků stejný, jako alokovaná paměť (další znak už se do alokované paměti nevejde),
-        //tak se "přialokuje" dalších 255.
-        if(real_string_len == string_len){
-            word = realloc(word, i++ *string_len * sizeof(char));
-        }
-
-        //Nakonec se načtený znak přidá do pole charů (stringu)
-        word[real_string_len++] = c;
+        t->stringValue[real_string_len++] = c;
     }
+    ungetc(c, source);//poslední znak, který byl přečtený se musí vrátit na vstup
 }
 
 void handle_number(FILE* source, Token* t) {
@@ -204,7 +185,7 @@ void handle_number(FILE* source, Token* t) {
     while(is_num_char(c = (char)getc(source)) || c == '.'){
         if (num_len + 1 == var_len) {
             var_len *= 10;
-            variable = realloc(variable, var_len);
+            variable = realloc(variable, var_len*sizeof(char));
         }
         if(c == '.'){ //v pripadě detekování '.' bude číslo konvertováno na float místo int
             dot = true;
