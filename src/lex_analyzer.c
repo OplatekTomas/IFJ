@@ -64,18 +64,11 @@ void handle_word(FILE* source ,Token *token){
     int len = read_next_word(source, word, 256);
     token->keywordValue = is_keyword(word);
     if(token->keywordValue != NON_KEYWORD){
-        printf("Keyword: %s\n",word);
+        //printf("Keyword: %s\n",word);
         token->type = KEYWORD;
-        free(word);
-        return;
-    }
-    char c = getc(source);
-    if(c == '('){
-        printf("Function call: %s\n", word);
+    }else{
         token->type = ID;
-        //TODO: Přidat arguemnty k tokenům.
     }
-
     free(word);
 }
 
@@ -138,35 +131,65 @@ void handle_eof(FILE* source, IndentStack* is, Token* t) {
     }
 }
 
-void handle_singleline_string(FILE* source, Token* t){
+void handle_multline_string(FILE* source, Token* t){
+    int max_len = 256;
+    int len = 0;
+    //Drobná prasárna která kontroluje jestli jsou na začátku multiline stringu opravdu 3 " za sebou
+    if(getc(source) != '"' || getc(source) != '"' || getc(source) != '"'){
+        t->type = ERROR;
+        return;
+    }
+    t->stringValue = calloc(max_len, sizeof(char));
+    //Kontrola jestli poslední 3 znaky jsou " a poslední z nich není escape hodnota
+    while(t->stringValue[len-1] != '"' || t->stringValue[len-2] != '"' || t->stringValue[len-3] != '"' || t->stringValue[len-4] == '\\'){
+        if(len-2 == max_len){ //Realloc při nedostatečné velikosti původního pole
+            max_len += 128;
+            t->stringValue = realloc(t->stringValue, max_len);
+        }
+        t->stringValue[len] = (char)getc(source);
+        len++;
+    }
+    //Useknutí stringu tak, aby neobsahoval poslední 3 zaky (uvozovky) - ty nejsou potřeba
+    t->stringValue[len-3] = 0;
     t->type = STRING;
-    int string_len = 256;
-    int real_string_len = 0;
-    int i = 2;
-    char c;
-    char *word = calloc(string_len, sizeof(char));
+}
+
+void handle_singleline_string(FILE* source, Token* t){
+    //inicializace pomocných proměnných
+    int string_len = 256;                               //dočasná délka stringu... pokud se tato velikost přeroste, paměť se realokuje
+    int real_string_len = 0;                            //počet znaků ve stringu
+    int i = 2;                                          //číslo, kterým se bude násobit velikost při realokaci
+    char c;                                             //čtený znak
+    char *word = calloc(string_len, sizeof(char));      //alokace paměti pro pole charů
 
 
+    //opakované čtení znaků z stdin
     while(true){
 
         c = getc(source);
 
+        //pokud je čtený znak nový řádek, vrátí se error
         if(c == '\n'){
             t->type = ERROR;
-            free(word);
+            free(word);         //a uvolní se alokovaná paměť
             return;
         }
 
+        //pokud narazí na jednoduchou uvozovku, která není escapovaná... (' --- neescapovaná uvozovka;      \' --- escapovaná uvozovka)
+        //tak se vrátí token s obsahem stringu
         if(c == '\'' && word[real_string_len - 1] != '\\'){
-            //ungetc(c, source);
             t->stringValue = word;
             return;
         }
 
+
+        //Pokud je počet znaků stejný, jako alokovaná paměť (další znak už se do alokované paměti nevejde),
+        //tak se "přialokuje" dalších 255.
         if(real_string_len == string_len){
             word = realloc(word, i++ *string_len * sizeof(char));
         }
 
+        //Nakonec se načtený znak přidá do pole charů (stringu)
         word[real_string_len++] = c;
     }
 }
@@ -317,8 +340,26 @@ Token get_next_token(FILE* source, IndentStack* is){
                 t.type = CLOSE_PARENTHES;
                 count_spaces(source);
                 return t;
+            case '+':
+                t.type = ADD;
+                count_spaces(source);
+                return t;
+            case '-':
+                t.type = SUB;
+                count_spaces(source);
+                return t;
+            case '*':
+                t.type = MUL;
+                count_spaces(source);
+                return t;
+            case '/':
+                t.type = DIV;
+                count_spaces(source);
+                return t;
             case '\'':
+                t.type = STRING;
                 handle_singleline_string(source, &t);
+                count_spaces(source);
                 break;
             case '=':
             case '<':
@@ -330,6 +371,10 @@ Token get_next_token(FILE* source, IndentStack* is){
             case '#':
                 handle_singleline_comments(source);
                 break;
+            case '"':
+                ungetc(c, source);
+                handle_multline_string(source, &t);
+                return t;
             case EOF:
                 handle_eof(source, is, &t);
                 return t;
