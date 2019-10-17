@@ -238,69 +238,61 @@ void handle_comparison(FILE* source, Token* t, char c) {
     char next = (char)getc(source);
     switch (c) {
         case '<':
-            if (next == ' ' || is_ident_char(c)) {
+            if (next == ' ' || is_ident_char(next)) {
                 ungetc(next, source);
                 t->type = LESSER;
+                return;
             } else if (next == '=') {
                 next = (char)getc(source);
-                if (next == ' ' || is_ident_char(c)) {
+                if (next == ' ' || is_ident_char(next)) {
                     ungetc(next, source);
                     t->type = LESSER_OR_EQ;
-                } else {
-                    t->type = ERROR;
+                    return;
                 }
-            } else {
-                t->type = ERROR;
             }
             break;
         case '>':
-            if (next == ' ' || is_ident_char(c)) {
+            if (next == ' ' || is_ident_char(next)) {
                 ungetc(next, source);
                 t->type = GREATER;
+                return;
             } else if (next == '=') {
                 next = (char)getc(source);
-                if (next == ' ' || is_ident_char(c)) {
+                if (next == ' ' || is_ident_char(next)) {
                     ungetc(next, source);
                     t->type = GREATER_OR_EQ;
-                } else {
-                    t->type = ERROR;
+                    return;
                 }
-            } else {
-                t->type = ERROR;
             }
             break;
         case '=':
-            if (next == ' ' || is_ident_char(c)) {
+            if (next == ' ' || is_ident_char(next)) {
                 ungetc(next, source);
                 t->type = ASSIGN;
+                return;
             } else if (next == '=') {
                 next = (char)getc(source);
-                if (next == ' ' || is_ident_char(c)) {
+                if (next == ' ' || is_ident_char(next)) {
                     ungetc(next, source);
                     t->type = EQ;
-                } else {
-                    t->type = ERROR;
+                    return;
                 }
-            } else {
-                t->type = ERROR;
             }
             break;
         case '!':
             if (next == '=') {
                 next = (char)getc(source);
-                if (next == ' ' || is_ident_char(c)) {
+                if (next == ' ' || is_ident_char(next)) {
                     ungetc(next, source);
                     t->type = NON_EQ;
-                } else {
-                    t->type = ERROR;
+                    return;
                 }
-            } else {
-                t->type = ERROR;
             }
             break;
         default:
             break;
     }
+    t->type = ERROR;
 }
 
 Token get_next_token(FILE* source, IndentStack* is){
@@ -353,8 +345,14 @@ Token get_next_token(FILE* source, IndentStack* is){
                 count_spaces(source);
                 return t;
             case '/':
-                t.type = DIV;
-                count_spaces(source);
+                if(getc(source) == '/'){
+                    t.type = DOUBLE_DIV;
+                    count_spaces(source);
+                }
+                else{
+                    t.type = DIV;
+                    count_spaces(source);
+                }
                 return t;
             case '\'':
                 t.type = STRING;

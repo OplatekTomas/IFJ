@@ -32,7 +32,8 @@ typedef enum{
     ADD,
     SUB,
     MUL,
-    DIV
+    DIV,
+    DOUBLE_DIV
 } TokenTypes;
 
 typedef union{
