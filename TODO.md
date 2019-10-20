@@ -2,10 +2,10 @@
 - rozeznat tyhle znaky
   - [x] \:
   - [x] ,
-  - [ ] \+
+  - [x] \+
   - [ ] /
-  - [ ] \*
-  - [ ] \-
+  - [x] \*
+  - [x] \-
   - [ ] \&
   - [X] \=
   - [X] ==
@@ -18,7 +18,7 @@
   - [x] integery
   - [x] floaty
   - [X] stringy
-  - [ ] multiline stringy
+  - [X] multiline stringy
   - [ ] ciselne literaly
 - kdyztak nekdo doplne dalsi nebo zapiste ze si zabirate neco
   

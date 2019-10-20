@@ -14,6 +14,8 @@ typedef enum {
         NON_KEYWORD
 } KeywordValue;
 
+extern const char KEYWORDS[][10];
+
 KeywordValue is_keyword(char * input);
 
 #endif //IFJ_KEYWORDS_H
