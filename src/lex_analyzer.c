@@ -160,7 +160,10 @@ void handle_singleline_string(FILE* source, Token* t){
     int real_string_len = 0;
     char c;
     t->stringValue = calloc(string_len, sizeof(char));
-    while((c = (char)getc(source)) != '\'' && t->stringValue[real_string_len-1] != '\\'){       //načítáme znak dokuď to není ' bez escape sekvence
+    if(t->stringValue == NULL){
+        throw_err(INTERN_ERR);
+    }
+    while((c = (char)getc(source)) != '\'' || t->stringValue[real_string_len-1] == '\\'){       //načítáme znak dokuď to není ' bez escape sekvence
         if(real_string_len - 1 == string_len){      //při nedostatečné velikosti původního pole ho zvětšíme.
             string_len += 128;
             t->stringValue = realloc(t->stringValue, string_len* sizeof(char));
@@ -170,9 +173,9 @@ void handle_singleline_string(FILE* source, Token* t){
             free(t->stringValue);
             return;
         }
-        t->stringValue[real_string_len++] = c;
+        t->stringValue[real_string_len] = c;
+        real_string_len++;
     }
-    ungetc(c, source);//poslední znak, který byl přečtený se musí vrátit na vstup
 }
 
 void handle_number(FILE* source, Token* t) {
