@@ -131,43 +131,50 @@ void handle_eof(FILE* source, IndentStack* is, Token* t) {
     }
 }
 
+void handle_multline_string(FILE* source, Token* t){
+    int max_len = 256;
+    int len = 0;
+    //Drobná prasárna která kontroluje jestli jsou na začátku multiline stringu opravdu 3 " za sebou
+    if(getc(source) != '"' || getc(source) != '"' || getc(source) != '"'){
+        t->type = ERROR;
+        return;
+    }
+    t->stringValue = calloc(max_len, sizeof(char));
+    //Kontrola jestli poslední 3 znaky jsou " a poslední z nich není escape hodnota
+    while(t->stringValue[len-1] != '"' || t->stringValue[len-2] != '"' || t->stringValue[len-3] != '"' || t->stringValue[len-4] == '\\'){
+        if(len+2 == max_len){ //Realloc při nedostatečné velikosti původního pole
+            max_len += 128;
+            t->stringValue = realloc(t->stringValue, max_len*sizeof(char));
+        }
+        t->stringValue[len] = (char)getc(source);
+        len++;
+    }
+    //Useknutí stringu tak, aby neobsahoval poslední 3 zaky (uvozovky) - ty nejsou potřeba
+    t->stringValue[len-3] = 0;
+    t->type = STRING;
+}
+
 void handle_singleline_string(FILE* source, Token* t){
     //inicializace pomocných proměnných
-    int string_len = 256;                               //dočasná délka stringu... pokud se tato velikost přeroste, paměť se realokuje
-    int real_string_len = 0;                            //počet znaků ve stringu
-    int i = 2;                                          //číslo, kterým se bude násobit velikost při realokaci
-    char c;                                             //čtený znak
-    char *word = calloc(string_len, sizeof(char));      //alokace paměti pro pole charů
-
-
-    //opakované čtení znaků z stdin
-    while(true){
-
-        c = getc(source);
-
-        //pokud je čtený znak nový řádek, vrátí se error
-        if(c == '\n'){
+    int string_len = 256;
+    int real_string_len = 0;
+    char c;
+    t->stringValue = calloc(string_len, sizeof(char));
+    if(t->stringValue == NULL){
+        throw_err(INTERN_ERR);
+    }
+    while((c = (char)getc(source)) != '\'' || t->stringValue[real_string_len-1] == '\\'){       //načítáme znak dokuď to není ' bez escape sekvence
+        if(real_string_len - 1 == string_len){      //při nedostatečné velikosti původního pole ho zvětšíme.
+            string_len += 128;
+            t->stringValue = realloc(t->stringValue, string_len* sizeof(char));
+        }
+        if(c == '\n'){      //V případě nového řádku nastala chyba z toho důvodu, že string nebyl ukončen, ale pokračuje se na další řádek
             t->type = ERROR;
-            free(word);         //a uvolní se alokovaná paměť
+            free(t->stringValue);
             return;
         }
-
-        //pokud narazí na jednoduchou uvozovku, která není escapovaná... (' --- neescapovaná uvozovka;      \' --- escapovaná uvozovka)
-        //tak se vrátí token s obsahem stringu
-        if(c == '\'' && word[real_string_len - 1] != '\\'){
-            t->stringValue = word;
-            return;
-        }
-
-
-        //Pokud je počet znaků stejný, jako alokovaná paměť (další znak už se do alokované paměti nevejde),
-        //tak se "přialokuje" dalších 255.
-        if(real_string_len == string_len){
-            word = realloc(word, i++ *string_len * sizeof(char));
-        }
-
-        //Nakonec se načtený znak přidá do pole charů (stringu)
-        word[real_string_len++] = c;
+        t->stringValue[real_string_len] = c;
+        real_string_len++;
     }
 }
 
@@ -175,31 +182,21 @@ void handle_number(FILE* source, Token* t) {
     char c;
     // 20 cisel bude snad stacit, kdyztak se prida
     int var_len = 20;
-    char* variable = malloc(var_len);
+    char* variable = calloc(var_len, sizeof(char));
     int num_len = 0;
-    // precist cislo
     bool dot = false;
-    do {
-        c = (char)getc(source);
-        if (is_num_char(c) || c == '.') {
-            if (num_len + 1 == var_len) {
-                variable = realloc(variable, var_len * 10);
-                var_len*= 10;
-            }
-            if (c == '.') {
-                dot = true;
-            }
-            variable[num_len] = c;
-            num_len++;
-        } else if (c == ' ') {
-            continue;
-        } else {
-            ungetc(c, source);
-            break;
+    while(is_num_char(c = (char)getc(source)) || c == '.'){
+        if (num_len + 1 == var_len) {
+            var_len *= 10;
+            variable = realloc(variable, var_len*sizeof(char));
         }
-    } while(true);
-    variable[num_len + 1] = '\0';
-    // tady uz jsou prectene cisla
+        if(c == '.'){ //v pripadě detekování '.' bude číslo konvertováno na float místo int
+            dot = true;
+        }
+        variable[num_len] = c;
+        num_len++;
+    }
+    ungetc(c, source);
     if (dot) {
         double d = strtod(variable, NULL);
         t->numberVal.d = d;
@@ -209,6 +206,7 @@ void handle_number(FILE* source, Token* t) {
         t->numberVal.i = i;
         t->type = INT;
     }
+    free(variable);
 }
 
 void handle_comparison(FILE* source, Token* t, char c) {
@@ -322,8 +320,14 @@ Token get_next_token(FILE* source, IndentStack* is){
                 count_spaces(source);
                 return t;
             case '/':
-                t.type = DIV;
-                count_spaces(source);
+                if(getc(source) == '/'){
+                    t.type = DOUBLE_DIV;
+                    count_spaces(source);
+                }
+                else{
+                    t.type = DIV;
+                    count_spaces(source);
+                }
                 return t;
             case '\'':
                 t.type = STRING;
@@ -340,6 +344,10 @@ Token get_next_token(FILE* source, IndentStack* is){
             case '#':
                 handle_singleline_comments(source);
                 break;
+            case '"':
+                ungetc(c, source);
+                handle_multline_string(source, &t);
+                return t;
             case EOF:
                 handle_eof(source, is, &t);
                 return t;
