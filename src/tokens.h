@@ -27,6 +27,7 @@ typedef enum{
     INDENT,
     DEDENT,
     END_OF_FILE,
+    END_OF_LINE,
     NIL,
     ERROR,
     COLON,

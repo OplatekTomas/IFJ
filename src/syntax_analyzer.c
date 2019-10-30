@@ -19,6 +19,7 @@ char token_type[][100] = {
         "INDENT",
         "DEDENT",
         "END_OF_FILE",
+        "END_OF_LINE",
         "NIL",
         "ERROR",
         "COLON",
@@ -31,11 +32,11 @@ char token_type[][100] = {
 };
 
 void get_derivation_tree(FILE *source){
+    Parser p;
+    parser_init(&p, source);
     Token t;
-    IndentStack is;
-    stack_init(&is);
     while(true){
-        t = get_next_token(source, &is);
+        t = get_next_token(&p);
         if (t.type == INT) {
             printf("INT %i\n", t.numberVal.i);
         } else if (t.type == FLOAT) {

@@ -12,10 +12,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+typedef struct{
+    IndentStack is;
+    bool first_on_line;
+    FILE* source;
+} Parser;
 
-int count_spaces(FILE*);
+void parser_init(Parser* p, FILE* source);
 
-Token get_next_token(FILE*, IndentStack* is);
+int count_spaces(FILE* source);
+
+Token get_next_token(Parser* p);
 
 
 #endif //IFJ_LEX_ANALYZER_H

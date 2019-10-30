@@ -4,6 +4,12 @@
 
 #include "lex_analyzer.h"
 
+void parser_init(Parser* p, FILE* source) {
+    p->source = source;
+    p->first_on_line = false;
+    stack_init(&p->is);
+}
+
 int count_spaces(FILE* source) {
     int spaces = 0;
     char c;
@@ -51,7 +57,7 @@ int read_next_word(FILE* source, char* word, int size){
         counter++;
     }
     ungetc(c, source);
-    count_spaces(source);
+    //count_spaces(source);
 
     return counter;
 }
@@ -77,37 +83,33 @@ void handle_word(FILE* source ,Token *token){
 // 0 - kdyz jen zkonzumuje mezery a nechce vratit token
 // 1 - kdyz chce vratit token
 // 2 - kdyz najde chybu
-int handle_indent(FILE* source, IndentStack *is, Token* t){
-    int indent = count_spaces(source);
+int handle_indent(Parser* p, Token* t){
+    int indent = count_spaces(p->source);
 
     //znak po mezerach
-    char c = (char)getc(source);
+    char c = (char)getc(p->source);
+    ungetc(c, p->source);
     if (c == '#') {
         // nastal jednoradkovy komentar, nedelat indent
-        ungetc(c, source);
         return 0;
     }
-    ungetc(c, source);
 
     // je stejny indent
-    if (indent == stack_top(is)) {
+    if (indent == stack_top(&p->is)) {
         return 0;
-    } else if (indent > stack_top(is)) {
+    } else if (indent > stack_top(&p->is)) {
         // je vetsi indent nez predtim
-        stack_push(is, indent);
+        stack_push(&p->is, indent);
         t->type = INDENT;
         return 1;
     } else {
         // je mensi hodnota nez predtim
-        stack_pop(is);
-        if (stack_top(is) < indent) {
+        stack_pop(&p->is);
+        if (stack_top(&p->is) < indent) {
             return 2;
-        } else if (stack_top(is) > indent) {
-            for (int i = 0; i < indent; i++) {
-                ungetc(' ', source);
-            }
         }
         t->type = DEDENT;
+        p->first_on_line = false;
         return 1;
     }
 }
@@ -272,92 +274,116 @@ void handle_comparison(FILE* source, Token* t, char c) {
     t->type = ERROR;
 }
 
-Token get_next_token(FILE* source, IndentStack* is){
+Token get_next_token(Parser* p){
     Token t;
     t.type = ERROR;
     t.keywordValue = NON_KEYWORD;
+    FILE* source = p->source;
     char c;
     // cteni souboru znak po znaku
     do {
         c = (char)getc(source);
         switch (c) {
             case '\n':;
-            // nebude fungovat poradne dokud nebudem rozpoznavat vsechno
-            //case ' ':;
-                int value = handle_indent(source, is, &t);
-                if (value == 0) {
-                    continue;
-                } else if (value == 1) {
+                if (!p->first_on_line) {
+                    t.type = END_OF_LINE;
+                    p->first_on_line = true;
                     return t;
                 } else {
-                    t.type = ERROR;
-                    return t;
+                    ungetc(c, source);
+                    p->first_on_line = false;
+                    int value = handle_indent(p, &t);
+                    if (value == 0) {
+                        continue;
+                    } else if (value == 1) {
+                        return t;
+                    } else {
+                        t.type = ERROR;
+                        return t;
+                    }
                 }
+            // nebude fungovat poradne dokud nebudem rozpoznavat vsechno
+            case ' ':
+                if (p->first_on_line) {
+                    ungetc(c, source);
+                    p->first_on_line = false;
+                    int value = handle_indent(p, &t);
+                    if (value == 0) {
+                        continue;
+                    } else if (value == 1) {
+                        return t;
+                    } else {
+                        t.type = ERROR;
+                        return t;
+                    }
+                }
+                break;
             case ':':
                 t.type = COLON;
-                count_spaces(source);
                 return t;
             case ',':
                 t.type = COMMA;
-                count_spaces(source);
                 return t;
             case '(':
                 t.type = OPEN_PARENTHES;
-                count_spaces(source);
                 return t;
             case ')':
                 t.type = CLOSE_PARENTHES;
-                count_spaces(source);
                 return t;
             case '+':
                 t.type = ADD;
-                count_spaces(source);
                 return t;
             case '-':
                 t.type = SUB;
-                count_spaces(source);
                 return t;
             case '*':
                 t.type = MUL;
-                count_spaces(source);
                 return t;
             case '/':
                 if(getc(source) == '/'){
                     t.type = DOUBLE_DIV;
-                    count_spaces(source);
                 }
                 else{
                     t.type = DIV;
-                    count_spaces(source);
                 }
                 return t;
             case '\'':
                 t.type = STRING;
                 handle_singleline_string(source, &t);
-                count_spaces(source);
                 break;
             case '=':
             case '<':
             case '>':
             case '!':
                 handle_comparison(source, &t, c);
-                count_spaces(source);
                 return t;
             case '#':
                 handle_singleline_comments(source);
+                p->first_on_line = false;
                 break;
             case '"':
                 ungetc(c, source);
                 handle_multline_string(source, &t);
                 return t;
             case EOF:
-                handle_eof(source, is, &t);
+                handle_eof(source, &p->is, &t);
                 return t;
             default:
                 //Všechny znaky kterými může začínát indentifier
                 if(is_letter(c) || c == '_'){
                     ungetc(c, source);
+                    if (p->first_on_line) {
+                        int value = handle_indent(p, &t);
+                        if (value == 1) {
+                            p->first_on_line = true;
+                            return t;
+                        } else if (value != 0) {
+                            t.type = ERROR;
+                            return t;
+                        }
+                    }
                     handle_word(source, &t);
+                    p->first_on_line = false;
                     return t;
                 } else if (is_num_char(c)) {
                     ungetc(c, source);
