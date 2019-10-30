@@ -1,5 +1,5 @@
-#ifndef IFJ_STACK_H
-#define IFJ_STACK_H
+#ifndef IFJ_INDENT_STACK_H
+#define IFJ_INDENT_STACK_H
 
 #include <stdbool.h>
 
@@ -16,4 +16,4 @@ int stack_top(IndentStack* is);
 void stack_push(IndentStack* is, int value);
 bool stack_empty(IndentStack* is);
 
-#endif //IFJ_STACK_H
+#endif //IFJ_INDENT_STACK_H

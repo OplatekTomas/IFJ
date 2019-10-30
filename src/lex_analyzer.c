@@ -66,10 +66,11 @@ void handle_word(FILE* source ,Token *token){
     if(token->keywordValue != NON_KEYWORD){
         //printf("Keyword: %s\n",word);
         token->type = KEYWORD;
+        free(word);
     }else{
         token->type = ID;
+        token->stringValue = word;
     }
-    free(word);
 }
 
 // Vraci:
@@ -141,6 +142,7 @@ void handle_multline_string(FILE* source, Token* t){
     }
     t->stringValue = calloc(max_len, sizeof(char));
     //Kontrola jestli poslední 3 znaky jsou " a poslední z nich není escape hodnota
+    //TODO: valgrind hazi chybu kvuli indexu v minusu
     while(t->stringValue[len-1] != '"' || t->stringValue[len-2] != '"' || t->stringValue[len-3] != '"' || t->stringValue[len-4] == '\\'){
         if(len+2 == max_len){ //Realloc při nedostatečné velikosti původního pole
             max_len += 128;

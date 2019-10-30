@@ -34,18 +34,26 @@ void get_derivation_tree(FILE *source){
     Token t;
     IndentStack is;
     stack_init(&is);
-    while((t = get_next_token(source, &is)).type != END_OF_FILE){
+    while(true){
+        t = get_next_token(source, &is);
         if (t.type == INT) {
             printf("INT %i\n", t.numberVal.i);
         } else if (t.type == FLOAT) {
             printf("FLOAT %f\n", t.numberVal.d);
         } else if (t.type == STRING) {
             printf("STRING '%s'\n", t.stringValue);
+            free(t.stringValue);
         } else if (t.type == KEYWORD) {
             printf("%s\n", KEYWORDS[t.keywordValue]);
+        } else if (t.type == ID) {
+            printf("ID %s\n", t.stringValue);
+            free(t.stringValue);
         } else if (t.type!= ERROR) {
             printf("%s\n", token_type[t.type]);
         }
-
+        // docasne
+        if (t.type == END_OF_FILE) {
+            break;
+        }
     }
 }

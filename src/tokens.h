@@ -5,6 +5,8 @@
 
 //PRO DEJVA ZÁKAZ VSTUPU!
 
+#ifndef IFJ_TOKENS_H
+#define IFJ_TOKENS_H
 
 typedef enum{
     ID,
@@ -48,3 +50,4 @@ typedef struct{
     char *stringValue;
 }Token;
 
+#endif //IFJ_TOKENS_H

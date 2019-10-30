@@ -6,9 +6,8 @@
 #ifndef IFJ_LEX_ANALYZER_H
 #define IFJ_LEX_ANALYZER_H
 
-#include "lex_analyzer.h"
 #include "tokens.h"
-#include "stack.h"
+#include "indent_stack.h"
 #include "error.h"
 #include <stdio.h>
 #include <stdlib.h>
