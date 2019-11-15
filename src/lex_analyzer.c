@@ -343,10 +343,11 @@ Token get_next_token(Scanner* s){
                 t.type = MUL;
                 return t;
             case '/':
-                if(getc(source) == '/'){
+                if((c = (getc(source))) == '/'){
                     t.type = DOUBLE_DIV;
                 }
                 else{
+                    ungetc(c, source);
                     t.type = DIV;
                 }
                 return t;
