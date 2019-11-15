@@ -4,10 +4,10 @@
 
 #include "lex_analyzer.h"
 
-void parser_init(Parser* p, FILE* source) {
-    p->source = source;
-    p->first_on_line = false;
-    stack_init(&p->is);
+void scanner_init(Scanner* s, FILE* source) {
+    s->source = source;
+    s->first_on_line = false;
+    stack_init(&s->is);
 }
 
 int count_spaces(FILE* source) {
@@ -83,33 +83,33 @@ void handle_word(FILE* source ,Token *token){
 // 0 - kdyz jen zkonzumuje mezery a nechce vratit token
 // 1 - kdyz chce vratit token
 // 2 - kdyz najde chybu
-int handle_indent(Parser* p, Token* t){
-    int indent = count_spaces(p->source);
+int handle_indent(Scanner* s, Token* t){
+    int indent = count_spaces(s->source);
 
     //znak po mezerach
-    char c = (char)getc(p->source);
-    ungetc(c, p->source);
+    char c = (char)getc(s->source);
+    ungetc(c, s->source);
     if (c == '#') {
         // nastal jednoradkovy komentar, nedelat indent
         return 0;
     }
 
     // je stejny indent
-    if (indent == stack_top(&p->is)) {
+    if (indent == stack_top(&s->is)) {
         return 0;
-    } else if (indent > stack_top(&p->is)) {
+    } else if (indent > stack_top(&s->is)) {
         // je vetsi indent nez predtim
-        stack_push(&p->is, indent);
+        stack_push(&s->is, indent);
         t->type = INDENT;
         return 1;
     } else {
         // je mensi hodnota nez predtim
-        stack_pop(&p->is);
-        if (stack_top(&p->is) < indent) {
+        stack_pop(&s->is);
+        if (stack_top(&s->is) < indent) {
             return 2;
         }
         t->type = DEDENT;
-        p->first_on_line = false;
+        s->first_on_line = false;
         return 1;
     }
 }
@@ -274,25 +274,26 @@ void handle_comparison(FILE* source, Token* t, char c) {
     t->type = ERROR;
 }
 
-Token get_next_token(Parser* p){
+Token get_next_token(Scanner* s){
     Token t;
     t.type = ERROR;
     t.keywordValue = NON_KEYWORD;
-    FILE* source = p->source;
+    t.stringValue = NULL;
+    FILE* source = s->source;
     char c;
     // cteni souboru znak po znaku
-    do {
+    while (true) {
         c = (char)getc(source);
         switch (c) {
             case '\n':;
-                if (!p->first_on_line) {
+                if (!s->first_on_line) {
                     t.type = END_OF_LINE;
-                    p->first_on_line = true;
+                    s->first_on_line = true;
                     return t;
                 } else {
                     ungetc(c, source);
-                    p->first_on_line = false;
-                    int value = handle_indent(p, &t);
+                    s->first_on_line = false;
+                    int value = handle_indent(s, &t);
                     if (value == 0) {
                         continue;
                     } else if (value == 1) {
@@ -304,10 +305,10 @@ Token get_next_token(Parser* p){
                 }
             // nebude fungovat poradne dokud nebudem rozpoznavat vsechno
             case ' ':
-                if (p->first_on_line) {
+                if (s->first_on_line) {
                     ungetc(c, source);
-                    p->first_on_line = false;
-                    int value = handle_indent(p, &t);
+                    s->first_on_line = false;
+                    int value = handle_indent(s, &t);
                     if (value == 0) {
                         continue;
                     } else if (value == 1) {
@@ -316,6 +317,8 @@ Token get_next_token(Parser* p){
                         t.type = ERROR;
                         return t;
                     }
+                } else {
+                    continue;
                 }
                 break;
             case ':':
@@ -360,23 +363,23 @@ Token get_next_token(Parser* p){
                 return t;
             case '#':
                 handle_singleline_comments(source);
-                p->first_on_line = false;
+                s->first_on_line = false;
                 break;
             case '"':
                 ungetc(c, source);
                 handle_multline_string(source, &t);
                 return t;
             case EOF:
-                handle_eof(source, &p->is, &t);
+                handle_eof(source, &s->is, &t);
                 return t;
             default:
                 //Všechny znaky kterými může začínát indentifier
                 if(is_letter(c) || c == '_'){
                     ungetc(c, source);
-                    if (p->first_on_line) {
-                        int value = handle_indent(p, &t);
+                    if (s->first_on_line) {
+                        int value = handle_indent(s, &t);
                         if (value == 1) {
-                            p->first_on_line = true;
+                            s->first_on_line = true;
                             return t;
                         } else if (value != 0) {
                             t.type = ERROR;
@@ -384,7 +387,7 @@ Token get_next_token(Parser* p){
                         }
                     }
                     handle_word(source, &t);
-                    p->first_on_line = false;
+                    s->first_on_line = false;
                     return t;
                 } else if (is_num_char(c)) {
                     ungetc(c, source);
@@ -393,7 +396,7 @@ Token get_next_token(Parser* p){
                 }
                 break;
         }
-    } while (t.type == END_OF_FILE);
+    };// while (t.type == END_OF_FILE);
 
     return t;
 }
