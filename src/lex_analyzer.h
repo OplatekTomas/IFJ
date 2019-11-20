@@ -14,11 +14,14 @@
 
 typedef struct{
     IndentStack is;
+    TokenStack ts;
     bool first_on_line;
     FILE* source;
 } Scanner;
 
 void scanner_init(Scanner* s, FILE* source);
+
+void scanner_unget(Scanner* s, Token t);
 
 int count_spaces(FILE* source);
 

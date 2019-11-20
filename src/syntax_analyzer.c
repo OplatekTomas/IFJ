@@ -63,14 +63,23 @@ bool check_while(ASTNode* tree, Scanner* s) {
 
 bool check_definition(ASTNode* tree, Scanner* s) {
     //TODO: dodelat
+    Token t = get_next_token(s);
+    if (t.type != ID) {
+
+    }
+
     return false;
 }
+
+
+// TODO: definice funkce nemuze byt v ifu / whilu
 
 /// Vraci   0 - kdyz nastala lexikalni chyba
 ///         1 - kdyz nastala syntakticka chyba
 ///         2 - kdyz nenastala chyba
 ///         3 - kdyz nastal konec souboru
-bool check_block(ASTNode* tree, Scanner* s) {
+///         4 - kdyz narazi na 'DEDENT'
+int check_block(ASTNode* tree, Scanner* s) {
     Token t = get_next_token(s);
 
     printf("kontrola bloku\n");
@@ -93,8 +102,6 @@ bool check_block(ASTNode* tree, Scanner* s) {
                     return check_if(tree, s);
                 case WHILE:
                     return check_while(tree, s);
-                case DEF:
-                    return check_definition(tree, s);
                 default:
                     return 1;
             }
@@ -103,8 +110,23 @@ bool check_block(ASTNode* tree, Scanner* s) {
             return 1;
         case END_OF_FILE:
             return 3;
+        case DEDENT:
+            return 4;
         default:
             return 1;
+    }
+}
+
+int check_root_block(ASTNode* tree, Scanner *s) {
+    Token t = get_next_token(s);
+    switch (t.type) {
+        case KEYWORD:
+            if (t.keywordValue  == DEF) {
+                check_definition(tree, s);
+            }
+        default:
+            scanner_unget(s, t);
+            check_block(tree, s);
     }
 }
 
@@ -116,7 +138,7 @@ ASTNode* get_derivation_tree(FILE *source) {
     ASTNode* root = (ASTNode*)malloc(sizeof(ASTNode));
 
     while (true) {
-        int result = check_block(root ,&s);
+        int result = check_root_block(root ,&s);
         switch (result) {
             case 0:
                 fprintf(stderr, "nastala lexikalni chyba\n");
