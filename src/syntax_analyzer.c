@@ -81,8 +81,31 @@ bool check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
     }
 }
 
+
+bool check_cond(ASTNode* tree, Scanner* s){
+    if(!check_expression(tree, s)){
+        return false;
+    }
+    Token t = get_next_token(s);
+    if(t.type != GREATER && t.type != LESSER && t.type != GREATER_OR_EQ && t.type != LESSER_OR_EQ && t.type != EQ && t.type != NON_EQ ){
+        return false;
+    }
+    if(!check_expression(tree, s)){
+        return false;
+    }
+    return true;
+}
+
 bool check_if(ASTNode* tree, Scanner* s) {
     //TODO: dodelat
+    if(!check_cond(tree, s)){
+        return false;
+    }
+    Token t = get_next_token(s);
+    if(t.type != COLON){
+        return false;
+    }
+
     return true;
 }
 
