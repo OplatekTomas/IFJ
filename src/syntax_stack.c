@@ -36,14 +36,26 @@ SSValue syntax_stack_top(SyntaxStack* ss, Token* t) {
     return ss->data[ss->index - 1];
 }
 
-SSValue syntax_stack_nearest_term(SyntaxStack* ss, Token* t) {
+SSValue syntax_stack_nearest_term(SyntaxStack* ss, Token* t, unsigned* loc) {
     for (unsigned i = ss->index - 1; i >= 0; i--) {
         if (ss->data[i] != SYNTAX_EXPR) {
             if (t != NULL) {
                 *t = ss->tokens[i];
             }
+            if (loc != NULL) {
+                *loc = i;
+            }
             return ss->data[i];
         }
     }
+}
+
+void syntax_stack_shift(SyntaxStack* ss, unsigned index) {
+    for (unsigned i = SYNTAX_STACK_MAX_SIZE - 1; i > index; i--) {
+        ss->tokens[i] = ss->tokens[i - 1];
+        ss->data[i] = ss->data[i - 1];
+    }
+    ss->data[index + 1] = SYNTAX_LESSER;
+    ss->index++;
 }
 

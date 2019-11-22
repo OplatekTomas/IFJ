@@ -55,8 +55,29 @@ SSValue parse_table[9][9] = {
 // E => (E)
 // E => ID
 
+// vraci true kdyz token je cislo, ID, string, nebo podobne
+bool is_token_i(Token t) {
+    return t.type == ID || t.type == INT || t.type == FLOAT || t.type == STRING;
+}
+
 int check_rule(SyntaxStack* ss) {
-    if (ss->data[ss->index - 1] == SYNTAX_TERM && ss->data[ss->index - 2] == SYNTAX_LESSER) {
+
+    if (ss->data[ss->index - 1] == SYNTAX_TERM && is_token_i(ss->tokens[ss->index - 1]) && ss->data[ss->index - 2] == SYNTAX_LESSER) {
+        printf("ID => E\n");
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        Token t;
+        syntax_stack_push(ss, SYNTAX_EXPR, t);
+        return 0;
+    } else if (
+            ss->data[ss->index - 1] == SYNTAX_EXPR &&
+            ss->data[ss->index - 4] == SYNTAX_LESSER &&
+            ss->data[ss->index - 3] == SYNTAX_EXPR &&
+            ss->data[ss->index - 2] == SYNTAX_TERM && ss->tokens[ss->index - 2].type == ADD
+            ) {
+        printf("E => E + E\n");
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         Token t;
@@ -150,7 +171,8 @@ bool check_expression(ASTNode* tree, Scanner* s) {
     // TODO: dodelat
     do {
         Token a;
-        SSValue sv = syntax_stack_nearest_term(&ss, &a);
+        unsigned loc;
+        SSValue sv = syntax_stack_nearest_term(&ss, &a, &loc);
 
         int A = convert_token_to_table_index(a);
         if (sv == SYNTAX_END) {
@@ -162,20 +184,17 @@ bool check_expression(ASTNode* tree, Scanner* s) {
 
         switch (parse_table[A][B]) {
             case SYNTAX_GREATER:
-                printf("syntax_greater\n");
                 if (check_rule(&ss)) {
                     return 1;
                 }
                 break;
             case SYNTAX_EQUAL:
-                printf("syntax_equal\n");
                 syntax_stack_push(&ss, SYNTAX_TERM, t);
                 t = get_next_token(s);
                 break;
-            case SYNTAX_LESSER:
-                printf("syntax_lesser\n");
+            case SYNTAX_LESSER:;
                 Token throwaway;
-                syntax_stack_push(&ss, SYNTAX_LESSER, throwaway);
+                syntax_stack_shift(&ss, loc);
                 syntax_stack_push(&ss, SYNTAX_TERM, t);
                 t = get_next_token(s);
                 break;
@@ -183,7 +202,7 @@ bool check_expression(ASTNode* tree, Scanner* s) {
             default:
                 return 1;
         }
-    } while (!(t.type == END_OF_LINE || t.type == END_OF_FILE  || t.type == COLON) || syntax_stack_nearest_term(&ss, NULL) != SYNTAX_END);
+    } while (!(t.type == END_OF_LINE || t.type == END_OF_FILE  || t.type == COLON) || syntax_stack_nearest_term(&ss, NULL, NULL) != SYNTAX_END);
     return 0;
 }
 

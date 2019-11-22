@@ -28,10 +28,11 @@ typedef struct {
 void syntax_stack_push(SyntaxStack* ss, SSValue value, Token t);
 void syntax_stack_init(SyntaxStack* ss);
 void syntax_stack_pop(SyntaxStack* ss);
+void syntax_stack_shift(SyntaxStack* ss, unsigned index);
 bool syntax_stack_full(SyntaxStack* ss);
 bool syntax_stack_empty(SyntaxStack* ss);
 SSValue syntax_stack_top(SyntaxStack* ss, Token* t);
-SSValue syntax_stack_nearest_term(SyntaxStack* ss, Token* t);
+SSValue syntax_stack_nearest_term(SyntaxStack* ss, Token* t, unsigned* loc);
 
 
 #endif //IFJ_SYNTAX_STACK_H
