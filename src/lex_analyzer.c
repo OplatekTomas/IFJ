@@ -8,6 +8,7 @@ void scanner_init(Scanner* s, FILE* source) {
     s->source = source;
     s->first_on_line = false;
     stack_init(&s->is);
+    token_stack_init(&s->ts);
 }
 
 int count_spaces(FILE* source) {
@@ -274,7 +275,7 @@ void handle_comparison(FILE* source, Token* t, char c) {
     t->type = ERROR;
 }
 
-Token get_next_token(Scanner* s){
+Token get_new_token(Scanner* s) {
     Token t;
     t.type = ERROR;
     t.keywordValue = NON_KEYWORD;
@@ -303,7 +304,7 @@ Token get_next_token(Scanner* s){
                         return t;
                     }
                 }
-            // nebude fungovat poradne dokud nebudem rozpoznavat vsechno
+                // nebude fungovat poradne dokud nebudem rozpoznavat vsechno
             case ' ':
                 if (s->first_on_line) {
                     ungetc(c, source);
@@ -396,7 +397,20 @@ Token get_next_token(Scanner* s){
                 }
                 break;
         }
-    };// while (t.type == END_OF_FILE);
-
-    return t;
+    }
 }
+
+Token get_next_token(Scanner* s){
+    if (token_stack_empty(&s->ts)) {
+        return get_new_token(s);
+    } else {
+        Token t = token_stack_top(&s->ts);
+        token_stack_pop(&s->ts);
+        return t;
+    }
+}
+
+void scanner_unget(Scanner* s, Token t) {
+    token_stack_push(&s->ts, t);
+}
+

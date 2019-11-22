@@ -15,12 +15,14 @@ int main (int argc, char *argv[]) {
         if (tree == NULL) {
             fprintf(stderr, "chyba pri syntakticke analyze\n");
         }
+        free_tree(tree);
         fclose(f);
     }else{
         ASTNode* tree = get_derivation_tree(stdin);
         if (tree == NULL) {
             fprintf(stderr, "chyba pri syntakticke analyze\n");
         }
+        free_tree(tree);
     }
 
     return 0;
