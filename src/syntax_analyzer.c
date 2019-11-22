@@ -1,4 +1,5 @@
 #include "syntax_analyzer.h"
+#include "syntax_stack.h"
 
 char token_type[][100] = {
         "ID",
@@ -31,9 +32,73 @@ char token_type[][100] = {
         "DOUBLE_DIV"
 };
 
+
+SSValue parse_table[9][9] = {
+    //            +    -    *    /    //   (    )   ID   end
+    /* + */     {'>', ' ', '<', '<', '<', '<', '>', '<', '>'},
+    /* - */     {' ', '>', '<', '<', '<', '<', '>', '<', '>'},
+    /* * */     {'>', '>', '>', ' ', ' ', '<', '>', '<', '>'},
+    /* / */     {'>', '>', ' ', '>', ' ', '<', '>', '<', '>'},
+    /* // */    {'>', '>', ' ', ' ', '>', '<', '>', '<', '>'},
+    /* ( */     {'<', '<', '<', '<', '<', '<', '=', '<', ' '},
+    /* ) */     {'>', '>', '>', '>', '>', ' ', '>', ' ', '>'},
+    /* ID */    {'>', '>', '>', '>', '>', ' ', '>', ' ', '>'},
+    /* end */   {'<', '<', '<', '<', '<', '<', ' ', '<', ' '},
+};
+
+//Pravidla pro PSA
+// E => E+E
+// E => E-E
+// E => E*E
+// E => E/E
+// E => E//E
+// E => (E)
+// E => ID
+
+int check_rule(SyntaxStack* ss) {
+    if (ss->data[ss->index - 1] == SYNTAX_TERM && ss->data[ss->index - 2] == SYNTAX_LESSER) {
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        Token t;
+        syntax_stack_push(ss, SYNTAX_EXPR, t);
+        return 0;
+    }
+    return 1;
+}
+
 void free_tree(ASTNode* tree) {
     // TODO: dodelat
     free(tree);
+}
+
+int convert_token_to_table_index(Token t) {
+    switch (t.type) {
+        case ADD:
+            return 0;
+        case SUB:
+            return 1;
+        case MUL:
+            return 2;
+        case DIV:
+            return 3;
+        case DOUBLE_DIV:
+            return 4;
+        case OPEN_PARENTHES:
+            return 5;
+        case CLOSE_PARENTHES:
+            return 6;
+        case ID:
+        case INT:
+        case FLOAT:
+        case STRING:
+            return 7;
+        case END_OF_LINE:
+        case END_OF_FILE:
+        case COLON:
+            return 8;
+        default:
+            return -1;
+    }
 }
 
 void node_init(ASTNode* node) {
@@ -54,21 +119,72 @@ void node_insert(ASTNode* node, ASTNode new) {
 
 bool check_function_call(ASTNode* tree, Scanner* s) {
     //TODO: dodelat
+    printf("kontrola volani funkce\n");
     return true;
 }
 
 bool check_expression(ASTNode* tree, Scanner* s) {
      printf("kontrola vyrazu\n");
 
-    // TODO: dodelat
-    while(true) {
-         Token t = get_next_token(s);
-         if (t.type == ID || t.type == FLOAT || t.type == INT || t.type == STRING || t.type == OPEN_PARENTHES || t.type == CLOSE_PARENTHES || t.type == COMMA) {
-
+    // zkontrolovat jestli neni volana funkce
+    Token t = get_next_token(s);
+    if (t.type == ID) {
+        Token par = get_next_token(s);
+        if (t.type == OPEN_PARENTHES) {
+            scanner_unget(s, par);
+            scanner_unget(s, t);
+            return check_function_call(tree, s);
         } else {
-            return false;
+            scanner_unget(s, par);
+            scanner_unget(s, t);
         }
-     }
+    } else {
+        scanner_unget(s, t);
+    }
+
+    SyntaxStack ss;
+    syntax_stack_init(&ss);
+
+    t = get_next_token(s);
+
+    // TODO: dodelat
+    do {
+        Token a;
+        SSValue sv = syntax_stack_nearest_term(&ss, &a);
+
+        int A = convert_token_to_table_index(a);
+        if (sv == SYNTAX_END) {
+            A = 8;
+        }
+
+        //t = get_next_token(s);
+        int B = convert_token_to_table_index(t);
+
+        switch (parse_table[A][B]) {
+            case SYNTAX_GREATER:
+                printf("syntax_greater\n");
+                if (check_rule(&ss)) {
+                    return 1;
+                }
+                break;
+            case SYNTAX_EQUAL:
+                printf("syntax_equal\n");
+                syntax_stack_push(&ss, SYNTAX_TERM, t);
+                t = get_next_token(s);
+                break;
+            case SYNTAX_LESSER:
+                printf("syntax_lesser\n");
+                Token throwaway;
+                syntax_stack_push(&ss, SYNTAX_LESSER, throwaway);
+                syntax_stack_push(&ss, SYNTAX_TERM, t);
+                t = get_next_token(s);
+                break;
+            case SYNTAX_EMPTY:
+            default:
+                return 1;
+        }
+    } while (!(t.type == END_OF_LINE || t.type == END_OF_FILE  || t.type == COLON) || syntax_stack_nearest_term(&ss, NULL) != SYNTAX_END);
+    return 0;
 }
 
 bool check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
@@ -117,11 +233,13 @@ int check_block(ASTNode* tree, Scanner* s) {
     switch (t.type) {
         case ID:;
             char* id = t.stringValue;
-            t = get_next_token(s);
-            switch (t.type) {
+            Token after = get_next_token(s);
+            switch (after.type) {
                 case ASSIGN:
                     return check_assignment(tree, s, id);
                 case OPEN_PARENTHES:
+                    scanner_unget(s, after);
+                    scanner_unget(s, t);
                     return check_function_call(tree, s);
                 default:
                     return 2;
