@@ -218,7 +218,7 @@ bool check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
 
 
 bool check_cond(ASTNode* tree, Scanner* s){
-    if(!check_expression(tree, s)){
+    /*if(!check_expression(tree, s)){
         return false;
     }
     Token t = get_next_token(s);
@@ -228,20 +228,62 @@ bool check_cond(ASTNode* tree, Scanner* s){
     if(!check_expression(tree, s)){
         return false;
     }
+    return true;*/
+    //TODO: Fix..
+    Token t = get_next_token(s);
+    t = get_next_token(s);
+    t = get_next_token(s);
     return true;
+
 }
 
-bool check_if(ASTNode* tree, Scanner* s) {
+int check_if_helper(ASTNode* tree, Scanner* s){
+    Token t = get_next_token(s);
+    if(t.type != COLON){ // if x < y:
+        return 2;
+    }
+    t = get_next_token(s);
+    if(t.type != END_OF_LINE){ //if x < y: EOL
+        return 2;
+    }
+    t = get_next_token(s);
+    if(t.type != INDENT){ //if x < y: EOL a nějaké hovado by to nechalo prázdné
+        return 1;
+    }
+    while(true){
+        t = get_next_token(s);
+        if(t.type == DEDENT){
+            break;
+        }
+        scanner_unget(s, t);
+        int result = check_block(tree, s);
+        /*if(result != 0){
+            return result;
+        }*/
+    }
+    return 0;
+}
+
+int check_if(ASTNode* tree, Scanner* s) {
     //TODO: dodelat
-    if(!check_cond(tree, s)){
-        return false;
+    printf("Kontrola ifu\n");
+    if(!check_cond(tree, s)){ //if x < y
+        return 2;
+    }
+    int result = check_if_helper(tree, s);
+    if(result != 0){
+        return result;
     }
     Token t = get_next_token(s);
-    if(t.type != COLON){
-        return false;
+    printf("Kontrola else\n");
+    if(t.type != KEYWORD || t.keywordValue != ELSE){
+        return 2;
     }
-
-    return true;
+    result = check_if_helper(tree, s);
+    if(result != 0){
+        return result;
+    }
+    return 0;
 }
 
 bool check_while(ASTNode* tree, Scanner* s) {
@@ -309,6 +351,9 @@ int check_block(ASTNode* tree, Scanner* s) {
 
 int check_root_block(ASTNode* tree, Scanner *s) {
     Token t = get_next_token(s);
+    if(t.type == END_OF_LINE){ //MOŽNÁ se může stát že ten if to tu celé nějak divně někde rozesere, ale bez něj mi to házelo errory a nelíbilo se mi to.
+        t = get_next_token(s); //FAKT MOŽNÁ, ale hrozí tu ustřelení celé nohy
+    }
     switch (t.type) {
         case KEYWORD:
             if (t.keywordValue  == DEF) {
@@ -328,9 +373,9 @@ ASTNode* get_derivation_tree(FILE *source) {
     ASTNode* root = (ASTNode*)malloc(sizeof(ASTNode));
     node_init(root);
     root->node_type = PROGRAM_ROOT;
-
-    while (true) {
-        int result = check_root_block(root ,&s);
+    int result = 0;
+    while (result != 3) {
+        result = check_root_block(root ,&s);
         switch (result) {
             case 1:
                 fprintf(stderr, "nastala lexikalni chyba\n");
@@ -340,10 +385,9 @@ ASTNode* get_derivation_tree(FILE *source) {
                 fprintf(stderr, "nastala syntakticka chyba\n");
                 free_tree(root);
                 return NULL;
-            case 3:
-                break;
             default:
                 continue;
         }
     }
+    return root;
 }
