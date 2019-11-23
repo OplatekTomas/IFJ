@@ -83,6 +83,75 @@ int check_rule(SyntaxStack* ss) {
         Token t;
         syntax_stack_push(ss, SYNTAX_EXPR, t);
         return 0;
+    } else if (
+            ss->data[ss->index - 1] == SYNTAX_EXPR &&
+            ss->data[ss->index - 4] == SYNTAX_LESSER &&
+            ss->data[ss->index - 3] == SYNTAX_EXPR &&
+            ss->data[ss->index - 2] == SYNTAX_TERM && ss->tokens[ss->index - 2].type == MUL
+            ) {
+        printf("E => E * E\n");
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        Token t;
+        syntax_stack_push(ss, SYNTAX_EXPR, t);
+        return 0;
+    } else if (
+            ss->data[ss->index - 1] == SYNTAX_EXPR &&
+            ss->data[ss->index - 4] == SYNTAX_LESSER &&
+            ss->data[ss->index - 3] == SYNTAX_EXPR &&
+            ss->data[ss->index - 2] == SYNTAX_TERM && ss->tokens[ss->index - 2].type == SUB
+            ) {
+        printf("E => E - E\n");
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        Token t;
+        syntax_stack_push(ss, SYNTAX_EXPR, t);
+        return 0;
+    } else if (
+            ss->data[ss->index - 1] == SYNTAX_EXPR &&
+            ss->data[ss->index - 4] == SYNTAX_LESSER &&
+            ss->data[ss->index - 3] == SYNTAX_EXPR &&
+            ss->data[ss->index - 2] == SYNTAX_TERM && ss->tokens[ss->index - 2].type == DIV
+            ) {
+        printf("E => E / E\n");
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        Token t;
+        syntax_stack_push(ss, SYNTAX_EXPR, t);
+        return 0;
+    } else if (
+            ss->data[ss->index - 1] == SYNTAX_EXPR &&
+            ss->data[ss->index - 4] == SYNTAX_LESSER &&
+            ss->data[ss->index - 3] == SYNTAX_EXPR &&
+            ss->data[ss->index - 2] == SYNTAX_TERM && ss->tokens[ss->index - 2].type == DOUBLE_DIV
+            ) {
+        printf("E => E // E\n");
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        Token t;
+        syntax_stack_push(ss, SYNTAX_EXPR, t);
+        return 0;
+    } else if (
+            ss->data[ss->index - 1] == SYNTAX_TERM && ss->tokens[ss->index - 1].type == CLOSE_PARENTHES &&
+            ss->data[ss->index - 2] == SYNTAX_EXPR &&
+            ss->data[ss->index - 3] == SYNTAX_TERM && ss->tokens[ss->index - 3].type == OPEN_PARENTHES
+            ) {
+        printf("E => (E)\n");
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        Token t;
+        syntax_stack_push(ss, SYNTAX_EXPR, t);
+        return 0;
     }
     return 1;
 }
