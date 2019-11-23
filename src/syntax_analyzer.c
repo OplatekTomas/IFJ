@@ -61,99 +61,88 @@ bool is_token_i(Token t) {
 }
 
 int check_rule(SyntaxStack* ss) {
-
-    if (ss->data[ss->index - 1] == SYNTAX_TERM && is_token_i(ss->tokens[ss->index - 1]) && ss->data[ss->index - 2] == SYNTAX_LESSER) {
+    SSData sd;
+    sd.type = SYNTAX_EXPR;
+    if (ss->data[ss->index - 1].type == SYNTAX_TERM && is_token_i(ss->data[ss->index - 1].t) && ss->data[ss->index - 2].type == SYNTAX_LESSER) {
         printf("ID => E\n");
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
-        Token t;
-        syntax_stack_push(ss, SYNTAX_EXPR, t);
-        return 0;
+        syntax_stack_push(ss, sd);
     } else if (
-            ss->data[ss->index - 1] == SYNTAX_EXPR &&
-            ss->data[ss->index - 4] == SYNTAX_LESSER &&
-            ss->data[ss->index - 3] == SYNTAX_EXPR &&
-            ss->data[ss->index - 2] == SYNTAX_TERM && ss->tokens[ss->index - 2].type == ADD
+            ss->data[ss->index - 1].type == SYNTAX_EXPR &&
+            ss->data[ss->index - 4].type == SYNTAX_LESSER &&
+            ss->data[ss->index - 3].type == SYNTAX_EXPR &&
+            ss->data[ss->index - 2].type == SYNTAX_TERM && ss->data[ss->index - 2].t.type == ADD
             ) {
         printf("E => E + E\n");
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
-        Token t;
-        syntax_stack_push(ss, SYNTAX_EXPR, t);
-        return 0;
+        syntax_stack_push(ss, sd);
     } else if (
-            ss->data[ss->index - 1] == SYNTAX_EXPR &&
-            ss->data[ss->index - 4] == SYNTAX_LESSER &&
-            ss->data[ss->index - 3] == SYNTAX_EXPR &&
-            ss->data[ss->index - 2] == SYNTAX_TERM && ss->tokens[ss->index - 2].type == MUL
+            ss->data[ss->index - 1].type == SYNTAX_EXPR &&
+            ss->data[ss->index - 4].type == SYNTAX_LESSER &&
+            ss->data[ss->index - 3].type == SYNTAX_EXPR &&
+            ss->data[ss->index - 2].type == SYNTAX_TERM && ss->data[ss->index - 2].t.type == MUL
             ) {
         printf("E => E * E\n");
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
-        Token t;
-        syntax_stack_push(ss, SYNTAX_EXPR, t);
-        return 0;
+        syntax_stack_push(ss, sd);
     } else if (
-            ss->data[ss->index - 1] == SYNTAX_EXPR &&
-            ss->data[ss->index - 4] == SYNTAX_LESSER &&
-            ss->data[ss->index - 3] == SYNTAX_EXPR &&
-            ss->data[ss->index - 2] == SYNTAX_TERM && ss->tokens[ss->index - 2].type == SUB
+            ss->data[ss->index - 1].type == SYNTAX_EXPR &&
+            ss->data[ss->index - 4].type == SYNTAX_LESSER &&
+            ss->data[ss->index - 3].type == SYNTAX_EXPR &&
+            ss->data[ss->index - 2].type == SYNTAX_TERM && ss->data[ss->index - 2].t.type == SUB
             ) {
         printf("E => E - E\n");
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
-        Token t;
-        syntax_stack_push(ss, SYNTAX_EXPR, t);
-        return 0;
+        syntax_stack_push(ss, sd);
     } else if (
-            ss->data[ss->index - 1] == SYNTAX_EXPR &&
-            ss->data[ss->index - 4] == SYNTAX_LESSER &&
-            ss->data[ss->index - 3] == SYNTAX_EXPR &&
-            ss->data[ss->index - 2] == SYNTAX_TERM && ss->tokens[ss->index - 2].type == DIV
+            ss->data[ss->index - 1].type == SYNTAX_EXPR &&
+            ss->data[ss->index - 4].type == SYNTAX_LESSER &&
+            ss->data[ss->index - 3].type == SYNTAX_EXPR &&
+            ss->data[ss->index - 2].type == SYNTAX_TERM && ss->data[ss->index - 2].t.type == DIV
             ) {
         printf("E => E / E\n");
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
-        Token t;
-        syntax_stack_push(ss, SYNTAX_EXPR, t);
-        return 0;
+        syntax_stack_push(ss, sd);
     } else if (
-            ss->data[ss->index - 1] == SYNTAX_EXPR &&
-            ss->data[ss->index - 4] == SYNTAX_LESSER &&
-            ss->data[ss->index - 3] == SYNTAX_EXPR &&
-            ss->data[ss->index - 2] == SYNTAX_TERM && ss->tokens[ss->index - 2].type == DOUBLE_DIV
+            ss->data[ss->index - 1].type == SYNTAX_EXPR &&
+            ss->data[ss->index - 4].type == SYNTAX_LESSER &&
+            ss->data[ss->index - 3].type == SYNTAX_EXPR &&
+            ss->data[ss->index - 2].type == SYNTAX_TERM && ss->data[ss->index - 2].t.type == DOUBLE_DIV
             ) {
         printf("E => E // E\n");
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
-        Token t;
-        syntax_stack_push(ss, SYNTAX_EXPR, t);
-        return 0;
+        syntax_stack_push(ss, sd);
     } else if (
-            ss->data[ss->index - 1] == SYNTAX_TERM && ss->tokens[ss->index - 1].type == CLOSE_PARENTHES &&
-            ss->data[ss->index - 2] == SYNTAX_EXPR &&
-            ss->data[ss->index - 3] == SYNTAX_TERM && ss->tokens[ss->index - 3].type == OPEN_PARENTHES
+            ss->data[ss->index - 1].type == SYNTAX_TERM && ss->data[ss->index - 1].t.type == CLOSE_PARENTHES &&
+            ss->data[ss->index - 2].type == SYNTAX_EXPR &&
+            ss->data[ss->index - 3].type == SYNTAX_TERM && ss->data[ss->index - 3].t.type == OPEN_PARENTHES
             ) {
         printf("E => (E)\n");
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
-        Token t;
-        syntax_stack_push(ss, SYNTAX_EXPR, t);
-        return 0;
+        syntax_stack_push(ss, sd);
+    } else {
+        return 1;
     }
-    return 1;
+    return 0;
 }
 
 void free_tree(ASTNode* tree) {
@@ -161,8 +150,11 @@ void free_tree(ASTNode* tree) {
     free(tree);
 }
 
-int convert_token_to_table_index(Token t) {
-    switch (t.type) {
+int convert_token_to_table_index(SSData sd) {
+    if (sd.type == SYNTAX_END) {
+        return 8;
+    }
+    switch (sd.t.type) {
         case ADD:
             return 0;
         case SUB:
@@ -239,17 +231,16 @@ bool check_expression(ASTNode* tree, Scanner* s) {
 
     // TODO: dodelat
     do {
-        Token a;
         unsigned loc;
-        SSValue sv = syntax_stack_nearest_term(&ss, &a, &loc);
+        SSData sd = syntax_stack_nearest_term(&ss, &loc);
 
-        int A = convert_token_to_table_index(a);
-        if (sv == SYNTAX_END) {
-            A = 8;
-        }
+        int A = convert_token_to_table_index(sd);
 
-        //t = get_next_token(s);
-        int B = convert_token_to_table_index(t);
+        SSData term;
+        term.type = SYNTAX_TERM;
+        term.t = t;
+
+        int B = convert_token_to_table_index(term);
 
         switch (parse_table[A][B]) {
             case SYNTAX_GREATER:
@@ -258,20 +249,19 @@ bool check_expression(ASTNode* tree, Scanner* s) {
                 }
                 break;
             case SYNTAX_EQUAL:
-                syntax_stack_push(&ss, SYNTAX_TERM, t);
+                syntax_stack_push(&ss, term);
                 t = get_next_token(s);
                 break;
-            case SYNTAX_LESSER:;
-                Token throwaway;
+            case SYNTAX_LESSER:
                 syntax_stack_shift(&ss, loc);
-                syntax_stack_push(&ss, SYNTAX_TERM, t);
+                syntax_stack_push(&ss, term);
                 t = get_next_token(s);
                 break;
             case SYNTAX_EMPTY:
             default:
                 return 1;
         }
-    } while (!(t.type == END_OF_LINE || t.type == END_OF_FILE  || t.type == COLON) || syntax_stack_nearest_term(&ss, NULL, NULL) != SYNTAX_END);
+    } while (!(t.type == END_OF_LINE || t.type == END_OF_FILE  || t.type == COLON) || syntax_stack_nearest_term(&ss, NULL).type != SYNTAX_END);
     return 0;
 }
 
