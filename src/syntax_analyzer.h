@@ -11,6 +11,7 @@ typedef enum {
     CONDITION,
     BLOCK,
     PROGRAM_ROOT,
+    IDENTIFICATOR,
     IF_ELSE,
     WHILE_LOOP
 } NonTerm;
@@ -19,12 +20,13 @@ struct node {
     NonTerm node_type;
     unsigned subnode_len;
     unsigned capacity;
-    struct node* nodes;
+    void* symbol;
+    struct node** nodes;
 };
 
 typedef struct node ASTNode;
 
-ASTNode* node_new();
+ASTNode* node_init(ASTNode* node);
 
 typedef union {
     Token t;
@@ -38,5 +40,6 @@ typedef enum {
 
 ASTNode* get_derivation_tree(FILE *source);
 void free_tree(ASTNode* tree);
+int check_block(ASTNode* tree, Scanner* s);
 
 #endif //IFJ_SYNTAX_ANALYZER_H

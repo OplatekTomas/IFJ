@@ -146,7 +146,12 @@ int check_rule(SyntaxStack* ss) {
 }
 
 void free_tree(ASTNode* tree) {
+
     // TODO: dodelat
+    for (unsigned i = 0; i < tree->subnode_len; i++) {
+        free_tree(tree->nodes[i]);
+    }
+    free(tree->nodes);
     free(tree);
 }
 
@@ -183,14 +188,19 @@ int convert_token_to_table_index(SSData sd) {
     }
 }
 
-void node_init(ASTNode* node) {
-    //node->node_type = 0;
+ASTNode* node_init(ASTNode* node) {
+    node->node_type = PROGRAM_ROOT;
     node->subnode_len = 0;
     node->capacity = 10;
-    node->nodes = malloc(10 * sizeof(ASTNode));
+    node->nodes = malloc(10 * sizeof(ASTNode*));
+    if (node->nodes == NULL) {
+        return NULL;
+    } else {
+        return node;
+    }
 }
 
-void node_insert(ASTNode* node, ASTNode new) {
+void node_insert(ASTNode* node, ASTNode* new) {
     if ((node->subnode_len + 1) > node->capacity) {
         node->nodes = realloc(node->nodes, node->capacity * 10);
         node->capacity *= 10;
@@ -256,6 +266,9 @@ bool check_expression(ASTNode* tree, Scanner* s) {
                 syntax_stack_shift(&ss, loc);
                 syntax_stack_push(&ss, term);
                 t = get_next_token(s);
+                if (t.type == END_OF_LINE || t.type == END_OF_FILE) {
+                    scanner_unget(s, t);
+                }
                 break;
             case SYNTAX_EMPTY:
             default:
@@ -268,11 +281,31 @@ bool check_expression(ASTNode* tree, Scanner* s) {
 bool check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
     //TODO: dodelat
     printf("kontrola prirazeni\n");
-    if (check_expression(tree, s)) {
-        return true;
-    } else {
-        return false;
+    ASTNode* assign_node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (node_init(assign_node) == NULL) {
+        //TODO: spravna kontrola chyb
+        return 1;
     }
+    assign_node->node_type = ASSIGNMENT;
+
+    ASTNode* id_node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (node_init(id_node) == NULL) {
+        //TODO: spravna kontrola chyb
+        return 1;
+    }
+    id_node->node_type = IDENTIFICATOR;
+    //TODO: pridat pointer na identifikator do tabulky symbolu
+    node_insert(assign_node, id_node);
+
+    if (check_expression(assign_node, s) == 0) {
+        Token t = get_next_token(s);
+        if (t.type == END_OF_LINE) {
+            node_insert(tree, assign_node);
+            return false;
+        }
+    }
+    free_tree(assign_node);
+    return true;
 }
 
 
@@ -296,7 +329,7 @@ bool check_cond(ASTNode* tree, Scanner* s){
 
 }
 
-int check_if_helper(ASTNode* tree, Scanner* s){
+int check_keyword_helper(ASTNode* tree, Scanner* s){
     Token t = get_next_token(s);
     if(t.type != COLON){ // if x < y:
         return 2;
@@ -323,13 +356,24 @@ int check_if_helper(ASTNode* tree, Scanner* s){
     return 0;
 }
 
+int check_args(ASTNode* tree, Scanner* s){
+    Token token = get_next_token(s);
+    if(token.type != OPEN_PARENTHES)
+        return 1;
+
+    do{
+        token = get_next_token(s);
+    } while(token.type != CLOSE_PARENTHES);
+    return 0;
+}
+
 int check_if(ASTNode* tree, Scanner* s) {
     //TODO: dodelat
     printf("Kontrola ifu\n");
     if(!check_cond(tree, s)){ //if x < y
         return 2;
     }
-    int result = check_if_helper(tree, s);
+    int result = check_keyword_helper(tree, s);
     if(result != 0){
         return result;
     }
@@ -338,26 +382,37 @@ int check_if(ASTNode* tree, Scanner* s) {
     if(t.type != KEYWORD || t.keywordValue != ELSE){
         return 2;
     }
-    result = check_if_helper(tree, s);
+    result = check_keyword_helper(tree, s);
     if(result != 0){
         return result;
     }
     return 0;
 }
 
-bool check_while(ASTNode* tree, Scanner* s) {
-    //TODO: dodelat
-    return true;
+int check_while(ASTNode* tree, Scanner* s) {
+    //TODO: dodelat strom
+    printf("kontrola whilu\n");
+    if(!check_cond(tree, s))
+        return 2;
+    int result = check_keyword_helper(tree, s);
+    if(result != 0){
+        return result;
+    }
+    return 0;
 }
 
 bool check_definition(ASTNode* tree, Scanner* s) {
-    //TODO: dodelat
-    Token t = get_next_token(s);
-    if (t.type != ID) {
+    //TODO: dodelat strom
+    printf("kontrola defu\n");
+    Token token = get_next_token(s);
+    int result = check_args(tree, s);
+    if(result != 0)
+        return result;
 
-    }
-
-    return true;
+    result = check_keyword_helper(tree, s);
+    if(result != 0)
+        return result;
+    return 0;
 }
 
 
@@ -366,8 +421,6 @@ bool check_definition(ASTNode* tree, Scanner* s) {
 /// Vraci   0 - kdyz nenastala chyba
 ///         1 - kdyz nastala lexikalni chyba
 ///         2 - kdyz nastala syntakticka chyba
-///         3 - kdyz nastal konec souboru
-///         4 - kdyz narazi na 'DEDENT'
 int check_block(ASTNode* tree, Scanner* s) {
     Token t = get_next_token(s);
 
@@ -393,31 +446,39 @@ int check_block(ASTNode* tree, Scanner* s) {
                     return check_if(tree, s);
                 case WHILE:
                     return check_while(tree, s);
+                case PASS:
+                    break;
+                case DEF:
+                    return check_definition(tree,s);
                 default:
                     return 2;
             }
         case STRING:
             //TODO: Poresit multiline stringy
             return 2;
-        case END_OF_FILE:
-            return 3;
-        case DEDENT:
-            return 4;
+        case END_OF_LINE:
+            return 0;
         default:
             return 2;
     }
 }
 
+/// Vraci   0 - kdyz nenastala chyba
+///         1 - kdyz nastala lexikalni chyba
+///         2 - kdyz nastala syntakticka chyba
+///         3 - kdyz nastal konec souboru
 int check_root_block(ASTNode* tree, Scanner *s) {
     Token t = get_next_token(s);
-    if(t.type == END_OF_LINE){ //MOŽNÁ se může stát že ten if to tu celé nějak divně někde rozesere, ale bez něj mi to házelo errory a nelíbilo se mi to.
-        t = get_next_token(s); //FAKT MOŽNÁ, ale hrozí tu ustřelení celé nohy
-    }
     switch (t.type) {
         case KEYWORD:
             if (t.keywordValue  == DEF) {
                 return check_definition(tree, s);
+            } else {
+                scanner_unget(s, t);
+                return check_block(tree, s);
             }
+        case END_OF_FILE:
+            return 3;
         default:
             scanner_unget(s, t);
             return check_block(tree, s);

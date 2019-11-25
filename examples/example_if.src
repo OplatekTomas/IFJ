@@ -1,10 +1,4 @@
 if num < 10:
-    print("true1")
-    print("what2")
-    print("what3")	
-    print("what4")
-    print("what5")
-    print("what6")
+    pica = 20
 else:
-    print("false")
-
+    pica = 420
