@@ -1,5 +1,4 @@
 #include "syntax_analyzer.h"
-#include "syntax_stack.h"
 
 char token_type[][100] = {
         "ID",
@@ -361,10 +360,17 @@ int check_args(ASTNode* tree, Scanner* s){
     if(token.type != OPEN_PARENTHES)
         return 1;
 
-    do{
+    while(true){
         token = get_next_token(s);
-    } while(token.type != CLOSE_PARENTHES);
-    return 0;
+        if(token.type != ID){
+            return 1;
+        }
+        token = get_next_token(s);
+        if(token.type != COLON){
+            break;
+        }
+    }
+    return (token.type == CLOSE_PARENTHES) ? 0 : 1;
 }
 
 int check_if(ASTNode* tree, Scanner* s) {
@@ -403,6 +409,7 @@ int check_while(ASTNode* tree, Scanner* s) {
 
 bool check_definition(ASTNode* tree, Scanner* s) {
     //TODO: dodelat strom
+    //TODO: pouzit tabulku
     printf("kontrola defu\n");
     Token token = get_next_token(s);
     int result = check_args(tree, s);
