@@ -1,3 +1,3 @@
 cislo = 60
-cislo = (cislo + 10) * 2
+cislo = cislo + 10
 print(cislo)

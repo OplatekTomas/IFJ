@@ -256,6 +256,9 @@ bool check_expression(ASTNode* tree, Scanner* s) {
                 syntax_stack_shift(&ss, loc);
                 syntax_stack_push(&ss, term);
                 t = get_next_token(s);
+                if (t.type == END_OF_LINE || t.type == END_OF_FILE) {
+                    scanner_unget(s, t);
+                }
                 break;
             case SYNTAX_EMPTY:
             default:
@@ -268,11 +271,13 @@ bool check_expression(ASTNode* tree, Scanner* s) {
 bool check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
     //TODO: dodelat
     printf("kontrola prirazeni\n");
-    if (check_expression(tree, s)) {
-        return true;
-    } else {
-        return false;
+    if (check_expression(tree, s) == 0) {
+        Token t = get_next_token(s);
+        if (t.type == END_OF_LINE) {
+            return false;
+        }
     }
+    return true;
 }
 
 
@@ -366,8 +371,6 @@ bool check_definition(ASTNode* tree, Scanner* s) {
 /// Vraci   0 - kdyz nenastala chyba
 ///         1 - kdyz nastala lexikalni chyba
 ///         2 - kdyz nastala syntakticka chyba
-///         3 - kdyz nastal konec souboru
-///         4 - kdyz narazi na 'DEDENT'
 int check_block(ASTNode* tree, Scanner* s) {
     Token t = get_next_token(s);
 
@@ -399,25 +402,27 @@ int check_block(ASTNode* tree, Scanner* s) {
         case STRING:
             //TODO: Poresit multiline stringy
             return 2;
-        case END_OF_FILE:
-            return 3;
-        case DEDENT:
-            return 4;
         default:
             return 2;
     }
 }
 
+/// Vraci   0 - kdyz nenastala chyba
+///         1 - kdyz nastala lexikalni chyba
+///         2 - kdyz nastala syntakticka chyba
+///         3 - kdyz nastal konec souboru
 int check_root_block(ASTNode* tree, Scanner *s) {
     Token t = get_next_token(s);
-    if(t.type == END_OF_LINE){ //MOŽNÁ se může stát že ten if to tu celé nějak divně někde rozesere, ale bez něj mi to házelo errory a nelíbilo se mi to.
-        t = get_next_token(s); //FAKT MOŽNÁ, ale hrozí tu ustřelení celé nohy
-    }
     switch (t.type) {
         case KEYWORD:
             if (t.keywordValue  == DEF) {
                 return check_definition(tree, s);
+            } else {
+                scanner_unget(s, t);
+                return check_block(tree, s);
             }
+        case END_OF_FILE:
+            return 3;
         default:
             scanner_unget(s, t);
             return check_block(tree, s);
