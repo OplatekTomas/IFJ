@@ -146,7 +146,12 @@ int check_rule(SyntaxStack* ss) {
 }
 
 void free_tree(ASTNode* tree) {
+
     // TODO: dodelat
+    for (unsigned i = 0; i < tree->subnode_len; i++) {
+        free_tree(tree->nodes[i]);
+    }
+    free(tree->nodes);
     free(tree);
 }
 
@@ -183,14 +188,19 @@ int convert_token_to_table_index(SSData sd) {
     }
 }
 
-void node_init(ASTNode* node) {
-    //node->node_type = 0;
+ASTNode* node_init(ASTNode* node) {
+    node->node_type = PROGRAM_ROOT;
     node->subnode_len = 0;
     node->capacity = 10;
-    node->nodes = malloc(10 * sizeof(ASTNode));
+    node->nodes = malloc(10 * sizeof(ASTNode*));
+    if (node->nodes == NULL) {
+        return NULL;
+    } else {
+        return node;
+    }
 }
 
-void node_insert(ASTNode* node, ASTNode new) {
+void node_insert(ASTNode* node, ASTNode* new) {
     if ((node->subnode_len + 1) > node->capacity) {
         node->nodes = realloc(node->nodes, node->capacity * 10);
         node->capacity *= 10;
@@ -271,12 +281,30 @@ bool check_expression(ASTNode* tree, Scanner* s) {
 bool check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
     //TODO: dodelat
     printf("kontrola prirazeni\n");
-    if (check_expression(tree, s) == 0) {
+    ASTNode* assign_node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (node_init(assign_node) == NULL) {
+        //TODO: spravna kontrola chyb
+        return 1;
+    }
+    assign_node->node_type = ASSIGNMENT;
+
+    ASTNode* id_node = (ASTNode*)malloc(sizeof(ASTNode));
+    if (node_init(id_node) == NULL) {
+        //TODO: spravna kontrola chyb
+        return 1;
+    }
+    id_node->node_type = IDENTIFICATOR;
+    //TODO: pridat pointer na identifikator do tabulky symbolu
+    node_insert(assign_node, id_node);
+
+    if (check_expression(assign_node, s) == 0) {
         Token t = get_next_token(s);
         if (t.type == END_OF_LINE) {
+            node_insert(tree, assign_node);
             return false;
         }
     }
+    free_tree(assign_node);
     return true;
 }
 
@@ -402,6 +430,8 @@ int check_block(ASTNode* tree, Scanner* s) {
         case STRING:
             //TODO: Poresit multiline stringy
             return 2;
+        case END_OF_LINE:
+            return 0;
         default:
             return 2;
     }
