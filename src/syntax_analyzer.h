@@ -40,5 +40,6 @@ typedef enum {
 
 ASTNode* get_derivation_tree(FILE *source);
 void free_tree(ASTNode* tree);
+int check_block(ASTNode* tree, Scanner* s);
 
 #endif //IFJ_SYNTAX_ANALYZER_H

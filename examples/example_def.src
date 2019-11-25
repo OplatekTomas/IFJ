@@ -1,0 +1,2 @@
+def nova_funkce():
+    a = 10
