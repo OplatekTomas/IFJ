@@ -323,6 +323,17 @@ int check_keyword_helper(ASTNode* tree, Scanner* s){
     return 0;
 }
 
+int check_args(ASTNode* tree, Scanner* s){
+    Token token = get_next_token(s);
+    if(token.type != OPEN_PARENTHES)
+        return 1;
+
+    do{
+        token = get_next_token(s);
+    } while(token.type != CLOSE_PARENTHES);
+    return 0;
+}
+
 int check_if(ASTNode* tree, Scanner* s) {
     //TODO: dodelat
     printf("Kontrola ifu\n");
@@ -347,7 +358,7 @@ int check_if(ASTNode* tree, Scanner* s) {
 
 int check_while(ASTNode* tree, Scanner* s) {
     //TODO: dodelat strom
-    int next_token;
+    printf("kontrola whilu\n");
     if(!check_cond(tree, s))
         return 2;
     int result = check_keyword_helper(tree, s);
@@ -358,13 +369,17 @@ int check_while(ASTNode* tree, Scanner* s) {
 }
 
 bool check_definition(ASTNode* tree, Scanner* s) {
-    //TODO: dodelat
-    Token t = get_next_token(s);
-    if (t.type != ID) {
+    //TODO: dodelat strom
+    printf("kontrola defu\n");
+    Token token = get_next_token(s);
+    int result = check_args(tree, s);
+    if(result != 0)
+        return result;
 
-    }
-
-    return true;
+    result = check_keyword_helper(tree, s);
+    if(result != 0)
+        return result;
+    return 0;
 }
 
 
@@ -402,8 +417,8 @@ int check_block(ASTNode* tree, Scanner* s) {
                     return check_while(tree, s);
                 case PASS:
                     break;
-                /*case DEF:
-                    return check_while(tree,s);*/
+                case DEF:
+                    return check_definition(tree,s);
                 default:
                     return 2;
             }
