@@ -296,7 +296,7 @@ bool check_cond(ASTNode* tree, Scanner* s){
 
 }
 
-int check_if_helper(ASTNode* tree, Scanner* s){
+int check_keyword_helper(ASTNode* tree, Scanner* s){
     Token t = get_next_token(s);
     if(t.type != COLON){ // if x < y:
         return 2;
@@ -329,7 +329,7 @@ int check_if(ASTNode* tree, Scanner* s) {
     if(!check_cond(tree, s)){ //if x < y
         return 2;
     }
-    int result = check_if_helper(tree, s);
+    int result = check_keyword_helper(tree, s);
     if(result != 0){
         return result;
     }
@@ -338,16 +338,23 @@ int check_if(ASTNode* tree, Scanner* s) {
     if(t.type != KEYWORD || t.keywordValue != ELSE){
         return 2;
     }
-    result = check_if_helper(tree, s);
+    result = check_keyword_helper(tree, s);
     if(result != 0){
         return result;
     }
     return 0;
 }
 
-bool check_while(ASTNode* tree, Scanner* s) {
-    //TODO: dodelat
-    return true;
+int check_while(ASTNode* tree, Scanner* s) {
+    //TODO: dodelat strom
+    int next_token;
+    if(!check_cond(tree, s))
+        return 2;
+    int result = check_keyword_helper(tree, s);
+    if(result != 0){
+        return result;
+    }
+    return 0;
 }
 
 bool check_definition(ASTNode* tree, Scanner* s) {
@@ -393,6 +400,10 @@ int check_block(ASTNode* tree, Scanner* s) {
                     return check_if(tree, s);
                 case WHILE:
                     return check_while(tree, s);
+                case PASS:
+                    break;
+                /*case DEF:
+                    return check_while(tree,s);*/
                 default:
                     return 2;
             }
