@@ -2,6 +2,8 @@
 #define IFJ_SYNTAX_ANALYZER_H
 
 #include "lex_analyzer.h"
+#include "syntax_stack.h"
+#include "symtable.h"
 
 typedef enum {
     PROGRAM_END,

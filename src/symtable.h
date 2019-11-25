@@ -21,7 +21,7 @@ typedef enum {
 
 typedef struct symTable{
     char* id;
-    int type;
+    typeValue type;
     void* dataPtr;
     int argNum;
     int* arguments;
