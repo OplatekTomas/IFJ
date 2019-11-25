@@ -215,6 +215,10 @@ bool check_function_call(ASTNode* tree, Scanner* s) {
     return true;
 }
 
+bool is_comp(Token t){
+    return t.type == EQ || t.type == NON_EQ || t.type == GREATER_OR_EQ || t.type == LESSER_OR_EQ || t.type == GREATER || t.type == LESSER;
+}
+
 bool check_expression(ASTNode* tree, Scanner* s) {
      printf("kontrola vyrazu\n");
 
@@ -266,7 +270,7 @@ bool check_expression(ASTNode* tree, Scanner* s) {
                 syntax_stack_shift(&ss, loc);
                 syntax_stack_push(&ss, term);
                 t = get_next_token(s);
-                if (t.type == END_OF_LINE || t.type == END_OF_FILE) {
+                if (t.type == END_OF_LINE || t.type == END_OF_FILE || is_comp(t) || t.type == COLON) {
                     scanner_unget(s, t);
                 }
                 break;
@@ -274,7 +278,8 @@ bool check_expression(ASTNode* tree, Scanner* s) {
             default:
                 return 1;
         }
-    } while (!(t.type == END_OF_LINE || t.type == END_OF_FILE  || t.type == COLON) || syntax_stack_nearest_term(&ss, NULL).type != SYNTAX_END);
+    } while (!(t.type == END_OF_LINE || t.type == END_OF_FILE  || t.type == COLON || is_comp(t)) || syntax_stack_nearest_term(&ss, NULL).type != SYNTAX_END);
+
     return 0;
 }
 
@@ -310,23 +315,18 @@ bool check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
 
 
 bool check_cond(ASTNode* tree, Scanner* s){
-    /*if(!check_expression(tree, s)){
+    //Kontrola podmínky
+    if(check_expression(tree, s)){
         return false;
     }
     Token t = get_next_token(s);
-    if(t.type != GREATER && t.type != LESSER && t.type != GREATER_OR_EQ && t.type != LESSER_OR_EQ && t.type != EQ && t.type != NON_EQ ){
+    if(!is_comp(t)){
         return false;
     }
-    if(!check_expression(tree, s)){
+    if(check_expression(tree, s)){
         return false;
     }
-    return true;*/
-    //TODO: Fix..
-    Token t = get_next_token(s);
-    t = get_next_token(s);
-    t = get_next_token(s);
     return true;
-
 }
 
 int check_keyword_helper(ASTNode* tree, Scanner* s){
@@ -368,7 +368,6 @@ int check_args(ASTNode* tree, Scanner* s){
 }
 
 int check_if(ASTNode* tree, Scanner* s) {
-    //TODO: dodelat
     printf("Kontrola ifu\n");
     if(!check_cond(tree, s)){ //if x < y
         return 2;
