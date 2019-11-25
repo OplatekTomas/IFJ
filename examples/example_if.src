@@ -1,0 +1,4 @@
+if num < 10:
+    pica = 20
+else:
+    pica = 420
