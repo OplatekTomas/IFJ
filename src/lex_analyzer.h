@@ -6,17 +6,26 @@
 #ifndef IFJ_LEX_ANALYZER_H
 #define IFJ_LEX_ANALYZER_H
 
-#include "lex_analyzer.h"
 #include "tokens.h"
-#include "stack.h"
+#include "indent_stack.h"
 #include "error.h"
 #include <stdio.h>
 #include <stdlib.h>
 
+typedef struct{
+    IndentStack is;
+    TokenStack ts;
+    bool first_on_line;
+    FILE* source;
+} Scanner;
 
-int count_spaces(FILE*);
+void scanner_init(Scanner* s, FILE* source);
 
-Token get_next_token(FILE*, IndentStack* is);
+void scanner_unget(Scanner* s, Token t);
+
+int count_spaces(FILE* source);
+
+Token get_next_token(Scanner* p);
 
 
 #endif //IFJ_LEX_ANALYZER_H

@@ -1,4 +1,4 @@
-#include "stack.h"
+#include "indent_stack.h"
 
 void stack_init(IndentStack* is) {
     is->level = 0;

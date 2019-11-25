@@ -4,6 +4,13 @@
 
 #include "lex_analyzer.h"
 
+void scanner_init(Scanner* s, FILE* source) {
+    s->source = source;
+    s->first_on_line = false;
+    stack_init(&s->is);
+    token_stack_init(&s->ts);
+}
+
 int count_spaces(FILE* source) {
     int spaces = 0;
     char c;
@@ -51,7 +58,7 @@ int read_next_word(FILE* source, char* word, int size){
         counter++;
     }
     ungetc(c, source);
-    count_spaces(source);
+    //count_spaces(source);
 
     return counter;
 }
@@ -66,47 +73,44 @@ void handle_word(FILE* source ,Token *token){
     if(token->keywordValue != NON_KEYWORD){
         //printf("Keyword: %s\n",word);
         token->type = KEYWORD;
+        free(word);
     }else{
         token->type = ID;
+        token->stringValue = word;
     }
-    free(word);
 }
 
 // Vraci:
 // 0 - kdyz jen zkonzumuje mezery a nechce vratit token
 // 1 - kdyz chce vratit token
 // 2 - kdyz najde chybu
-int handle_indent(FILE* source, IndentStack *is, Token* t){
-    int indent = count_spaces(source);
+int handle_indent(Scanner* s, Token* t){
+    int indent = count_spaces(s->source);
 
     //znak po mezerach
-    char c = (char)getc(source);
+    char c = (char)getc(s->source);
+    ungetc(c, s->source);
     if (c == '#') {
         // nastal jednoradkovy komentar, nedelat indent
-        ungetc(c, source);
         return 0;
     }
-    ungetc(c, source);
 
     // je stejny indent
-    if (indent == stack_top(is)) {
+    if (indent == stack_top(&s->is)) {
         return 0;
-    } else if (indent > stack_top(is)) {
+    } else if (indent > stack_top(&s->is)) {
         // je vetsi indent nez predtim
-        stack_push(is, indent);
+        stack_push(&s->is, indent);
         t->type = INDENT;
         return 1;
     } else {
         // je mensi hodnota nez predtim
-        stack_pop(is);
-        if (stack_top(is) < indent) {
+        stack_pop(&s->is);
+        if (stack_top(&s->is) < indent) {
             return 2;
-        } else if (stack_top(is) > indent) {
-            for (int i = 0; i < indent; i++) {
-                ungetc(' ', source);
-            }
         }
         t->type = DEDENT;
+        s->first_on_line = false;
         return 1;
     }
 }
@@ -141,6 +145,7 @@ void handle_multline_string(FILE* source, Token* t){
     }
     t->stringValue = calloc(max_len, sizeof(char));
     //Kontrola jestli poslední 3 znaky jsou " a poslední z nich není escape hodnota
+    //TODO: valgrind hazi chybu kvuli indexu v minusu
     while(t->stringValue[len-1] != '"' || t->stringValue[len-2] != '"' || t->stringValue[len-3] != '"' || t->stringValue[len-4] == '\\'){
         if(len+2 == max_len){ //Realloc při nedostatečné velikosti původního pole
             max_len += 128;
@@ -270,92 +275,120 @@ void handle_comparison(FILE* source, Token* t, char c) {
     t->type = ERROR;
 }
 
-Token get_next_token(FILE* source, IndentStack* is){
+Token get_new_token(Scanner* s) {
     Token t;
     t.type = ERROR;
     t.keywordValue = NON_KEYWORD;
+    t.stringValue = NULL;
+    FILE* source = s->source;
     char c;
     // cteni souboru znak po znaku
-    do {
+    while (true) {
         c = (char)getc(source);
         switch (c) {
             case '\n':;
-            // nebude fungovat poradne dokud nebudem rozpoznavat vsechno
-            //case ' ':;
-                int value = handle_indent(source, is, &t);
-                if (value == 0) {
-                    continue;
-                } else if (value == 1) {
+                if (!s->first_on_line) {
+                    t.type = END_OF_LINE;
+                    s->first_on_line = true;
                     return t;
                 } else {
-                    t.type = ERROR;
-                    return t;
+                    ungetc(c, source);
+                    s->first_on_line = false;
+                    int value = handle_indent(s, &t);
+                    if (value == 0) {
+                        continue;
+                    } else if (value == 1) {
+                        return t;
+                    } else {
+                        t.type = ERROR;
+                        return t;
+                    }
                 }
+                // nebude fungovat poradne dokud nebudem rozpoznavat vsechno
+            case ' ':
+                if (s->first_on_line) {
+                    ungetc(c, source);
+                    s->first_on_line = false;
+                    int value = handle_indent(s, &t);
+                    if (value == 0) {
+                        continue;
+                    } else if (value == 1) {
+                        return t;
+                    } else {
+                        t.type = ERROR;
+                        return t;
+                    }
+                } else {
+                    continue;
+                }
+                break;
             case ':':
                 t.type = COLON;
-                count_spaces(source);
                 return t;
             case ',':
                 t.type = COMMA;
-                count_spaces(source);
                 return t;
             case '(':
                 t.type = OPEN_PARENTHES;
-                count_spaces(source);
                 return t;
             case ')':
                 t.type = CLOSE_PARENTHES;
-                count_spaces(source);
                 return t;
             case '+':
                 t.type = ADD;
-                count_spaces(source);
                 return t;
             case '-':
                 t.type = SUB;
-                count_spaces(source);
                 return t;
             case '*':
                 t.type = MUL;
-                count_spaces(source);
                 return t;
             case '/':
-                if(getc(source) == '/'){
+                if((c = (getc(source))) == '/'){
                     t.type = DOUBLE_DIV;
-                    count_spaces(source);
                 }
                 else{
+                    ungetc(c, source);
                     t.type = DIV;
-                    count_spaces(source);
                 }
                 return t;
             case '\'':
                 t.type = STRING;
                 handle_singleline_string(source, &t);
-                count_spaces(source);
                 break;
             case '=':
             case '<':
             case '>':
             case '!':
                 handle_comparison(source, &t, c);
-                count_spaces(source);
                 return t;
             case '#':
                 handle_singleline_comments(source);
+                s->first_on_line = false;
                 break;
             case '"':
                 ungetc(c, source);
                 handle_multline_string(source, &t);
                 return t;
             case EOF:
-                handle_eof(source, is, &t);
+                handle_eof(source, &s->is, &t);
                 return t;
             default:
                 //Všechny znaky kterými může začínát indentifier
                 if(is_letter(c) || c == '_'){
                     ungetc(c, source);
+                    if (s->first_on_line) {
+                        int value = handle_indent(s, &t);
+                        if (value == 1) {
+                            s->first_on_line = true;
+                            return t;
+                        } else if (value != 0) {
+                            t.type = ERROR;
+                            return t;
+                        }
+                    }
                     handle_word(source, &t);
+                    s->first_on_line = false;
                     return t;
                 } else if (is_num_char(c)) {
                     ungetc(c, source);
@@ -364,7 +397,20 @@ Token get_next_token(FILE* source, IndentStack* is){
                 }
                 break;
         }
-    } while (t.type == END_OF_FILE);
-
-    return t;
+    }
 }
+
+Token get_next_token(Scanner* s){
+    if (token_stack_empty(&s->ts)) {
+        return get_new_token(s);
+    } else {
+        Token t = token_stack_top(&s->ts);
+        token_stack_pop(&s->ts);
+        return t;
+    }
+}
+
+void scanner_unget(Scanner* s, Token t) {
+    token_stack_push(&s->ts, t);
+}
+

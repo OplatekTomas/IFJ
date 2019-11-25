@@ -1,19 +1,28 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "stack.h"
-#include "keywords.h"
-#include "lex_analyzer.h"
 #include "syntax_analyzer.h"
 
 #define DEBUG 1
 
 int main (int argc, char *argv[]) {
     if(DEBUG){
+        if (argc == 1) {
+            fprintf(stderr, "neni predany zdrojovy parametr\n");
+            exit(99);
+        }
         FILE *f = fopen(argv[1], "r");
-        get_derivation_tree(f);
+        ASTNode* tree = get_derivation_tree(f);
+        if (tree == NULL) {
+            fprintf(stderr, "chyba pri syntakticke analyze\n");
+        }
+        free_tree(tree);
         fclose(f);
     }else{
-        get_derivation_tree(stdin);
+        ASTNode* tree = get_derivation_tree(stdin);
+        if (tree == NULL) {
+            fprintf(stderr, "chyba pri syntakticke analyze\n");
+        }
+        free_tree(tree);
     }
 
     return 0;

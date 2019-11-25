@@ -53,6 +53,11 @@ dkms.conf
 /cmake-build-debug
 workspace.xml
 
+#test outputs
+/examples/output
+
 .idea/git_toolbox_prj.xml
 
 .idea/deployment.xml
+
+vgcore*
