@@ -11,10 +11,18 @@ int main (int argc, char *argv[]) {
             exit(99);
         }
         FILE *f = fopen(argv[1], "r");
-        get_derivation_tree(f);
+        ASTNode* tree = get_derivation_tree(f);
+        if (tree == NULL) {
+            fprintf(stderr, "chyba pri syntakticke analyze\n");
+        }
+        free_tree(tree);
         fclose(f);
     }else{
-        get_derivation_tree(stdin);
+        ASTNode* tree = get_derivation_tree(stdin);
+        if (tree == NULL) {
+            fprintf(stderr, "chyba pri syntakticke analyze\n");
+        }
+        free_tree(tree);
     }
 
     return 0;

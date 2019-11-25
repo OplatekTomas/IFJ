@@ -14,15 +14,18 @@
 
 typedef struct{
     IndentStack is;
+    TokenStack ts;
     bool first_on_line;
     FILE* source;
-} Parser;
+} Scanner;
 
-void parser_init(Parser* p, FILE* source);
+void scanner_init(Scanner* s, FILE* source);
+
+void scanner_unget(Scanner* s, Token t);
 
 int count_spaces(FILE* source);
 
-Token get_next_token(Parser* p);
+Token get_next_token(Scanner* p);
 
 
 #endif //IFJ_LEX_ANALYZER_H

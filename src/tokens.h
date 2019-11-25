@@ -1,12 +1,14 @@
+#ifndef IFJ_TOKENS_H
+#define IFJ_TOKENS_H
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "keywords.h"
-
 
 //PRO DEJVA ZÁKAZ VSTUPU!
 
-#ifndef IFJ_TOKENS_H
-#define IFJ_TOKENS_H
+#define TOKEN_STACK_MAX_SIZE 20
 
 typedef enum{
     ID,
@@ -50,5 +52,16 @@ typedef struct{
     NumberVal numberVal;
     char *stringValue;
 }Token;
+
+typedef struct {
+    unsigned index;
+    Token data[TOKEN_STACK_MAX_SIZE];
+} TokenStack;
+
+void token_stack_init(TokenStack* ts);
+void token_stack_push(TokenStack* ts, Token t);
+void token_stack_pop(TokenStack* ts);
+bool token_stack_empty(TokenStack* ss);
+Token token_stack_top(TokenStack* ts);
 
 #endif //IFJ_TOKENS_H
