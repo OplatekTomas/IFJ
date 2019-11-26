@@ -27,7 +27,7 @@ bool syntax_stack_empty(SyntaxStack* ss) {
 }
 
 SSData syntax_stack_nearest_term(SyntaxStack* ss, unsigned* loc) {
-    for (unsigned i = ss->index - 1; i >= 0; i--) {
+    for (unsigned i = ss->index - 1;; i--) {
         if (ss->data[i].type != SYNTAX_EXPR) {
             if (loc != NULL) {
                 *loc = i;

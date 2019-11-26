@@ -7,7 +7,8 @@
 // zapoznamkovano kvuli docasnym compile chybam
 //#include "symtable.h"
 
-ASTNode* get_derivation_tree(FILE *source);
+/// Vraci kod chyby, ktery je stejny jako kod chyby kompilatoru
+int get_derivation_tree(FILE *source, ASTNode** tree);
 int check_block(ASTNode* tree, Scanner* s);
 
 #endif //IFJ_SYNTAX_ANALYZER_H

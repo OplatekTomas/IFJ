@@ -4,26 +4,6 @@
 
 #include "astnode.h"
 
-
-//TODO: odstrelit
-ASTNode* node_init(ASTNode* node) {
-    if (node == NULL) {
-        return NULL;
-    }
-    node->node_type = PROGRAM_ROOT;
-    node->subnode_len = 0;
-    node->capacity = START_CAPACITY;
-    node->n.i = 0;
-    node->str_val = NULL;
-    node->symbol = NULL;
-    node->nodes = malloc(START_CAPACITY * sizeof(ASTNode*));
-    if (node->nodes == NULL) {
-        return NULL;
-    } else {
-        return node;
-    }
-}
-
 ASTNode* node_new() {
     ASTNode* node = malloc(sizeof(ASTNode));
     if (node == NULL) {

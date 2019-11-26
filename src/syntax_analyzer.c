@@ -268,20 +268,18 @@ bool check_expression(ASTNode* tree, Scanner* s) {
     return 0;
 }
 
-bool check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
+int check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
     //TODO: dodelat
     printf("kontrola prirazeni\n");
-    ASTNode* assign_node = (ASTNode*)malloc(sizeof(ASTNode));
-    if (node_init(assign_node) == NULL) {
-        //TODO: spravna kontrola chyb
-        return 1;
+    ASTNode* assign_node = node_new();
+    if (assign_node == NULL) {
+        return 99;
     }
     assign_node->node_type = ASSIGNMENT;
 
-    ASTNode* id_node = (ASTNode*)malloc(sizeof(ASTNode));
-    if (node_init(id_node) == NULL) {
-        //TODO: spravna kontrola chyb
-        return 1;
+    ASTNode* id_node = node_new();
+    if (id_node == NULL) {
+        return 99;
     }
     id_node->node_type = IDENTIFICATOR;
     //TODO: pridat pointer na identifikator do tabulky symbolu
@@ -477,13 +475,15 @@ int check_root_block(ASTNode* tree, Scanner *s) {
     }
 }
 
-/// Vraci derivacni strom, ktery je potom potreba uvolnit
-ASTNode* get_derivation_tree(FILE *source) {
+int get_derivation_tree(FILE *source, ASTNode** tree) {
     Scanner s;
     scanner_init(&s, source);
 
-    ASTNode* root = (ASTNode*)malloc(sizeof(ASTNode));
-    node_init(root);
+    ASTNode* root = node_new();
+    if (root == NULL) {
+        return 99;
+    }
+
     root->node_type = PROGRAM_ROOT;
     int result = 0;
     while (result != 3) {
@@ -492,14 +492,15 @@ ASTNode* get_derivation_tree(FILE *source) {
             case 1:
                 fprintf(stderr, "nastala lexikalni chyba\n");
                 free_tree(root);
-                return NULL;
+                return 1;
             case 2:
                 fprintf(stderr, "nastala syntakticka chyba\n");
                 free_tree(root);
-                return NULL;
+                return 2;
             default:
                 continue;
         }
     }
-    return root;
+    *tree = root;
+    return 0;
 }

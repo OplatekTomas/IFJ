@@ -43,7 +43,6 @@ struct node {
 
 typedef struct node ASTNode;
 
-ASTNode* node_init(ASTNode* node);
 ASTNode* node_new();
 void node_insert(ASTNode* node, ASTNode* new);
 void free_tree(ASTNode* tree);
