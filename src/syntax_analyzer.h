@@ -2,44 +2,12 @@
 #define IFJ_SYNTAX_ANALYZER_H
 
 #include "lex_analyzer.h"
-
-typedef enum {
-    PROGRAM_END,
-    STATEMENT,
-    EXPRESSION,
-    ASSIGNMENT,
-    CONDITION,
-    BLOCK,
-    PROGRAM_ROOT,
-    IDENTIFICATOR,
-    IF_ELSE,
-    WHILE_LOOP
-} NonTerm;
-
-struct node {
-    NonTerm node_type;
-    unsigned subnode_len;
-    unsigned capacity;
-    void* symbol;
-    struct node** nodes;
-};
-
-typedef struct node ASTNode;
-
-ASTNode* node_init(ASTNode* node);
-
-typedef union {
-    Token t;
-    NonTerm n;
-} Word;
-
-typedef enum {
-    TOKEN,
-    NONTERM
-} WordType;
+#include "syntax_stack.h"
+#include "astnode.h"
+// zapoznamkovano kvuli docasnym compile chybam
+//#include "symtable.h"
 
 ASTNode* get_derivation_tree(FILE *source);
-void free_tree(ASTNode* tree);
 int check_block(ASTNode* tree, Scanner* s);
 
 #endif //IFJ_SYNTAX_ANALYZER_H
