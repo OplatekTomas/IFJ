@@ -1,3 +1,6 @@
+#ifndef IFJ_ERROR_H
+#define IFJ_ERROR_H
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -13,3 +16,5 @@ typedef enum{
 }error_type;
 
 void throw_err(error_type et); //deklarace funkce, která oznamuje chyby
+
+#endif

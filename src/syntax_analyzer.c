@@ -73,6 +73,7 @@ int check_rule(SyntaxStack* ss) {
     if (ss->data[ss->index - 1].type == SYNTAX_TERM && is_token_i(ss->data[ss->index - 1].t) && ss->data[ss->index - 2].type == SYNTAX_LESSER) {
         printf("ID => E\n");
         SSData term = syntax_stack_top(ss);
+        // pop term and lessen sign
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         // add info
@@ -100,73 +101,41 @@ int check_rule(SyntaxStack* ss) {
         syntax_stack_push(ss, sd);
     } else if (
             ss->data[ss->index - 1].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 2].type == SYNTAX_TERM && ss->data[ss->index - 2].t.type == ADD &&
+            ss->data[ss->index - 2].type == SYNTAX_TERM &&
             ss->data[ss->index - 3].type == SYNTAX_EXPR &&
             ss->data[ss->index - 4].type == SYNTAX_LESSER
             ) {
-        printf("E => E + E\n");
+        // kontrola vsech aritmetickych pravidel
+        printf("E => E '%i' E\n", ss->data[ss->index -2].t.type);
+        switch (ss->data[ss->index - 2].t.type) {
+            case ADD:
+                sd.node->node_type = ADDITION;
+                break;
+            case MUL:
+                sd.node->node_type = MULTIPLICATION;
+                break;
+            case SUB:
+                sd.node->node_type = SUBTRACTION;
+                break;
+            case DIV:
+                sd.node->node_type = DIVISION;
+                break;
+            case DOUBLE_DIV:
+                sd.node->node_type = INT_DIVISION;
+                break;
+            default:
+                free_tree(node);
+                return 1;
+        }
+        // pop left and right side, op and lesser sign
         SSData right_side = syntax_stack_top(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         SSData left_side = syntax_stack_top(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
-        sd.node->node_type = ADDITION;
         node_insert(sd.node, left_side.node);
         node_insert(sd.node, right_side.node);
-        syntax_stack_push(ss, sd);
-    } else if (
-            ss->data[ss->index - 1].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 2].type == SYNTAX_TERM && ss->data[ss->index - 2].t.type == MUL &&
-            ss->data[ss->index - 3].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 4].type == SYNTAX_LESSER
-            ) {
-        printf("E => E * E\n");
-        SSData right_side = syntax_stack_top(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        SSData left_side = syntax_stack_top(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        sd.node->node_type = MULTIPLICATION;
-        node_insert(sd.node, left_side.node);
-        node_insert(sd.node, right_side.node);
-        syntax_stack_push(ss, sd);
-    } else if (
-            ss->data[ss->index - 1].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 4].type == SYNTAX_LESSER &&
-            ss->data[ss->index - 3].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 2].type == SYNTAX_TERM && ss->data[ss->index - 2].t.type == SUB
-            ) {
-        printf("E => E - E\n");
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_push(ss, sd);
-    } else if (
-            ss->data[ss->index - 1].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 4].type == SYNTAX_LESSER &&
-            ss->data[ss->index - 3].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 2].type == SYNTAX_TERM && ss->data[ss->index - 2].t.type == DIV
-            ) {
-        printf("E => E / E\n");
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_push(ss, sd);
-    } else if (
-            ss->data[ss->index - 1].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 4].type == SYNTAX_LESSER &&
-            ss->data[ss->index - 3].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 2].type == SYNTAX_TERM && ss->data[ss->index - 2].t.type == DOUBLE_DIV
-            ) {
-        printf("E => E // E\n");
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
         syntax_stack_push(ss, sd);
     } else if (
             ss->data[ss->index - 1].type == SYNTAX_TERM && ss->data[ss->index - 1].t.type == CLOSE_PARENTHES &&
@@ -175,6 +144,7 @@ int check_rule(SyntaxStack* ss) {
             ss->data[ss->index - 4].type == SYNTAX_LESSER
             ) {
         printf("E => (E)\n");
+        // pop parenthesis and  expression
         syntax_stack_pop(ss);
         SSData term = syntax_stack_top(ss);
         syntax_stack_pop(ss);
@@ -215,6 +185,12 @@ int convert_token_to_table_index(SSData sd) {
         case END_OF_LINE:
         case END_OF_FILE:
         case COLON:
+        case EQ:
+        case NON_EQ:
+        case GREATER_OR_EQ:
+        case LESSER_OR_EQ:
+        case GREATER:
+        case LESSER:
             return 8;
         default:
             return -1;
@@ -227,8 +203,35 @@ bool check_function_call(ASTNode* tree, Scanner* s) {
     return true;
 }
 
-bool is_comp(Token t){
-    return t.type == EQ || t.type == NON_EQ || t.type == GREATER_OR_EQ || t.type == LESSER_OR_EQ || t.type == GREATER || t.type == LESSER;
+bool is_comp(Token t, CondType* type){
+    //Lehčí backwards kompatibilita.. když je mi OpType u prdele střelím tam prostě NULL a sere pes
+    if(type == NULL){
+        return t.type == EQ || t.type == NON_EQ || t.type == GREATER || t.type == LESSER || t.type == LESSER_OR_EQ || t.type == GREATER_OR_EQ;
+    }
+    switch(t.type){
+        case EQ:
+            *type = OP_EQ;
+            break;
+        case NON_EQ:
+            *type = OP_NEQ;
+            break;
+        case GREATER:
+            *type = OP_GR;
+            break;
+        case LESSER:
+            *type = OP_LS;
+            break;
+        case GREATER_OR_EQ:
+            *type = OP_GREQ;
+            break;
+        case LESSER_OR_EQ:
+            *type = OP_LSEQ;
+            break;
+        default:
+            *type = OP_NONE;
+            return false;
+    }
+    return true;
 }
 
 bool check_expression(ASTNode* tree, Scanner* s) {
@@ -282,7 +285,7 @@ bool check_expression(ASTNode* tree, Scanner* s) {
                 syntax_stack_shift(&ss, loc);
                 syntax_stack_push(&ss, term);
                 t = get_next_token(s);
-                if (t.type == END_OF_LINE || t.type == END_OF_FILE || is_comp(t) || t.type == COLON) {
+                if (t.type == END_OF_LINE || t.type == END_OF_FILE || is_comp(t, NULL) || t.type == COLON) {
                     scanner_unget(s, t);
                 }
                 break;
@@ -290,7 +293,7 @@ bool check_expression(ASTNode* tree, Scanner* s) {
             default:
                 return 1;
         }
-    } while (!(t.type == END_OF_LINE || t.type == END_OF_FILE  || t.type == COLON || is_comp(t)) || syntax_stack_nearest_term(&ss, NULL).type != SYNTAX_END);
+    } while (!(t.type == END_OF_LINE || t.type == END_OF_FILE  || t.type == COLON || is_comp(t, NULL)) || syntax_stack_nearest_term(&ss, NULL).type != SYNTAX_END);
     SSData result = syntax_stack_top(&ss);
 
     node_insert(tree, result.node);
@@ -298,20 +301,18 @@ bool check_expression(ASTNode* tree, Scanner* s) {
     return 0;
 }
 
-bool check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
+int check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
     //TODO: dodelat
     printf("kontrola prirazeni\n");
-    ASTNode* assign_node = (ASTNode*)malloc(sizeof(ASTNode));
-    if (node_init(assign_node) == NULL) {
-        //TODO: spravna kontrola chyb
-        return 1;
+    ASTNode* assign_node = node_new();
+    if (assign_node == NULL) {
+        return 99;
     }
     assign_node->node_type = ASSIGNMENT;
 
-    ASTNode* id_node = (ASTNode*)malloc(sizeof(ASTNode));
-    if (node_init(id_node) == NULL) {
-        //TODO: spravna kontrola chyb
-        return 1;
+    ASTNode* id_node = node_new();
+    if (id_node == NULL) {
+        return 99;
     }
     id_node->node_type = IDENTIFICATOR;
     //TODO: pridat pointer na identifikator do tabulky symbolu
@@ -331,16 +332,26 @@ bool check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
 
 bool check_cond(ASTNode* tree, Scanner* s){
     //Kontrola podmínky
-    if(check_expression(tree, s)){
+    CondType optype = OP_NONE;
+    ASTNode* comp = node_new();
+    comp->node_type = CONDITION;
+    if(check_expression(comp, s)){
+        free_tree(comp);
         return false;
     }
     Token t = get_next_token(s);
-    if(!is_comp(t)){
+    if(!is_comp(t, &optype)){
+        free_tree(comp);
         return false;
     }
-    if(check_expression(tree, s)){
+    comp->condType = optype;
+    if(check_expression(comp, s)){
+        free_tree(comp);
         return false;
     }
+    node_insert(tree, comp);
+    print_tree(tree);
+
     return true;
 }
 
@@ -391,10 +402,12 @@ int check_args(ASTNode* tree, Scanner* s){
 
 int check_if(ASTNode* tree, Scanner* s) {
     printf("Kontrola ifu\n");
-    if(!check_cond(tree, s)){ //if x < y
+    ASTNode *root_node = node_new();
+    root_node->node_type = IF_ELSE;
+    if(!check_cond(root_node, s)){ //if x < y
         return 2;
     }
-    int result = check_keyword_helper(tree, s);
+    int result = check_keyword_helper(root_node, s);
     if(result != 0){
         return result;
     }
@@ -507,13 +520,15 @@ int check_root_block(ASTNode* tree, Scanner *s) {
     }
 }
 
-/// Vraci derivacni strom, ktery je potom potreba uvolnit
-ASTNode* get_derivation_tree(FILE *source) {
+int get_derivation_tree(FILE *source, ASTNode** tree) {
     Scanner s;
     scanner_init(&s, source);
 
-    ASTNode* root = (ASTNode*)malloc(sizeof(ASTNode));
-    node_init(root);
+    ASTNode* root = node_new();
+    if (root == NULL) {
+        return 99;
+    }
+
     root->node_type = PROGRAM_ROOT;
     int result = 0;
     while (result != 3) {
@@ -522,14 +537,15 @@ ASTNode* get_derivation_tree(FILE *source) {
             case 1:
                 fprintf(stderr, "nastala lexikalni chyba\n");
                 free_tree(root);
-                return NULL;
+                return 1;
             case 2:
                 fprintf(stderr, "nastala syntakticka chyba\n");
                 free_tree(root);
-                return NULL;
+                return 2;
             default:
                 continue;
         }
     }
-    return root;
+    *tree = root;
+    return 0;
 }
