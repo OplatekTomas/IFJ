@@ -32,14 +32,14 @@ typedef enum {
 } NonTerm;
 
 typedef enum {
+    OP_NONE,
     OP_GR,
     OP_LS,
     OP_EQ,
     OP_NEQ,
     OP_GREQ,
-    OP_LSEQ,
-    OP_NONE
-} OpType;
+    OP_LSEQ
+} CondType;
 
 struct node {
     NonTerm node_type;
@@ -47,7 +47,7 @@ struct node {
     unsigned capacity;
     void* symbol;
     NumberVal n;
-    OpType op;
+    CondType condType;
     char* str_val;
     struct node** nodes;
 };
@@ -58,5 +58,6 @@ ASTNode* node_init(ASTNode* node);
 ASTNode* node_new();
 void node_insert(ASTNode* node, ASTNode* new);
 void free_tree(ASTNode* tree);
+void print_tree(ASTNode* tree);
 
 #endif //IFJ_ASTNODE_H

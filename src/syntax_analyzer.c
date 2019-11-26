@@ -215,6 +215,12 @@ int convert_token_to_table_index(SSData sd) {
         case END_OF_LINE:
         case END_OF_FILE:
         case COLON:
+        case EQ:
+        case NON_EQ:
+        case GREATER_OR_EQ:
+        case LESSER_OR_EQ:
+        case GREATER:
+        case LESSER:
             return 8;
         default:
             return -1;
@@ -227,8 +233,35 @@ bool check_function_call(ASTNode* tree, Scanner* s) {
     return true;
 }
 
-bool is_comp(Token t){
-    return t.type == EQ || t.type == NON_EQ || t.type == GREATER_OR_EQ || t.type == LESSER_OR_EQ || t.type == GREATER || t.type == LESSER;
+bool is_comp(Token t, CondType* type){
+    //Lehčí backwards kompatibilita.. když je mi OpType u prdele střelím tam prostě NULL a sere pes
+    if(type == NULL){
+        return t.type == EQ || t.type == NON_EQ || t.type == GREATER || t.type == LESSER || t.type == LESSER_OR_EQ || t.type == GREATER_OR_EQ;
+    }
+    switch(t.type){
+        case EQ:
+            *type = OP_EQ;
+            break;
+        case NON_EQ:
+            *type = OP_NEQ;
+            break;
+        case GREATER:
+            *type = OP_GR;
+            break;
+        case LESSER:
+            *type = OP_LS;
+            break;
+        case GREATER_OR_EQ:
+            *type = OP_GREQ;
+            break;
+        case LESSER_OR_EQ:
+            *type = OP_LSEQ;
+            break;
+        default:
+            *type = OP_NONE;
+            return false;
+    }
+    return true;
 }
 
 bool check_expression(ASTNode* tree, Scanner* s) {
@@ -282,7 +315,7 @@ bool check_expression(ASTNode* tree, Scanner* s) {
                 syntax_stack_shift(&ss, loc);
                 syntax_stack_push(&ss, term);
                 t = get_next_token(s);
-                if (t.type == END_OF_LINE || t.type == END_OF_FILE || is_comp(t) || t.type == COLON) {
+                if (t.type == END_OF_LINE || t.type == END_OF_FILE || is_comp(t, NULL) || t.type == COLON) {
                     scanner_unget(s, t);
                 }
                 break;
@@ -290,7 +323,7 @@ bool check_expression(ASTNode* tree, Scanner* s) {
             default:
                 return 1;
         }
-    } while (!(t.type == END_OF_LINE || t.type == END_OF_FILE  || t.type == COLON || is_comp(t)) || syntax_stack_nearest_term(&ss, NULL).type != SYNTAX_END);
+    } while (!(t.type == END_OF_LINE || t.type == END_OF_FILE  || t.type == COLON || is_comp(t, NULL)) || syntax_stack_nearest_term(&ss, NULL).type != SYNTAX_END);
     SSData result = syntax_stack_top(&ss);
 
     node_insert(tree, result.node);
@@ -331,18 +364,26 @@ bool check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
 
 bool check_cond(ASTNode* tree, Scanner* s){
     //Kontrola podmínky
+    CondType optype = OP_NONE;
     ASTNode* comp = node_new();
     comp->node_type = CONDITION;
     if(check_expression(comp, s)){
+        free_tree(comp);
         return false;
     }
     Token t = get_next_token(s);
-    if(!is_comp(t)){
+    if(!is_comp(t, &optype)){
+        free_tree(comp);
         return false;
     }
-    if(check_expression(tree, s)){
+    comp->condType = optype;
+    if(check_expression(comp, s)){
+        free_tree(comp);
         return false;
     }
+    node_insert(tree, comp);
+    print_tree(tree);
+
     return true;
 }
 
@@ -398,7 +439,7 @@ int check_if(ASTNode* tree, Scanner* s) {
     if(!check_cond(root_node, s)){ //if x < y
         return 2;
     }
-    int result = check_keyword_helper(tree, s);
+    int result = check_keyword_helper(root_node, s);
     if(result != 0){
         return result;
     }

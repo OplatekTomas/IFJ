@@ -1,4 +1,4 @@
-if num < 10:
+if num + 10 < 10:
     pica = 20
 else:
     pica = 420
