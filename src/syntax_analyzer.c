@@ -31,6 +31,9 @@ char token_type[][100] = {
         "DOUBLE_DIV"
 };
 
+int check_block(ASTNode* tree, Scanner* s);
+int check_function_call(ASTNode* tree, Scanner* s);
+
 
 SSValue parse_table[9][9] = {
     //            +    -    *    /    //   (    )   ID   end
@@ -191,17 +194,13 @@ int convert_token_to_table_index(SSData sd) {
         case LESSER_OR_EQ:
         case GREATER:
         case LESSER:
+        case COMMA:
             return 8;
         default:
             return -1;
     }
 }
 
-bool check_function_call(ASTNode* tree, Scanner* s) {
-    //TODO: dodelat
-    printf("kontrola volani funkce\n");
-    return true;
-}
 
 bool is_comp(Token t, CondType* type){
     //Lehčí backwards kompatibilita.. když je mi OpType u prdele střelím tam prostě NULL a sere pes
@@ -285,7 +284,7 @@ bool check_expression(ASTNode* tree, Scanner* s) {
                 syntax_stack_shift(&ss, loc);
                 syntax_stack_push(&ss, term);
                 t = get_next_token(s);
-                if (t.type == END_OF_LINE || t.type == END_OF_FILE || is_comp(t, NULL) || t.type == COLON) {
+                if (t.type == END_OF_LINE || t.type == END_OF_FILE || is_comp(t, NULL) || t.type == COMMA ||  t.type == COLON) {
                     scanner_unget(s, t);
                 }
                 break;
@@ -293,13 +292,73 @@ bool check_expression(ASTNode* tree, Scanner* s) {
             default:
                 return 1;
         }
-    } while (!(t.type == END_OF_LINE || t.type == END_OF_FILE  || t.type == COLON || is_comp(t, NULL)) || syntax_stack_nearest_term(&ss, NULL).type != SYNTAX_END);
+    } while (!(t.type == END_OF_LINE || t.type == COMMA || t.type == END_OF_FILE  || t.type == COLON || is_comp(t, NULL)) || syntax_stack_nearest_term(&ss, NULL).type != SYNTAX_END);
     SSData result = syntax_stack_top(&ss);
 
     node_insert(tree, result.node);
 
     return 0;
 }
+
+int check_function_call(ASTNode* tree, Scanner* s) {
+    printf("kontrola volani funkce\n");
+    Token t = get_next_token(s);
+    ASTNode *root_tree = node_new();
+    root_tree->str_val = t.stringValue;
+    root_tree->node_type = FUNCITON_CALL;
+    if((t = get_next_token(s)).type != OPEN_PARENTHES){
+        free_tree(root_tree);
+        return 2;
+    }
+    Token prev_t = t;
+    t = get_next_token(s);
+    while(t.type != CLOSE_PARENTHES){
+        ASTNode *param = node_new();
+        switch(t.type){
+            case ID:
+                param->node_type = IDENTIFICATOR;
+                param->str_val = t.stringValue;
+                break;
+            case NONE:
+                param->node_type = VALUE_NONE;
+                break;
+            case INT:
+                param->node_type = VALUE_INT;
+                param->n.i = t.numberVal.i;
+                break;
+            case FLOAT:
+                param->node_type = VALUE_FLOAT;
+                param->n.d = t.numberVal.d;
+                break;
+            case STRING:
+                param->node_type = VALUE_STRING;
+                param->str_val = t.stringValue;
+                break;
+            default:
+                free_tree(root_tree);
+                return 2;
+        }
+        node_insert(root_tree, param);
+        prev_t = t;
+        t = get_next_token(s);
+        if(t.type == CLOSE_PARENTHES){
+            break;
+        }
+        if(t.type != COMMA){
+            free_tree(root_tree);
+            return 2;
+        }
+        prev_t = t;
+        t = get_next_token(s);
+    }
+    if(prev_t.type == COMMA){
+        free_tree(root_tree);
+        return 2;
+    }
+    node_insert(tree, root_tree);
+    return 0;
+}
+
 
 int check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
     //TODO: dodelat
@@ -350,8 +409,6 @@ bool check_cond(ASTNode* tree, Scanner* s){
         return false;
     }
     node_insert(tree, comp);
-    print_tree(tree);
-
     return true;
 }
 
@@ -368,17 +425,21 @@ int check_keyword_helper(ASTNode* tree, Scanner* s){
     if(t.type != INDENT){ //if x < y: EOL a nějaké hovado by to nechalo prázdné
         return 1;
     }
-    while(true){
+    ASTNode *block_node = node_new();
+    block_node->node_type = BLOCK;
+    while(true){ // Read inside block
         t = get_next_token(s);
         if(t.type == DEDENT){
             break;
         }
         scanner_unget(s, t);
-        int result = check_block(tree, s);
-        /*if(result != 0){
+        int result = check_block(block_node, s);
+        if(result != 0){
+            free_tree(block_node);
             return result;
-        }*/
+        }
     }
+    node_insert(tree, block_node);
     return 0;
 }
 
@@ -405,33 +466,44 @@ int check_if(ASTNode* tree, Scanner* s) {
     ASTNode *root_node = node_new();
     root_node->node_type = IF_ELSE;
     if(!check_cond(root_node, s)){ //if x < y
+        free_tree(root_node);
         return 2;
     }
     int result = check_keyword_helper(root_node, s);
     if(result != 0){
+        free_tree(root_node);
         return result;
     }
     Token t = get_next_token(s);
     printf("Kontrola else\n");
     if(t.type != KEYWORD || t.keywordValue != ELSE){
+        free_tree(root_node);
         return 2;
     }
-    result = check_keyword_helper(tree, s);
+    result = check_keyword_helper(root_node, s);
     if(result != 0){
+        free_tree(root_node);
         return result;
     }
+    node_insert(tree, root_node);
+    print_tree(tree);
     return 0;
 }
 
 int check_while(ASTNode* tree, Scanner* s) {
-    //TODO: dodelat strom
-    printf("kontrola whilu\n");
-    if(!check_cond(tree, s))
+     printf("kontrola whilu\n");
+    ASTNode *while_node = node_new();
+    while_node->node_type = WHILE_LOOP;
+    if(!check_cond(while_node, s)){
+        free_tree(while_node);
         return 2;
-    int result = check_keyword_helper(tree, s);
+    }
+    int result = check_keyword_helper(while_node, s);
     if(result != 0){
+        free_tree(while_node);
         return result;
     }
+    node_insert(tree, while_node);
     return 0;
 }
 

@@ -22,9 +22,7 @@ int main (int argc, char *argv[]) {
             fclose(f);
             throw_err(syntax_result);
         }
-
         print_tree(tree);
-
         int semantics_result = check_semantics(tree);
 
         if (semantics_result != 0) {
@@ -33,7 +31,6 @@ int main (int argc, char *argv[]) {
             free_tree(tree);
             throw_err(semantics_result);
         }
-
         free_tree(tree);
         fclose(f);
     }else{
