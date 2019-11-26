@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "syntax_analyzer.h"
+#include "semantic_analyzer.h"
 #include "error.h"
 
 #define DEBUG 1
@@ -22,6 +23,14 @@ int main (int argc, char *argv[]) {
             throw_err(syntax_result);
         }
         print_tree(tree);
+        int semantics_result = check_semantics(tree);
+
+        if (semantics_result != 0) {
+            // semanticka chyba nebo interni chyba
+            fclose(f);
+            free_tree(tree);
+            throw_err(semantics_result);
+        }
         free_tree(tree);
         fclose(f);
     }else{
@@ -30,7 +39,15 @@ int main (int argc, char *argv[]) {
 
         if (syntax_result != 0) {
             // lexikalni, syntakticka nebo interni chyba
+            free_tree(tree);
             throw_err(syntax_result);
+        }
+
+        int semantics_result = check_semantics(tree);
+
+        if (semantics_result != 0) {
+            // semanticka chyba nebo interni chyba
+            throw_err(semantics_result);
         }
 
         free_tree(tree);
