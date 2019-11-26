@@ -47,6 +47,9 @@ void free_tree(ASTNode* tree) {
     free(tree);
 }
 
+ASTNode* node_iter_next(ASTIterator *iter) {
+     return NULL;
+}
 
 const char *node_types[100] = {
     "STATEMENT",

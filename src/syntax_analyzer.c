@@ -241,7 +241,7 @@ bool check_expression(ASTNode* tree, Scanner* s) {
     Token t = get_next_token(s);
     if (t.type == ID) {
         Token par = get_next_token(s);
-        if (t.type == OPEN_PARENTHES) {
+        if (par.type == OPEN_PARENTHES) {
             scanner_unget(s, par);
             scanner_unget(s, t);
             return check_function_call(tree, s);

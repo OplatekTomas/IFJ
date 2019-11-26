@@ -54,9 +54,15 @@ struct node {
 
 typedef struct node ASTNode;
 
+typedef struct{
+    ASTNode* root;
+    ASTNode** current;
+} ASTIterator;
+
 ASTNode* node_new();
 void node_insert(ASTNode* node, ASTNode* new);
 void free_tree(ASTNode* tree);
 void print_tree(ASTNode* tree);
+ASTNode* node_iter_next(ASTIterator* iter);
 
 #endif //IFJ_ASTNODE_H
