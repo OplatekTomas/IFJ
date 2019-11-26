@@ -55,6 +55,9 @@ void node_insert(ASTNode* node, ASTNode* new) {
 }
 
 void free_tree(ASTNode* tree) {
+    if (tree == NULL) {
+        return;
+    }
 
     // TODO: dodelat
     for (unsigned i = 0; i < tree->subnode_len; i++) {

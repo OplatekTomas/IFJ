@@ -11,7 +11,6 @@
 #define START_CAPACITY 10
 
 typedef enum {
-    PROGRAM_END,
     STATEMENT,
     EXPRESSION,
     ADDITION,

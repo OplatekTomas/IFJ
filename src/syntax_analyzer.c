@@ -75,30 +75,62 @@ int check_rule(SyntaxStack* ss) {
         SSData term = syntax_stack_top(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
+        // add info
+        switch (term.t.type) {
+            case INT:
+                sd.node->node_type = VALUE_INT;
+                sd.node->n.i = term.t.numberVal.i;
+                break;
+            case FLOAT:
+                sd.node->node_type = VALUE_FLOAT;
+                sd.node->n.d = term.t.numberVal.d;
+                break;
+            case STRING:
+                sd.node->node_type = VALUE_STRING;
+                sd.node->str_val = term.t.stringValue;
+                break;
+            case ID:
+                sd.node->node_type = IDENTIFICATOR;
+                //TODO: pridat kontrolu symbolu
+                break;
+            default:
+                // tohle by se snad stat nemelo
+                return 99;
+        }
         syntax_stack_push(ss, sd);
     } else if (
             ss->data[ss->index - 1].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 4].type == SYNTAX_LESSER &&
+            ss->data[ss->index - 2].type == SYNTAX_TERM && ss->data[ss->index - 2].t.type == ADD &&
             ss->data[ss->index - 3].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 2].type == SYNTAX_TERM && ss->data[ss->index - 2].t.type == ADD
+            ss->data[ss->index - 4].type == SYNTAX_LESSER
             ) {
         printf("E => E + E\n");
+        SSData right_side = syntax_stack_top(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
+        SSData left_side = syntax_stack_top(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
+        sd.node->node_type = ADDITION;
+        node_insert(sd.node, left_side.node);
+        node_insert(sd.node, right_side.node);
         syntax_stack_push(ss, sd);
     } else if (
             ss->data[ss->index - 1].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 4].type == SYNTAX_LESSER &&
+            ss->data[ss->index - 2].type == SYNTAX_TERM && ss->data[ss->index - 2].t.type == MUL &&
             ss->data[ss->index - 3].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 2].type == SYNTAX_TERM && ss->data[ss->index - 2].t.type == MUL
+            ss->data[ss->index - 4].type == SYNTAX_LESSER
             ) {
         printf("E => E * E\n");
+        SSData right_side = syntax_stack_top(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
+        SSData left_side = syntax_stack_top(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
+        sd.node->node_type = MULTIPLICATION;
+        node_insert(sd.node, left_side.node);
+        node_insert(sd.node, right_side.node);
         syntax_stack_push(ss, sd);
     } else if (
             ss->data[ss->index - 1].type == SYNTAX_EXPR &&
@@ -139,14 +171,16 @@ int check_rule(SyntaxStack* ss) {
     } else if (
             ss->data[ss->index - 1].type == SYNTAX_TERM && ss->data[ss->index - 1].t.type == CLOSE_PARENTHES &&
             ss->data[ss->index - 2].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 3].type == SYNTAX_TERM && ss->data[ss->index - 3].t.type == OPEN_PARENTHES
+            ss->data[ss->index - 3].type == SYNTAX_TERM && ss->data[ss->index - 3].t.type == OPEN_PARENTHES &&
+            ss->data[ss->index - 4].type == SYNTAX_LESSER
             ) {
         printf("E => (E)\n");
         syntax_stack_pop(ss);
+        SSData term = syntax_stack_top(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
-        syntax_stack_push(ss, sd);
+        syntax_stack_push(ss, term);
     } else {
         free_tree(node);
         return 1;
@@ -257,6 +291,9 @@ bool check_expression(ASTNode* tree, Scanner* s) {
                 return 1;
         }
     } while (!(t.type == END_OF_LINE || t.type == END_OF_FILE  || t.type == COLON || is_comp(t)) || syntax_stack_nearest_term(&ss, NULL).type != SYNTAX_END);
+    SSData result = syntax_stack_top(&ss);
+
+    node_insert(tree, result.node);
 
     return 0;
 }
