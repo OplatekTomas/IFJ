@@ -6,7 +6,6 @@
 
 void syntax_stack_push(SyntaxStack* ss, SSData data) {
     ss->data[ss->index] = data;
-    //ss->tokens[ss->index] = t;
     ss->index++;
 }
 
@@ -46,3 +45,6 @@ void syntax_stack_shift(SyntaxStack* ss, unsigned index) {
     ss->index++;
 }
 
+SSData syntax_stack_top(SyntaxStack* ss) {
+    return ss->data[ss->index - 1];
+}

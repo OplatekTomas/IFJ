@@ -62,8 +62,17 @@ bool is_token_i(Token t) {
 int check_rule(SyntaxStack* ss) {
     SSData sd;
     sd.type = SYNTAX_EXPR;
+
+    ASTNode* node = node_new();
+    if (node == NULL) {
+        return 99;
+    }
+    node->node_type = EXPRESSION;
+    sd.node = node;
+
     if (ss->data[ss->index - 1].type == SYNTAX_TERM && is_token_i(ss->data[ss->index - 1].t) && ss->data[ss->index - 2].type == SYNTAX_LESSER) {
         printf("ID => E\n");
+        SSData term = syntax_stack_top(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         syntax_stack_push(ss, sd);
@@ -139,19 +148,10 @@ int check_rule(SyntaxStack* ss) {
         syntax_stack_pop(ss);
         syntax_stack_push(ss, sd);
     } else {
+        free_tree(node);
         return 1;
     }
     return 0;
-}
-
-void free_tree(ASTNode* tree) {
-
-    // TODO: dodelat
-    for (unsigned i = 0; i < tree->subnode_len; i++) {
-        free_tree(tree->nodes[i]);
-    }
-    free(tree->nodes);
-    free(tree);
 }
 
 int convert_token_to_table_index(SSData sd) {
@@ -185,27 +185,6 @@ int convert_token_to_table_index(SSData sd) {
         default:
             return -1;
     }
-}
-
-ASTNode* node_init(ASTNode* node) {
-    node->node_type = PROGRAM_ROOT;
-    node->subnode_len = 0;
-    node->capacity = 10;
-    node->nodes = malloc(10 * sizeof(ASTNode*));
-    if (node->nodes == NULL) {
-        return NULL;
-    } else {
-        return node;
-    }
-}
-
-void node_insert(ASTNode* node, ASTNode* new) {
-    if ((node->subnode_len + 1) > node->capacity) {
-        node->nodes = realloc(node->nodes, node->capacity * 10);
-        node->capacity *= 10;
-    }
-    node->nodes[node->subnode_len] = new;
-    node->subnode_len += 1;
 }
 
 bool check_function_call(ASTNode* tree, Scanner* s) {
