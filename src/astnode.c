@@ -66,7 +66,10 @@ const char *node_types[100] = {
     "VALUE_INT",
     "VALUE_FLOAT",
     "VALUE_STRING",
+    "VALUE_NONE",
     "CONVERSION",
+    "FUNCTION_DEFINITION",
+    "FUNCTION_CALL",
     NULL
 };
 

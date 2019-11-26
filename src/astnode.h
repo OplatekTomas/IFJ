@@ -28,7 +28,10 @@ typedef enum {
     VALUE_INT,
     VALUE_FLOAT,
     VALUE_STRING,
+    VALUE_NONE,
     CONVERSION,
+    FUNCTION_DEFINITION,
+    FUNCITON_CALL
 } NonTerm;
 
 typedef enum {
