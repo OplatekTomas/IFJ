@@ -73,6 +73,7 @@ int check_rule(SyntaxStack* ss) {
     if (ss->data[ss->index - 1].type == SYNTAX_TERM && is_token_i(ss->data[ss->index - 1].t) && ss->data[ss->index - 2].type == SYNTAX_LESSER) {
         printf("ID => E\n");
         SSData term = syntax_stack_top(ss);
+        // pop term and lessen sign
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         // add info
@@ -100,73 +101,41 @@ int check_rule(SyntaxStack* ss) {
         syntax_stack_push(ss, sd);
     } else if (
             ss->data[ss->index - 1].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 2].type == SYNTAX_TERM && ss->data[ss->index - 2].t.type == ADD &&
+            ss->data[ss->index - 2].type == SYNTAX_TERM &&
             ss->data[ss->index - 3].type == SYNTAX_EXPR &&
             ss->data[ss->index - 4].type == SYNTAX_LESSER
             ) {
-        printf("E => E + E\n");
+        // kontrola vsech aritmetickych pravidel
+        printf("E => E '%i' E\n", ss->data[ss->index -2].t.type);
+        switch (ss->data[ss->index - 2].t.type) {
+            case ADD:
+                sd.node->node_type = ADDITION;
+                break;
+            case MUL:
+                sd.node->node_type = MULTIPLICATION;
+                break;
+            case SUB:
+                sd.node->node_type = SUBTRACTION;
+                break;
+            case DIV:
+                sd.node->node_type = DIVISION;
+                break;
+            case DOUBLE_DIV:
+                sd.node->node_type = INT_DIVISION;
+                break;
+            default:
+                free_tree(node);
+                return 1;
+        }
+        // pop left and right side, op and lesser sign
         SSData right_side = syntax_stack_top(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
         SSData left_side = syntax_stack_top(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
-        sd.node->node_type = ADDITION;
         node_insert(sd.node, left_side.node);
         node_insert(sd.node, right_side.node);
-        syntax_stack_push(ss, sd);
-    } else if (
-            ss->data[ss->index - 1].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 2].type == SYNTAX_TERM && ss->data[ss->index - 2].t.type == MUL &&
-            ss->data[ss->index - 3].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 4].type == SYNTAX_LESSER
-            ) {
-        printf("E => E * E\n");
-        SSData right_side = syntax_stack_top(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        SSData left_side = syntax_stack_top(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        sd.node->node_type = MULTIPLICATION;
-        node_insert(sd.node, left_side.node);
-        node_insert(sd.node, right_side.node);
-        syntax_stack_push(ss, sd);
-    } else if (
-            ss->data[ss->index - 1].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 4].type == SYNTAX_LESSER &&
-            ss->data[ss->index - 3].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 2].type == SYNTAX_TERM && ss->data[ss->index - 2].t.type == SUB
-            ) {
-        printf("E => E - E\n");
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_push(ss, sd);
-    } else if (
-            ss->data[ss->index - 1].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 4].type == SYNTAX_LESSER &&
-            ss->data[ss->index - 3].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 2].type == SYNTAX_TERM && ss->data[ss->index - 2].t.type == DIV
-            ) {
-        printf("E => E / E\n");
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_push(ss, sd);
-    } else if (
-            ss->data[ss->index - 1].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 4].type == SYNTAX_LESSER &&
-            ss->data[ss->index - 3].type == SYNTAX_EXPR &&
-            ss->data[ss->index - 2].type == SYNTAX_TERM && ss->data[ss->index - 2].t.type == DOUBLE_DIV
-            ) {
-        printf("E => E // E\n");
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
         syntax_stack_push(ss, sd);
     } else if (
             ss->data[ss->index - 1].type == SYNTAX_TERM && ss->data[ss->index - 1].t.type == CLOSE_PARENTHES &&
@@ -175,6 +144,7 @@ int check_rule(SyntaxStack* ss) {
             ss->data[ss->index - 4].type == SYNTAX_LESSER
             ) {
         printf("E => (E)\n");
+        // pop parenthesis and  expression
         syntax_stack_pop(ss);
         SSData term = syntax_stack_top(ss);
         syntax_stack_pop(ss);
