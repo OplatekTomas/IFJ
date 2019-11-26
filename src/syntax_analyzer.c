@@ -294,7 +294,9 @@ bool check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
 
 bool check_cond(ASTNode* tree, Scanner* s){
     //Kontrola podmínky
-    if(check_expression(tree, s)){
+    ASTNode* comp = node_new();
+    comp->node_type = CONDITION;
+    if(check_expression(comp, s)){
         return false;
     }
     Token t = get_next_token(s);
@@ -354,7 +356,9 @@ int check_args(ASTNode* tree, Scanner* s){
 
 int check_if(ASTNode* tree, Scanner* s) {
     printf("Kontrola ifu\n");
-    if(!check_cond(tree, s)){ //if x < y
+    ASTNode *root_node = node_new();
+    root_node->node_type = IF_ELSE;
+    if(!check_cond(root_node, s)){ //if x < y
         return 2;
     }
     int result = check_keyword_helper(tree, s);

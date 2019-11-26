@@ -35,6 +35,7 @@ ASTNode* node_new() {
     node->n.i = 0;
     node->str_val = NULL;
     node->symbol = NULL;
+    node->op = OP_NONE;
     node->nodes = malloc(START_CAPACITY * sizeof(ASTNode*));
     if (node->nodes == NULL) {
         free(node);

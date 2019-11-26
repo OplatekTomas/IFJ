@@ -32,12 +32,23 @@ typedef enum {
     CONVERSION,
 } NonTerm;
 
+typedef enum {
+    OP_GR,
+    OP_LS,
+    OP_EQ,
+    OP_NEQ,
+    OP_GREQ,
+    OP_LSEQ,
+    OP_NONE
+} OpType;
+
 struct node {
     NonTerm node_type;
     unsigned subnode_len;
     unsigned capacity;
     void* symbol;
     NumberVal n;
+    OpType op;
     char* str_val;
     struct node** nodes;
 };
