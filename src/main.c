@@ -21,7 +21,6 @@ int main (int argc, char *argv[]) {
             fclose(f);
             throw_err(syntax_result);
         }
-
         free_tree(tree);
         fclose(f);
     }else{

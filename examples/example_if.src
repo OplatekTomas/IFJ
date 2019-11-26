@@ -1,4 +1,7 @@
-if num + 10 < 10:
-    pica = 20
+cislo = 60 + 10 * 5
+if cislo + 10 < 10:
+    while cislo < 5:
+        cislo = fce(10, 10, 'wat')
+    cislo = 10 + 20
 else:
-    pica = 420
+    cislo = 60 * 10 * 5
