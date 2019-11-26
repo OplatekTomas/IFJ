@@ -9,7 +9,7 @@ unsigned int htabHashFunction(const char *str) {    //funkce pro generování ha
     const unsigned char *p;
     for(p=(const unsigned char*)str; *p!='\0'; p++)
         h = 65599*h + *p;
-    return h % SIZE;
+    return h % TABLE_SIZE;
 }
 
 void deleteST(char* id){    //odstraní symTable z hashTable
@@ -46,7 +46,7 @@ void insertST(struct symTable* ptr){    //vloží již alokovanou a vypněnou sy
     }
 }
 
-struct symTable* searchST(char* id){    //vyhledá symTable v hashTable a vrátí pointer na ní
+SymTable* searchST(char* id){    //vyhledá symTable v hashTable a vrátí pointer na ní
     if(id == NULL){
         return NULL;
     }
@@ -63,8 +63,8 @@ struct symTable* searchST(char* id){    //vyhledá symTable v hashTable a vrát�
 }
 
 void freeHT(){  //vymaže celou hashTable
-    for(int i = 0; i < SIZE; i++){
-        struct symTable *item = hashTable[i];
+    for(int i = 0; i < TABLE_SIZE; i++){
+        SymTable *item = hashTable[i];
         while(item != NULL){
             struct symTable *tmp = item->ptrNext;
             free(item);

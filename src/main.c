@@ -22,6 +22,8 @@ int main (int argc, char *argv[]) {
             throw_err(syntax_result);
         }
 
+        print_tree(tree);
+
         free_tree(tree);
         fclose(f);
     }else{

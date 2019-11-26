@@ -450,9 +450,6 @@ bool check_definition(ASTNode* tree, Scanner* s) {
     return 0;
 }
 
-
-// TODO: definice funkce nemuze byt v ifu / whilu
-
 /// Vraci   0 - kdyz nenastala chyba
 ///         1 - kdyz nastala lexikalni chyba
 ///         2 - kdyz nastala syntakticka chyba
