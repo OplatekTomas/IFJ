@@ -15,6 +15,7 @@ ASTNode* node_new() {
     node->n.i = 0;
     node->str_val = NULL;
     node->symbol = NULL;
+    node->condType = OP_NONE;
     node->nodes = malloc(START_CAPACITY * sizeof(ASTNode*));
     if (node->nodes == NULL) {
         free(node);
@@ -44,4 +45,47 @@ void free_tree(ASTNode* tree) {
     }
     free(tree->nodes);
     free(tree);
+}
+
+
+const char *node_types[100] = {
+    "STATEMENT",
+    "EXPRESSION",
+    "ADDITION",
+    "SUBTRACTION",
+    "MULTIPLICATION",
+    "DIVISION",
+    "INT_DIVISION",
+    "ASSIGNMENT",
+    "CONDITION",
+    "BLOCK",
+    "PROGRAM_ROOT",
+    "IDENTIFICATOR",
+    "IF_ELSE",
+    "WHILE_LOOP",
+    "VALUE_INT",
+    "VALUE_FLOAT",
+    "VALUE_STRING",
+    "CONVERSION",
+    NULL
+};
+
+void print_node_name(ASTNode* tree, int indent){
+    for(int i = 0; i < indent*2; i++){
+        printf(" ");
+    }
+    printf("%s\n", node_types[tree->node_type]);
+}
+void print_tree_private(ASTNode* tree, int indent){
+    indent += 1;
+    print_node_name(tree, indent);
+    for(unsigned int i = 0; i < tree->subnode_len; i++){
+        print_tree_private(tree->nodes[i], indent);
+    }
+}
+
+void print_tree(ASTNode* tree){
+    printf("Vypis binarniho stromu:\n");
+    print_tree_private(tree, -1);
+    printf("Konec stromu\n");
 }
