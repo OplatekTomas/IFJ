@@ -69,5 +69,6 @@ void free_tree(ASTNode* tree);
 void print_tree(ASTNode* tree);
 ASTNode** get_all_expressions(ASTNode* root, unsigned* len);
 ASTNode* node_iter_next(ASTIterator* iter);
+ASTNode** get_postorder(ASTNode* root);
 
 #endif //IFJ_ASTNODE_H
