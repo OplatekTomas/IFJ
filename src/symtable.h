@@ -7,24 +7,29 @@
 #include <stdint.h>
 #include <string.h>
 
-typedef enum {
-    NONE,
-    INT,
-    FLOAT,
-    STRING
-} typeValue;
-
 #define SIZE 97
 
 #ifndef IFJ_SYMTABLE_H
 #define IFJ_SYMTABLE_H
 
+typedef enum {
+    TYPE_NONE,
+    TYPE_INT,
+    TYPE_FLOAT,
+    TYPE_STRING
+} typeValue;
+
+typedef struct arguments{
+    char* id;
+    typeValue type;
+};
+
 typedef struct symTable{
     char* id;
-    int type;
+    typeValue type;
     void* dataPtr;
     int argNum;
-    int* arguments;
+    struct arguments* args; //TODO asi nefunguje
     int scope;
     struct symTableFunc* ptrNext;
 };

@@ -118,7 +118,8 @@ void node_insert(ASTNode* node, ASTNode new) {
 }
 
 bool check_function_call(ASTNode* tree, Scanner* s) {
-    //TODO: dodelat
+    //jestli otevřená závorka, Dejvova funkce, zavřená závorka
+    //TODO Kolby
     printf("kontrola volani funkce\n");
     return true;
 }
