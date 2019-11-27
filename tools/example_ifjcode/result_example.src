@@ -6,9 +6,6 @@ LABEL $$main # main body
 CREATEFRAME  # no main-body vars
 PUSHFRAME
 DEFVAR LF@y
-CREATEFRAME
-DEFVAR TF@%1
-MOVE TF@%1 int@10
-MOVE LF@y TF@%1
+MOVE LF@y int@10
 WRITE LF@y
 

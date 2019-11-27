@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "syntax_analyzer.h"
 #include "semantic_analyzer.h"
+#include "code_gen.h"
 #include "error.h"
 
 #define DEBUG 1
@@ -31,6 +32,7 @@ int main (int argc, char *argv[]) {
             free_tree(tree);
             throw_err(semantics_result);
         }
+        GenerateCode(tree, NULL, stdout);
         free_tree(tree);
         fclose(f);
     }else{
