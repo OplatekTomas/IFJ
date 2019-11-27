@@ -13,5 +13,15 @@ int check_semantics(ASTNode *tree) {
 }
 
 int check_types(ASTNode *tree) {
+    unsigned exprs_len = 0;
+    ASTNode** exprs = get_all_expressions(tree, &exprs_len);
+
+    printf("nalezeno %u vyrazu", exprs_len);
+
+    for (unsigned i = 0; i < exprs_len; i++) {
+        ASTNode* expr = exprs[i];
+    }
+
+    free(exprs);
     return 0;
 }

@@ -35,7 +35,7 @@ int check_block(ASTNode* tree, Scanner* s);
 int check_function_call(ASTNode* tree, Scanner* s);
 
 
-SSValue parse_table[9][9] = {
+const SSValue parse_table[9][9] = {
     //            +    -    *    /    //   (    )   ID   end
     /* + */     {'>', ' ', '<', '<', '<', '<', '>', '<', '>'},
     /* - */     {' ', '>', '<', '<', '<', '<', '>', '<', '>'},
