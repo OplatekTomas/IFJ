@@ -389,6 +389,7 @@ int check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
     }
     id_node->node_type = IDENTIFICATOR;
     //TODO: pridat pointer na identifikator do tabulky symbolu
+
     node_insert(assign_node, id_node);
 
     if (check_expression(assign_node, s) == 0) {
@@ -631,7 +632,7 @@ int check_block(ASTNode* tree, Scanner* s, bool is_inside_function) {
 ///         1 - kdyz nastala lexikalni chyba
 ///         2 - kdyz nastala syntakticka chyba
 ///         3 - kdyz nastal konec souboru
-int check_root_block(ASTNode* tree, Scanner *s, bool is_inside_definition) {
+int check_root_block(ASTNode* tree, Scanner *s) {
     Token t = get_next_token(s);
     switch (t.type) {
         case KEYWORD:
@@ -639,7 +640,7 @@ int check_root_block(ASTNode* tree, Scanner *s, bool is_inside_definition) {
                 return check_definition(tree, s);
             } else {
                 scanner_unget(s, t);
-                return check_block(tree, s, is_inside_definition);
+                return check_block(tree, s, false);
             }
         case END_OF_FILE:
             return 3;
@@ -647,7 +648,7 @@ int check_root_block(ASTNode* tree, Scanner *s, bool is_inside_definition) {
             return 1;
         default:
             scanner_unget(s, t);
-            return check_block(tree, s, is_inside_definition);
+            return check_block(tree, s, true);
     }
 }
 
@@ -660,10 +661,12 @@ int get_derivation_tree(FILE *source, ASTNode** tree) {
         return 99;
     }
 
+    SymTable* table = allocHT();
+
     root->node_type = PROGRAM_ROOT;
     int result = 0;
     while (result != 3) {
-        result = check_root_block(root ,&s, false);
+        result = check_root_block(root ,&s);
         switch (result) {
             case 1:
                 free_tree(root);
