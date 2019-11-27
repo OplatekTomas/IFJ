@@ -11,9 +11,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#ifndef IFJ_SYMTABLE_H
-#define IFJ_SYMTABLE_H
-
 #define TABLE_SIZE 97
 
 typedef enum {
@@ -23,26 +20,33 @@ typedef enum {
     TYPE_STRING
 } typeValue;
 
-typedef struct arguments{
+struct arguments{
     char* id;
     typeValue type;
+    struct arguments* nextArg;
 };
+
+typedef struct arguments Arguments;
 
 struct symTable {
     char* id;
     typeValue type;
     void* dataPtr;
     int argNum;
-    struct arguments* args; //TODO asi nefunguje
+    struct arguments* args;
     int scope;
     struct symTable* ptrNext;
 };
 
 typedef struct symTable SymTable;
 
-SymTable* hashTable[TABLE_SIZE];
+SymTable* hashTable;
+
+SymTable* allocHT();
 
 unsigned int htabHashFunction(const char *str);
+
+Arguments* allocArgs();
 
 void deleteST(char* id);
 

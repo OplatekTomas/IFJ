@@ -4,6 +4,16 @@
 
 #include "symtable.h"
 
+SymTable* allocHT(){
+    SymTable* ptr = (SymTable*)malloc(TABLE_SIZE* sizeof(SymTable));
+    return ptr;
+}
+
+Arguments* allocArgs(){
+    Arguments* ptr = (Arguments*)malloc(sizeof(Arguments));
+    return ptr;
+}
+
 unsigned int htabHashFunction(const char *str) {    //funkce pro generování hashe podle id
     uint32_t h=0;     // musí mít 32 bitů
     const unsigned char *p;
