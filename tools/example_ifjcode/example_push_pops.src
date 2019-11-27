@@ -1,0 +1,6 @@
+.IFJcode19
+
+DEFVAR GF@var
+PUSHS int@42
+POPS GF@var
+WRITE GF@var

@@ -31,7 +31,8 @@ typedef enum {
     VALUE_NONE,
     CONVERSION,
     FUNCTION_DEFINITION,
-    FUNCITON_CALL
+    FUNCITON_CALL,
+    RETURN_VALUE
 } NonTerm;
 
 typedef enum {

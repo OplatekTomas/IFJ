@@ -1,0 +1,28 @@
+.IFJcode19
+
+# a = inputi
+DEFVAR GF@a
+READ GF@a int
+WRITE GF@a
+
+# if a > 0 then
+DEFVAR GF@res
+GT GF@res GF@a int@0
+JUMPIFNEQ $false GF@res bool@true
+DEFVAR GF@a$type
+DEFVAR GF@a$tmp
+TYPE GF@a$type GF@a
+MOVE GF@a$tmp GF@a
+JUMPIFEQ $if$1$true$int GF@a$type string@int
+JUMPIFEQ $if$1$true$float GF@a$type string@float
+EXIT int@4
+LABEL $if$1$true$int
+INT2FLOAT GF@a$tmp GF@a
+LABEL $if$1$true$float
+# a = a + 0.5
+ADD GF@a GF@a$tmp float@0x1p-1
+
+LABEL $false
+WRITE GF@a
+
+
