@@ -15,6 +15,11 @@ int main (int argc, char *argv[]) {
 
         FILE *f = fopen(argv[1], "r");
 
+        if (f == NULL) {
+            fprintf(stderr, "neexistujici soubor\n");
+            throw_err(INTERN_ERR);
+        }
+
         ASTNode* tree;
         int syntax_result = get_derivation_tree(f, &tree);
 

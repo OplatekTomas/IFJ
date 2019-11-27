@@ -34,7 +34,7 @@ char token_type[][100] = {
 int check_block(ASTNode* tree, Scanner* s, bool is_inside_definition);
 int check_function_call(ASTNode* tree, Scanner* s);
 
-SSValue parse_table[9][9] = {
+const SSValue parse_table[9][9] = {
     //            +    -    *    /    //   (    )   ID   end
     /* + */     {'>', ' ', '<', '<', '<', '<', '>', '<', '>'},
     /* - */     {' ', '>', '<', '<', '<', '<', '>', '<', '>'},
