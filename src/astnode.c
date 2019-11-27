@@ -83,31 +83,55 @@ ASTNode** get_all_expressions(ASTNode* root, unsigned* len) {
     return expressions;
 }
 
+
 const char *node_types[100] = {
-    "STATEMENT",
-    "EXPRESSION",
-    "ADDITION",
-    "SUBTRACTION",
-    "MULTIPLICATION",
-    "DIVISION",
-    "INT_DIVISION",
-    "ASSIGNMENT",
-    "CONDITION",
-    "BLOCK",
-    "PROGRAM_ROOT",
-    "IDENTIFICATOR",
-    "IF_ELSE",
-    "WHILE_LOOP",
-    "VALUE_INT",
-    "VALUE_FLOAT",
-    "VALUE_STRING",
-    "VALUE_NONE",
-    "CONVERSION",
-    "FUNCTION_DEFINITION",
-    "FUNCTION_CALL",
-    "RETURN_VALUE",
-    NULL
+        "STATEMENT",
+        "EXPRESSION",
+        "ADDITION",
+        "SUBTRACTION",
+        "MULTIPLICATION",
+        "DIVISION",
+        "INT_DIVISION",
+        "ASSIGNMENT",
+        "CONDITION",
+        "BLOCK",
+        "PROGRAM_ROOT",
+        "IDENTIFICATOR",
+        "IF_ELSE",
+        "WHILE_LOOP",
+        "VALUE_INT",
+        "VALUE_FLOAT",
+        "VALUE_STRING",
+        "VALUE_NONE",
+        "CONVERSION",
+        "FUNCTION_DEFINITION",
+        "FUNCTION_CALL",
+        "RETURN_VALUE",
+        NULL
 };
+
+
+void goLeft(ASTNode* tree,ASTNode** resultThingy, int *counter, int *currentCap){
+    for(unsigned i = 0; i < tree->subnode_len; i++){
+        if(*counter + 2 >= *currentCap){
+            *currentCap += 100;
+            resultThingy = realloc(resultThingy, sizeof(ASTNode*)* *currentCap);
+        }
+        goLeft(tree->nodes[i],resultThingy, counter, currentCap);
+    }
+    resultThingy[*counter] = tree;
+    (*counter)++;
+}
+
+ASTNode** get_postorder(ASTNode* root){
+    int counter = 0;
+    int cap = 100;
+    ASTNode** result = malloc(sizeof(ASTNode*) * cap);
+    goLeft(root, result, &counter, &cap);
+    return result;
+}
+
+
 
 void print_node_name(ASTNode* tree, int indent){
     for(int i = 0; i < indent*2; i++){

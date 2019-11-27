@@ -5,6 +5,6 @@
 #include "code_gen.h"
 
 void GenerateCode(ASTNode *tree, SymTable *table, FILE *output) {
-
+    ASTNode** result = get_postorder(tree);
 }
 

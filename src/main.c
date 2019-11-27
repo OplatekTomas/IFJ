@@ -37,6 +37,7 @@ int main (int argc, char *argv[]) {
             free_tree(tree);
             throw_err(semantics_result);
         }
+
         GenerateCode(tree, NULL, stdout);
         free_tree(tree);
         fclose(f);
