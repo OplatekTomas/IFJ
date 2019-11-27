@@ -40,20 +40,18 @@ struct symTable {
 
 typedef struct symTable SymTable;
 
-SymTable* hashTable;
-
 SymTable* allocHT();
 
 unsigned int htabHashFunction(const char *str);
 
 Arguments* allocArgs();
 
-void deleteST(char* id);
+void deleteST(SymTable** hashTable, char* id);
 
-void freeHT();
+void freeHT(SymTable** hashTable);
 
-void insertST(SymTable* ptr);
+void insertST(SymTable** hashTable, SymTable* ptr);
 
-SymTable* searchST(char* id);
+SymTable* searchST(SymTable** hashTable, char* id);
 
 #endif //IFJ_SYMTABLE_H
