@@ -1,0 +1,3 @@
+#vyhodi chybu, protoze chybi indent
+while (5>4):
+print('pruser')

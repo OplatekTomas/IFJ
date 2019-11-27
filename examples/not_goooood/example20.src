@@ -1,0 +1,4 @@
+if 1>0:
+    pass
+else
+    print('pruser')

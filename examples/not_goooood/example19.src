@@ -1,0 +1,4 @@
+if:
+    print('pruser')
+else:
+    print('pruser cislo 2')

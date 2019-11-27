@@ -1,0 +1,7 @@
+a = 'c'
+b = 5.01
+
+if a == b:
+    print('pruser')
+else:
+    print('actually taky chyba')

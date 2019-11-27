@@ -1,0 +1,14 @@
+#vypise se nope, pokud nesouhlasi pocty
+def func(x):
+    i = 0
+    while x != 0:
+        x = x - 1
+        i = i + 1
+    return i
+
+cislo = func(10)
+
+if cislo == 10:
+    print('yes')
+else:
+    print('nope')

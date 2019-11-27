@@ -1,0 +1,6 @@
+#chyba by nastat nemela...
+x=5
+y=4
+while x>y:
+    pass
+print('cajk')

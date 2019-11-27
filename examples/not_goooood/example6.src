@@ -1,0 +1,5 @@
+#mela by se vyhodit chyba kvuli spatnemu poctu argumentu pri volani
+def func(a,b,c):
+    return a
+
+a = func(4,5,6,7)
