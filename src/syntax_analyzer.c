@@ -1,5 +1,4 @@
 #include "syntax_analyzer.h"
-#include "syntax_stack.h"
 
 char token_type[][100] = {
         "ID",
@@ -32,6 +31,9 @@ char token_type[][100] = {
         "DOUBLE_DIV"
 };
 
+int check_block(ASTNode* tree, Scanner* s);
+int check_function_call(ASTNode* tree, Scanner* s);
+
 
 SSValue parse_table[9][9] = {
     //            +    -    *    /    //   (    )   ID   end
@@ -55,24 +57,115 @@ SSValue parse_table[9][9] = {
 // E => (E)
 // E => ID
 
+// vraci true kdyz token je cislo, ID, string, nebo podobne
+bool is_token_i(Token t) {
+    return t.type == ID || t.type == INT || t.type == FLOAT || t.type == STRING;
+}
+
 int check_rule(SyntaxStack* ss) {
-    if (ss->data[ss->index - 1] == SYNTAX_TERM && ss->data[ss->index - 2] == SYNTAX_LESSER) {
-        syntax_stack_pop(ss);
-        syntax_stack_pop(ss);
-        Token t;
-        syntax_stack_push(ss, SYNTAX_EXPR, t);
-        return 0;
+    SSData sd;
+    sd.type = SYNTAX_EXPR;
+
+    ASTNode* node = node_new();
+    if (node == NULL) {
+        return 99;
     }
-    return 1;
+    node->node_type = EXPRESSION;
+    sd.node = node;
+
+    if (ss->data[ss->index - 1].type == SYNTAX_TERM && is_token_i(ss->data[ss->index - 1].t) && ss->data[ss->index - 2].type == SYNTAX_LESSER) {
+        printf("ID => E\n");
+        SSData term = syntax_stack_top(ss);
+        // pop term and lessen sign
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        // add info
+        switch (term.t.type) {
+            case INT:
+                sd.node->node_type = VALUE_INT;
+                sd.node->n.i = term.t.numberVal.i;
+                break;
+            case FLOAT:
+                sd.node->node_type = VALUE_FLOAT;
+                sd.node->n.d = term.t.numberVal.d;
+                break;
+            case STRING:
+                sd.node->node_type = VALUE_STRING;
+                sd.node->str_val = term.t.stringValue;
+                break;
+            case ID:
+                sd.node->node_type = IDENTIFICATOR;
+                //TODO: pridat kontrolu symbolu
+                break;
+            default:
+                // tohle by se snad stat nemelo
+                return 99;
+        }
+        syntax_stack_push(ss, sd);
+    } else if (
+            ss->data[ss->index - 1].type == SYNTAX_EXPR &&
+            ss->data[ss->index - 2].type == SYNTAX_TERM &&
+            ss->data[ss->index - 3].type == SYNTAX_EXPR &&
+            ss->data[ss->index - 4].type == SYNTAX_LESSER
+            ) {
+        // kontrola vsech aritmetickych pravidel
+        printf("E => E '%i' E\n", ss->data[ss->index -2].t.type);
+        switch (ss->data[ss->index - 2].t.type) {
+            case ADD:
+                sd.node->node_type = ADDITION;
+                break;
+            case MUL:
+                sd.node->node_type = MULTIPLICATION;
+                break;
+            case SUB:
+                sd.node->node_type = SUBTRACTION;
+                break;
+            case DIV:
+                sd.node->node_type = DIVISION;
+                break;
+            case DOUBLE_DIV:
+                sd.node->node_type = INT_DIVISION;
+                break;
+            default:
+                free_tree(node);
+                return 1;
+        }
+        // pop left and right side, op and lesser sign
+        SSData right_side = syntax_stack_top(ss);
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        SSData left_side = syntax_stack_top(ss);
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        node_insert(sd.node, left_side.node);
+        node_insert(sd.node, right_side.node);
+        syntax_stack_push(ss, sd);
+    } else if (
+            ss->data[ss->index - 1].type == SYNTAX_TERM && ss->data[ss->index - 1].t.type == CLOSE_PARENTHES &&
+            ss->data[ss->index - 2].type == SYNTAX_EXPR &&
+            ss->data[ss->index - 3].type == SYNTAX_TERM && ss->data[ss->index - 3].t.type == OPEN_PARENTHES &&
+            ss->data[ss->index - 4].type == SYNTAX_LESSER
+            ) {
+        printf("E => (E)\n");
+        // pop parenthesis and  expression
+        syntax_stack_pop(ss);
+        SSData term = syntax_stack_top(ss);
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        syntax_stack_pop(ss);
+        syntax_stack_push(ss, term);
+    } else {
+        free_tree(node);
+        return 1;
+    }
+    return 0;
 }
 
-void free_tree(ASTNode* tree) {
-    // TODO: dodelat
-    free(tree);
-}
-
-int convert_token_to_table_index(Token t) {
-    switch (t.type) {
+int convert_token_to_table_index(SSData sd) {
+    if (sd.type == SYNTAX_END) {
+        return 8;
+    }
+    switch (sd.t.type) {
         case ADD:
             return 0;
         case SUB:
@@ -95,32 +188,48 @@ int convert_token_to_table_index(Token t) {
         case END_OF_LINE:
         case END_OF_FILE:
         case COLON:
+        case EQ:
+        case NON_EQ:
+        case GREATER_OR_EQ:
+        case LESSER_OR_EQ:
+        case GREATER:
+        case LESSER:
+        case COMMA:
             return 8;
         default:
             return -1;
     }
 }
 
-void node_init(ASTNode* node) {
-    //node->node_type = 0;
-    node->subnode_len = 0;
-    node->capacity = 10;
-    node->nodes = malloc(10 * sizeof(ASTNode));
-}
 
-void node_insert(ASTNode* node, ASTNode new) {
-    if ((node->subnode_len + 1) > node->capacity) {
-        node->nodes = realloc(node->nodes, node->capacity * 10);
-        node->capacity *= 10;
+bool is_comp(Token t, CondType* type){
+    //Lehčí backwards kompatibilita.. když je mi OpType u prdele střelím tam prostě NULL a sere pes
+    if(type == NULL){
+        return t.type == EQ || t.type == NON_EQ || t.type == GREATER || t.type == LESSER || t.type == LESSER_OR_EQ || t.type == GREATER_OR_EQ;
     }
-    node->nodes[node->subnode_len] = new;
-    node->subnode_len += 1;
-}
-
-bool check_function_call(ASTNode* tree, Scanner* s) {
-    //jestli otevřená závorka, Dejvova funkce, zavřená závorka
-    //TODO Kolby
-    printf("kontrola volani funkce\n");
+    switch(t.type){
+        case EQ:
+            *type = OP_EQ;
+            break;
+        case NON_EQ:
+            *type = OP_NEQ;
+            break;
+        case GREATER:
+            *type = OP_GR;
+            break;
+        case LESSER:
+            *type = OP_LS;
+            break;
+        case GREATER_OR_EQ:
+            *type = OP_GREQ;
+            break;
+        case LESSER_OR_EQ:
+            *type = OP_LSEQ;
+            break;
+        default:
+            *type = OP_NONE;
+            return false;
+    }
     return true;
 }
 
@@ -131,7 +240,7 @@ bool check_expression(ASTNode* tree, Scanner* s) {
     Token t = get_next_token(s);
     if (t.type == ID) {
         Token par = get_next_token(s);
-        if (t.type == OPEN_PARENTHES) {
+        if (par.type == OPEN_PARENTHES) {
             scanner_unget(s, par);
             scanner_unget(s, t);
             return check_function_call(tree, s);
@@ -150,82 +259,272 @@ bool check_expression(ASTNode* tree, Scanner* s) {
 
     // TODO: dodelat
     do {
-        Token a;
-        SSValue sv = syntax_stack_nearest_term(&ss, &a);
+        unsigned loc;
+        SSData sd = syntax_stack_nearest_term(&ss, &loc);
 
-        int A = convert_token_to_table_index(a);
-        if (sv == SYNTAX_END) {
-            A = 8;
-        }
+        int A = convert_token_to_table_index(sd);
 
-        //t = get_next_token(s);
-        int B = convert_token_to_table_index(t);
+        SSData term;
+        term.type = SYNTAX_TERM;
+        term.t = t;
+
+        int B = convert_token_to_table_index(term);
 
         switch (parse_table[A][B]) {
             case SYNTAX_GREATER:
-                printf("syntax_greater\n");
                 if (check_rule(&ss)) {
                     return 1;
                 }
                 break;
             case SYNTAX_EQUAL:
-                printf("syntax_equal\n");
-                syntax_stack_push(&ss, SYNTAX_TERM, t);
+                syntax_stack_push(&ss, term);
                 t = get_next_token(s);
                 break;
             case SYNTAX_LESSER:
-                printf("syntax_lesser\n");
-                Token throwaway;
-                syntax_stack_push(&ss, SYNTAX_LESSER, throwaway);
-                syntax_stack_push(&ss, SYNTAX_TERM, t);
+                syntax_stack_shift(&ss, loc);
+                syntax_stack_push(&ss, term);
                 t = get_next_token(s);
+                if (t.type == END_OF_LINE || t.type == END_OF_FILE || is_comp(t, NULL) || t.type == COMMA ||  t.type == COLON) {
+                    scanner_unget(s, t);
+                }
                 break;
             case SYNTAX_EMPTY:
             default:
                 return 1;
         }
-    } while (!(t.type == END_OF_LINE || t.type == END_OF_FILE  || t.type == COLON) || syntax_stack_nearest_term(&ss, NULL) != SYNTAX_END);
+    } while (!(t.type == END_OF_LINE || t.type == COMMA || t.type == END_OF_FILE  || t.type == COLON || is_comp(t, NULL)) || syntax_stack_nearest_term(&ss, NULL).type != SYNTAX_END);
+    SSData result = syntax_stack_top(&ss);
+
+    node_insert(tree, result.node);
+
     return 0;
 }
 
-bool check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
+int check_function_call(ASTNode* tree, Scanner* s) {
+    printf("kontrola volani funkce\n");
+    Token t = get_next_token(s);
+    ASTNode *root_tree = node_new();
+    root_tree->str_val = t.stringValue;
+    root_tree->node_type = FUNCITON_CALL;
+    if((t = get_next_token(s)).type != OPEN_PARENTHES){
+        free_tree(root_tree);
+        return 2;
+    }
+    Token prev_t = t;
+    t = get_next_token(s);
+    while(t.type != CLOSE_PARENTHES){
+        ASTNode *param = node_new();
+        switch(t.type){
+            case ID:
+                param->node_type = IDENTIFICATOR;
+                param->str_val = t.stringValue;
+                break;
+            case NONE:
+                param->node_type = VALUE_NONE;
+                break;
+            case INT:
+                param->node_type = VALUE_INT;
+                param->n.i = t.numberVal.i;
+                break;
+            case FLOAT:
+                param->node_type = VALUE_FLOAT;
+                param->n.d = t.numberVal.d;
+                break;
+            case STRING:
+                param->node_type = VALUE_STRING;
+                param->str_val = t.stringValue;
+                break;
+            default:
+                free_tree(root_tree);
+                return 2;
+        }
+        node_insert(root_tree, param);
+        prev_t = t;
+        t = get_next_token(s);
+        if(t.type == CLOSE_PARENTHES){
+            break;
+        }
+        if(t.type != COMMA){
+            free_tree(root_tree);
+            return 2;
+        }
+        prev_t = t;
+        t = get_next_token(s);
+    }
+    if(prev_t.type == COMMA){
+        free_tree(root_tree);
+        return 2;
+    }
+    node_insert(tree, root_tree);
+    return 0;
+}
+
+
+int check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
     //TODO: dodelat
     printf("kontrola prirazeni\n");
-    if (check_expression(tree, s)) {
-        return true;
-    } else {
+    ASTNode* assign_node = node_new();
+    if (assign_node == NULL) {
+        return 99;
+    }
+    assign_node->node_type = ASSIGNMENT;
+
+    ASTNode* id_node = node_new();
+    if (id_node == NULL) {
+        return 99;
+    }
+    id_node->node_type = IDENTIFICATOR;
+    //TODO: pridat pointer na identifikator do tabulky symbolu
+    node_insert(assign_node, id_node);
+
+    if (check_expression(assign_node, s) == 0) {
+        Token t = get_next_token(s);
+        if (t.type == END_OF_LINE) {
+            node_insert(tree, assign_node);
+            return false;
+        }
+    }
+    free_tree(assign_node);
+    return true;
+}
+
+
+bool check_cond(ASTNode* tree, Scanner* s){
+    //Kontrola podmínky
+    CondType optype = OP_NONE;
+    ASTNode* comp = node_new();
+    comp->node_type = CONDITION;
+    if(check_expression(comp, s)){
+        free_tree(comp);
         return false;
     }
-}
-
-bool check_if(ASTNode* tree, Scanner* s) {
-    //TODO: dodelat
+    Token t = get_next_token(s);
+    if(!is_comp(t, &optype)){
+        free_tree(comp);
+        return false;
+    }
+    comp->condType = optype;
+    if(check_expression(comp, s)){
+        free_tree(comp);
+        return false;
+    }
+    node_insert(tree, comp);
     return true;
 }
 
-bool check_while(ASTNode* tree, Scanner* s) {
-    //TODO: dodelat
-    return true;
+int check_keyword_helper(ASTNode* tree, Scanner* s){
+    Token t = get_next_token(s);
+    if(t.type != COLON){ // if x < y:
+        return 2;
+    }
+    t = get_next_token(s);
+    if(t.type != END_OF_LINE){ //if x < y: EOL
+        return 2;
+    }
+    t = get_next_token(s);
+    if(t.type != INDENT){ //if x < y: EOL a nějaké hovado by to nechalo prázdné
+        return 1;
+    }
+    ASTNode *block_node = node_new();
+    block_node->node_type = BLOCK;
+    while(true){ // Read inside block
+        t = get_next_token(s);
+        if(t.type == DEDENT){
+            break;
+        }
+        scanner_unget(s, t);
+        int result = check_block(block_node, s);
+        if(result != 0){
+            free_tree(block_node);
+            return result;
+        }
+    }
+    node_insert(tree, block_node);
+    return 0;
+}
+
+int check_args(ASTNode* tree, Scanner* s){
+    Token token = get_next_token(s);
+    if(token.type != OPEN_PARENTHES)
+        return 1;
+
+    while(true){
+        token = get_next_token(s);
+        if(token.type != ID){
+            return 1;
+        }
+        token = get_next_token(s);
+        if(token.type != COLON){
+            break;
+        }
+    }
+    return (token.type == CLOSE_PARENTHES) ? 0 : 1;
+}
+
+int check_if(ASTNode* tree, Scanner* s) {
+    printf("Kontrola ifu\n");
+    ASTNode *root_node = node_new();
+    root_node->node_type = IF_ELSE;
+    if(!check_cond(root_node, s)){ //if x < y
+        free_tree(root_node);
+        return 2;
+    }
+    int result = check_keyword_helper(root_node, s);
+    if(result != 0){
+        free_tree(root_node);
+        return result;
+    }
+    Token t = get_next_token(s);
+    printf("Kontrola else\n");
+    if(t.type != KEYWORD || t.keywordValue != ELSE){
+        free_tree(root_node);
+        return 2;
+    }
+    result = check_keyword_helper(root_node, s);
+    if(result != 0){
+        free_tree(root_node);
+        return result;
+    }
+    node_insert(tree, root_node);
+    print_tree(tree);
+    return 0;
+}
+
+int check_while(ASTNode* tree, Scanner* s) {
+     printf("kontrola whilu\n");
+    ASTNode *while_node = node_new();
+    while_node->node_type = WHILE_LOOP;
+    if(!check_cond(while_node, s)){
+        free_tree(while_node);
+        return 2;
+    }
+    int result = check_keyword_helper(while_node, s);
+    if(result != 0){
+        free_tree(while_node);
+        return result;
+    }
+    node_insert(tree, while_node);
+    return 0;
 }
 
 bool check_definition(ASTNode* tree, Scanner* s) {
-    //TODO: dodelat
-    Token t = get_next_token(s);
-    if (t.type != ID) {
+    //TODO: dodelat strom
+    //TODO: pouzit tabulku
+    printf("kontrola defu\n");
+    Token token = get_next_token(s);
+    int result = check_args(tree, s);
+    if(result != 0)
+        return result;
 
-    }
-
-    return true;
+    result = check_keyword_helper(tree, s);
+    if(result != 0)
+        return result;
+    return 0;
 }
-
-
-// TODO: definice funkce nemuze byt v ifu / whilu
 
 /// Vraci   0 - kdyz nenastala chyba
 ///         1 - kdyz nastala lexikalni chyba
 ///         2 - kdyz nastala syntakticka chyba
-///         3 - kdyz nastal konec souboru
-///         4 - kdyz narazi na 'DEDENT'
 int check_block(ASTNode* tree, Scanner* s) {
     Token t = get_next_token(s);
 
@@ -251,58 +550,71 @@ int check_block(ASTNode* tree, Scanner* s) {
                     return check_if(tree, s);
                 case WHILE:
                     return check_while(tree, s);
+                case PASS:
+                    break;
+                case DEF:
+                    return check_definition(tree,s);
                 default:
                     return 2;
             }
         case STRING:
             //TODO: Poresit multiline stringy
             return 2;
-        case END_OF_FILE:
-            return 3;
-        case DEDENT:
-            return 4;
+        case END_OF_LINE:
+            return 0;
         default:
             return 2;
     }
 }
 
+/// Vraci   0 - kdyz nenastala chyba
+///         1 - kdyz nastala lexikalni chyba
+///         2 - kdyz nastala syntakticka chyba
+///         3 - kdyz nastal konec souboru
 int check_root_block(ASTNode* tree, Scanner *s) {
     Token t = get_next_token(s);
     switch (t.type) {
         case KEYWORD:
             if (t.keywordValue  == DEF) {
                 return check_definition(tree, s);
+            } else {
+                scanner_unget(s, t);
+                return check_block(tree, s);
             }
+        case END_OF_FILE:
+            return 3;
         default:
             scanner_unget(s, t);
             return check_block(tree, s);
     }
 }
 
-/// Vraci derivacni strom, ktery je potom potreba uvolnit
-ASTNode* get_derivation_tree(FILE *source) {
+int get_derivation_tree(FILE *source, ASTNode** tree) {
     Scanner s;
     scanner_init(&s, source);
 
-    ASTNode* root = (ASTNode*)malloc(sizeof(ASTNode));
-    node_init(root);
-    root->node_type = PROGRAM_ROOT;
+    ASTNode* root = node_new();
+    if (root == NULL) {
+        return 99;
+    }
 
-    while (true) {
-        int result = check_root_block(root ,&s);
+    root->node_type = PROGRAM_ROOT;
+    int result = 0;
+    while (result != 3) {
+        result = check_root_block(root ,&s);
         switch (result) {
             case 1:
                 fprintf(stderr, "nastala lexikalni chyba\n");
                 free_tree(root);
-                return NULL;
+                return 1;
             case 2:
                 fprintf(stderr, "nastala syntakticka chyba\n");
                 free_tree(root);
-                return NULL;
-            case 3:
-                break;
+                return 2;
             default:
                 continue;
         }
     }
+    *tree = root;
+    return 0;
 }

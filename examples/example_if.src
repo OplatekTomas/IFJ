@@ -1,0 +1,7 @@
+cislo = 60 + 10 * 5
+if cislo + 10 < 10:
+    while cislo < 5:
+        cislo = fce(10, 10, 'wat')
+    cislo = 10 + 20
+else:
+    cislo = 60 * 10 * 5

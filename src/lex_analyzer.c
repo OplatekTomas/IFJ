@@ -355,7 +355,7 @@ Token get_new_token(Scanner* s) {
             case '\'':
                 t.type = STRING;
                 handle_singleline_string(source, &t);
-                break;
+                return t;
             case '=':
             case '<':
             case '>':
