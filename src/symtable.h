@@ -11,6 +11,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#define TABLE_SIZE 97
+
 typedef enum {
     TYPE_NONE,
     TYPE_INT,
@@ -18,30 +20,38 @@ typedef enum {
     TYPE_STRING
 } typeValue;
 
-#define TABLE_SIZE 97
+struct arguments{
+    char* id;
+    typeValue type;
+    struct arguments* nextArg;
+};
+
+typedef struct arguments Arguments;
 
 struct symTable {
     char* id;
     typeValue type;
     void* dataPtr;
     int argNum;
-    int* arguments;
+    struct arguments* args;
     int scope;
     struct symTable* ptrNext;
 };
 
 typedef struct symTable SymTable;
 
-SymTable* hashTable[TABLE_SIZE];
+SymTable* allocHT();
 
 unsigned int htabHashFunction(const char *str);
 
-void deleteST(char* id);
+Arguments* allocArgs();
 
-void freeHT();
+void deleteST(SymTable** hashTable, char* id);
 
-void insertST(SymTable* ptr);
+void freeHT(SymTable** hashTable);
 
-SymTable* searchST(char* id);
+void insertST(SymTable** hashTable, SymTable* ptr);
+
+SymTable* searchST(SymTable** hashTable, char* id);
 
 #endif //IFJ_SYMTABLE_H

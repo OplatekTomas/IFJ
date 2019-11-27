@@ -4,6 +4,16 @@
 
 #include "symtable.h"
 
+SymTable* allocHT(){
+    SymTable* ptr = (SymTable*)malloc(TABLE_SIZE* sizeof(SymTable));
+    return ptr;
+}
+
+Arguments* allocArgs(){
+    Arguments* ptr = (Arguments*)malloc(sizeof(Arguments));
+    return ptr;
+}
+
 unsigned int htabHashFunction(const char *str) {    //funkce pro generování hashe podle id
     uint32_t h=0;     // musí mít 32 bitů
     const unsigned char *p;
@@ -12,12 +22,12 @@ unsigned int htabHashFunction(const char *str) {    //funkce pro generování ha
     return h % TABLE_SIZE;
 }
 
-void deleteST(char* id){    //odstraní symTable z hashTable
+void deleteST(SymTable** hashTable, char* id){    //odstraní symTable z hashTable
     if(id == NULL)
         return;
     int hash = htabHashFunction(id);
-    struct symTable* item = hashTable[hash];
-    struct symTable* prev = hashTable[hash];
+    SymTable* item = hashTable[hash];
+    SymTable* prev = hashTable[hash];
     if(item == NULL){
         return;
     }
@@ -36,17 +46,17 @@ void deleteST(char* id){    //odstraní symTable z hashTable
     free(item);
 }
 
-void insertST(struct symTable* ptr){    //vloží již alokovanou a vypněnou symTable do hashTable
+void insertST(SymTable** hashTable, SymTable* ptr){    //vloží již alokovanou a vypněnou symTable do hashTable
     if(ptr != NULL){
         int hash = htabHashFunction(ptr->id);
-        if(hashTable[hash] != NULL){
+        if(&hashTable[hash] != NULL){
             ptr->ptrNext = hashTable[hash];
         }
         hashTable[hash] = ptr;
     }
 }
 
-SymTable* searchST(char* id){    //vyhledá symTable v hashTable a vrátí pointer na ní
+SymTable* searchST(SymTable** hashTable, char* id){    //vyhledá symTable v hashTable a vrátí pointer na ní
     if(id == NULL){
         return NULL;
     }
@@ -62,7 +72,7 @@ SymTable* searchST(char* id){    //vyhledá symTable v hashTable a vrátí point
     return ptr;
 }
 
-void freeHT(){  //vymaže celou hashTable
+void freeHT(SymTable** hashTable){  //vymaže celou hashTable
     for(int i = 0; i < TABLE_SIZE; i++){
         SymTable *item = hashTable[i];
         while(item != NULL){

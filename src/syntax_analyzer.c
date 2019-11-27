@@ -155,7 +155,7 @@ int check_rule(SyntaxStack* ss) {
         syntax_stack_push(ss, term);
     } else {
         free_tree(node);
-        return 1;
+        return 2;
     }
     return 0;
 }
@@ -232,7 +232,7 @@ bool is_comp(Token t, CondType* type){
     return true;
 }
 
-bool check_expression(ASTNode* tree, Scanner* s) {
+int check_expression(ASTNode* tree, Scanner* s) {
      printf("kontrola vyrazu\n");
 
     // zkontrolovat jestli neni volana funkce
@@ -243,11 +243,16 @@ bool check_expression(ASTNode* tree, Scanner* s) {
             scanner_unget(s, par);
             scanner_unget(s, t);
             return check_function_call(tree, s);
+        } else if (par.type == ERROR) {
+            return 1;
         } else {
             scanner_unget(s, par);
             scanner_unget(s, t);
         }
     } else {
+        if (t.type == ERROR) {
+            return 1;
+        }
         scanner_unget(s, t);
     }
 
@@ -255,6 +260,10 @@ bool check_expression(ASTNode* tree, Scanner* s) {
     syntax_stack_init(&ss);
 
     t = get_next_token(s);
+
+    if (t.type == ERROR) {
+        return 1;
+    }
 
     // TODO: dodelat
     do {
@@ -272,24 +281,30 @@ bool check_expression(ASTNode* tree, Scanner* s) {
         switch (parse_table[A][B]) {
             case SYNTAX_GREATER:
                 if (check_rule(&ss)) {
-                    return 1;
+                    return 2;
                 }
                 break;
             case SYNTAX_EQUAL:
                 syntax_stack_push(&ss, term);
                 t = get_next_token(s);
+                if (t.type == ERROR) {
+                    return 1;
+                }
                 break;
             case SYNTAX_LESSER:
                 syntax_stack_shift(&ss, loc);
                 syntax_stack_push(&ss, term);
                 t = get_next_token(s);
+                if (t.type == ERROR) {
+                    return 1;
+                }
                 if (t.type == END_OF_LINE || t.type == END_OF_FILE || is_comp(t, NULL) || t.type == COMMA ||  t.type == COLON) {
                     scanner_unget(s, t);
                 }
                 break;
             case SYNTAX_EMPTY:
             default:
-                return 1;
+                return 2;
         }
     } while (!(t.type == END_OF_LINE || t.type == COMMA || t.type == END_OF_FILE  || t.type == COLON || is_comp(t, NULL)) || syntax_stack_nearest_term(&ss, NULL).type != SYNTAX_END);
     SSData result = syntax_stack_top(&ss);
@@ -374,17 +389,22 @@ int check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
     }
     id_node->node_type = IDENTIFICATOR;
     //TODO: pridat pointer na identifikator do tabulky symbolu
+
     node_insert(assign_node, id_node);
 
     if (check_expression(assign_node, s) == 0) {
         Token t = get_next_token(s);
+        if (t.type == ERROR) {
+            free_tree(assign_node);
+            return 1;
+        }
         if (t.type == END_OF_LINE) {
             node_insert(tree, assign_node);
-            return false;
+            return 0;
         }
     }
     free_tree(assign_node);
-    return true;
+    return 2;
 }
 
 
@@ -573,6 +593,8 @@ int check_block(ASTNode* tree, Scanner* s, bool is_inside_function) {
                     scanner_unget(s, after);
                     scanner_unget(s, t);
                     return check_function_call(tree, s);
+                case ERROR:
+                    return 1;
                 default:
                     return 2;
             }
@@ -599,6 +621,8 @@ int check_block(ASTNode* tree, Scanner* s, bool is_inside_function) {
             return 2;
         case END_OF_LINE:
             return 0;
+        case ERROR:
+            return 1;
         default:
             return 2;
     }
@@ -608,7 +632,7 @@ int check_block(ASTNode* tree, Scanner* s, bool is_inside_function) {
 ///         1 - kdyz nastala lexikalni chyba
 ///         2 - kdyz nastala syntakticka chyba
 ///         3 - kdyz nastal konec souboru
-int check_root_block(ASTNode* tree, Scanner *s, bool is_inside_definition) {
+int check_root_block(ASTNode* tree, Scanner *s) {
     Token t = get_next_token(s);
     switch (t.type) {
         case KEYWORD:
@@ -616,13 +640,15 @@ int check_root_block(ASTNode* tree, Scanner *s, bool is_inside_definition) {
                 return check_definition(tree, s);
             } else {
                 scanner_unget(s, t);
-                return check_block(tree, s, is_inside_definition);
+                return check_block(tree, s, false);
             }
         case END_OF_FILE:
             return 3;
+        case ERROR:
+            return 1;
         default:
             scanner_unget(s, t);
-            return check_block(tree, s, is_inside_definition);
+            return check_block(tree, s, true);
     }
 }
 
@@ -635,17 +661,17 @@ int get_derivation_tree(FILE *source, ASTNode** tree) {
         return 99;
     }
 
+    SymTable* table = allocHT();
+
     root->node_type = PROGRAM_ROOT;
     int result = 0;
     while (result != 3) {
-        result = check_root_block(root ,&s, false);
+        result = check_root_block(root ,&s);
         switch (result) {
             case 1:
-                fprintf(stderr, "nastala lexikalni chyba\n");
                 free_tree(root);
                 return 1;
             case 2:
-                fprintf(stderr, "nastala syntakticka chyba\n");
                 free_tree(root);
                 return 2;
             default:
