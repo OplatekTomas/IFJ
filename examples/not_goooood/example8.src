@@ -1,0 +1,3 @@
+#mela by vyletet chyba, kvulit chybejicimu jmenu f-ce
+def (x, y):
+    print('pruser')

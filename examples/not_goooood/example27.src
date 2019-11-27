@@ -1,0 +1,7 @@
+a = 5
+b = 'c'
+
+if a == b:
+    print('pruser')
+else:
+    print('actually taky pruser')

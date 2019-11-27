@@ -1,0 +1,5 @@
+#vyhodi se chyba, protoze chybi dvojtecka
+x = 5
+y = 4
+while x>y
+    print('pruser')

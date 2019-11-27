@@ -1,0 +1,5 @@
+#mela by se vyhodit chyba kvuli chybejici dvojtecce
+def func(x, y)
+    x = y
+
+func(5, 6)

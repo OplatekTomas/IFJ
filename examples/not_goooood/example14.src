@@ -1,0 +1,4 @@
+#chyba by nastat nemela...
+while (5>4):
+    pass
+print('neco')
