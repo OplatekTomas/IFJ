@@ -33,7 +33,7 @@ char token_type[][100] = {
 
 int check_block(ASTNode* tree, Scanner* s);
 int check_function_call(ASTNode* tree, Scanner* s);
-
+bool is_inside_function_definition = false;
 
 SSValue parse_table[9][9] = {
     //            +    -    *    /    //   (    )   ID   end
@@ -444,21 +444,36 @@ int check_keyword_helper(ASTNode* tree, Scanner* s){
 }
 
 int check_args(ASTNode* tree, Scanner* s){
-    Token token = get_next_token(s);
-    if(token.type != OPEN_PARENTHES)
+    Token t = get_next_token(s);
+    if(t.type != OPEN_PARENTHES){
         return 1;
-
-    while(true){
-        token = get_next_token(s);
-        if(token.type != ID){
-            return 1;
+    }
+    Token prev_t = t;
+    t = get_next_token(s);
+    while(t.type != CLOSE_PARENTHES){
+        if(t.type != ID){
+            return 2;
         }
-        token = get_next_token(s);
-        if(token.type != COLON){
+        ASTNode *param = node_new();
+        param->node_type = IDENTIFICATOR;
+        param->str_val = t.stringValue;
+        node_insert(tree, param);
+        prev_t = t;
+        t = get_next_token(s);
+        if(t.type == CLOSE_PARENTHES){
             break;
         }
+        if(t.type != COMMA){
+            free_tree(tree);
+            return 2;
+        }
+        prev_t = t;
+        t = get_next_token(s);
     }
-    return (token.type == CLOSE_PARENTHES) ? 0 : 1;
+    if(prev_t.type == COMMA){
+        return 2;
+    }
+    return 0;
 }
 
 int check_if(ASTNode* tree, Scanner* s) {
@@ -507,18 +522,43 @@ int check_while(ASTNode* tree, Scanner* s) {
     return 0;
 }
 
-bool check_definition(ASTNode* tree, Scanner* s) {
-    //TODO: dodelat strom
+int check_definition(ASTNode* tree, Scanner* s) {
     //TODO: pouzit tabulku
     printf("kontrola defu\n");
+    is_inside_function_definition = true;
     Token token = get_next_token(s);
-    int result = check_args(tree, s);
-    if(result != 0)
+    ASTNode* root_tree = node_new();
+    root_tree->node_type = FUNCTION_DEFINITION;
+    int result = check_args(root_tree, s);
+    if(result != 0){
+        is_inside_function_definition = false;
+        free(root_tree);
         return result;
+    }
+    result = check_keyword_helper(root_tree, s);
+    if(result != 0){
+        is_inside_function_definition = false;
+        free_tree(root_tree);
+        return result;
+    }
+    is_inside_function_definition = false;
+    node_insert(tree, root_tree);
+    return 0;
+}
 
-    result = check_keyword_helper(tree, s);
-    if(result != 0)
+int check_return(ASTNode* tree, Scanner* s){
+    if(!is_inside_function_definition){
+        return 2;
+    }
+    print_tree(tree);
+    ASTNode* node = node_new();
+    node->node_type = RETURN_VALUE;
+    int result = check_expression(node, s);
+    if(result != 0){
+        free_tree(node);
         return result;
+    }
+    node_insert(tree, node);
     return 0;
 }
 
@@ -554,6 +594,8 @@ int check_block(ASTNode* tree, Scanner* s) {
                     break;
                 case DEF:
                     return check_definition(tree,s);
+                case RETURN:
+                    return check_return(tree, s);
                 default:
                     return 2;
             }

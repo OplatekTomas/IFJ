@@ -1,0 +1,8 @@
+def fn(x,y):
+    if x < y:
+        return
+    else:
+        return y
+        
+cislo = fn(10,5)
+print(cislo)

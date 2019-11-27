@@ -73,6 +73,7 @@ const char *node_types[100] = {
     "CONVERSION",
     "FUNCTION_DEFINITION",
     "FUNCTION_CALL",
+    "RETURN_VALUE",
     NULL
 };
 
