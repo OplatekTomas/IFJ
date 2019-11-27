@@ -51,6 +51,38 @@ ASTNode* node_iter_next(ASTIterator *iter) {
      return NULL;
 }
 
+bool is_num_op(NonTerm type) {
+    return type == ADDITION || type == MULTIPLICATION || type == SUBTRACTION || type == DIVISION || type == INT_DIVISION;
+}
+
+void check_for_expr(ASTNode* root, ASTNode** expressions, unsigned* expr_len, unsigned* expr_cap) {
+    for (unsigned i = 0; i < root->subnode_len; i++) {
+        ASTNode* child = root->nodes[i];
+
+        if (is_num_op(child->node_type)) {
+            expressions[*expr_len] = child;
+            (*expr_len)+=1;
+            if (expr_len == expr_cap) {
+                expressions = realloc(expressions, 10 * (*expr_cap) * sizeof(ASTNode*));
+            }
+        } else {
+            check_for_expr(child, expressions, expr_len, expr_cap);
+        }
+    }
+}
+
+ASTNode** get_all_expressions(ASTNode* root, unsigned* len) {
+    unsigned expression_capacity = 20;
+    ASTNode** expressions = malloc(sizeof(ASTNode*) * expression_capacity);
+    unsigned expressions_len = 0;
+
+    check_for_expr(root, expressions, &expressions_len, &expression_capacity);
+
+    (*len) = expressions_len;
+
+    return expressions;
+}
+
 const char *node_types[100] = {
     "STATEMENT",
     "EXPRESSION",
@@ -73,6 +105,7 @@ const char *node_types[100] = {
     "CONVERSION",
     "FUNCTION_DEFINITION",
     "FUNCTION_CALL",
+    "RETURN_VALUE",
     NULL
 };
 

@@ -137,7 +137,7 @@ void handle_eof(FILE* source, IndentStack* is, Token* t) {
 
 void handle_multline_string(FILE* source, Token* t){
     int max_len = 256;
-    int len = 0;
+    int len = 4;
     //Drobná prasárna která kontroluje jestli jsou na začátku multiline stringu opravdu 3 " za sebou
     if(getc(source) != '"' || getc(source) != '"' || getc(source) != '"'){
         t->type = ERROR;
@@ -156,6 +156,12 @@ void handle_multline_string(FILE* source, Token* t){
     }
     //Useknutí stringu tak, aby neobsahoval poslední 3 zaky (uvozovky) - ty nejsou potřeba
     t->stringValue[len-3] = 0;
+    char *temp = calloc(len, sizeof(char));
+    for(int i = 0; i < len; i++){
+        temp[i] = t->stringValue[i+4];
+    }
+    free(t->stringValue);
+    t->stringValue = temp;
     t->type = STRING;
 }
 

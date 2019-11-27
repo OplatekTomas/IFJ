@@ -31,7 +31,8 @@ typedef enum {
     VALUE_NONE,
     CONVERSION,
     FUNCTION_DEFINITION,
-    FUNCITON_CALL
+    FUNCITON_CALL,
+    RETURN_VALUE
 } NonTerm;
 
 typedef enum {
@@ -66,6 +67,7 @@ ASTNode* node_new();
 void node_insert(ASTNode* node, ASTNode* new);
 void free_tree(ASTNode* tree);
 void print_tree(ASTNode* tree);
+ASTNode** get_all_expressions(ASTNode* root, unsigned* len);
 ASTNode* node_iter_next(ASTIterator* iter);
 
 #endif //IFJ_ASTNODE_H

@@ -1,0 +1,11 @@
+
+.IFJcode19
+JUMP $$main
+
+LABEL $$main # main body
+CREATEFRAME  # no main-body vars
+PUSHFRAME
+DEFVAR LF@y
+MOVE LF@y int@10
+WRITE LF@y
+
