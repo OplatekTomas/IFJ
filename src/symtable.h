@@ -11,6 +11,11 @@
 #include <stdint.h>
 #include <string.h>
 
+#ifndef IFJ_SYMTABLE_H
+#define IFJ_SYMTABLE_H
+
+#define TABLE_SIZE 97
+
 typedef enum {
     TYPE_NONE,
     TYPE_INT,
@@ -18,14 +23,17 @@ typedef enum {
     TYPE_STRING
 } typeValue;
 
-#define TABLE_SIZE 97
+typedef struct arguments{
+    char* id;
+    typeValue type;
+};
 
 struct symTable {
     char* id;
     typeValue type;
     void* dataPtr;
     int argNum;
-    int* arguments;
+    struct arguments* args; //TODO asi nefunguje
     int scope;
     struct symTable* ptrNext;
 };
