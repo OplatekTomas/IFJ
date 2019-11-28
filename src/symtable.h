@@ -40,11 +40,13 @@ struct symTable {
 
 typedef struct symTable SymTable;
 
-SymTable* allocHT();
+SymTable** allocHT();
 
 unsigned int htabHashFunction(const char *str);
 
 Arguments* allocArgs();
+
+SymTable* allocST(char* id);
 
 void deleteST(SymTable** hashTable, char* id);
 

@@ -3,6 +3,7 @@
 #include "semantic_analyzer.h"
 #include "code_gen.h"
 #include "error.h"
+#include "symtable.h"
 
 int main (int argc, char *argv[]) {
 #ifndef NDEBUG
@@ -20,9 +21,10 @@ int main (int argc, char *argv[]) {
 #endif
 
     ASTNode* tree;
+    SymTable** table;
 
 #ifndef NDEBUG
-    int syntax_result = get_derivation_tree(f, &tree);
+    int syntax_result = get_derivation_tree(f, &tree, &table);
 #else
     int syntax_result = get_derivation_tree(stdin, &tree);
 #endif
@@ -32,6 +34,7 @@ int main (int argc, char *argv[]) {
         #ifndef NDEBUG
         fclose(f);
         #endif
+        freeHT(table);
         throw_err(syntax_result);
     }
     print_tree(tree);
@@ -43,10 +46,12 @@ int main (int argc, char *argv[]) {
         fclose(f);
 #endif
         free_tree(tree);
+        freeHT(table);
         throw_err(semantics_result);
     }
-    GenerateCode(tree, NULL, stdout);
+    generate_code(tree, table, stdout);
     free_tree(tree);
+    freeHT(table);
 #ifndef NDEBUG
     fclose(f);
 #endif
