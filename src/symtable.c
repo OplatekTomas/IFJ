@@ -31,6 +31,7 @@ SymTable* allocST(char* id){
     ptr->dataPtr = NULL;
     ptr->scope = 0;
     ptr->type = TYPE_NONE;
+    ptr->localTable = NULL;
 }
 
 unsigned int htabHashFunction(const char *str) {    //funkce pro generování hashe podle id
@@ -127,4 +128,8 @@ void freeHT(SymTable** hashTable){  //vymaže celou hashTable
         hashTable[i] = NULL;
     }
     free(hashTable);
+}
+
+void fill_with_fn(SymTable **hashTable) {
+    char** functions = {"inputs","inputi", "inputf", "print", "len", "substr", "ord", "chr"};
 }
