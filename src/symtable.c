@@ -131,6 +131,8 @@ void freeHT(SymTable** hashTable){  //vymaže celou hashTable
                 free(item->args);
                 args = argsNext;
             }
+            if(item->localTable != NULL)
+                freeHT(item->localTable);
             free(item);
             item = tmpST;
         }
