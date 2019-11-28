@@ -14,7 +14,7 @@ def fn2(y):
 cislo = fn(10,5)
 if cislo < 10:
     y = 5
-    z = fn(cislo, y)
+    z = fn(y, y)
 else:
     pass
 

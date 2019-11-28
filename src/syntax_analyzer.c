@@ -32,7 +32,7 @@ char token_type[][100] = {
 };
 
 int check_block(ASTNode* tree, Scanner* s, bool is_inside_definition, char* name, SymTable** table);
-int check_function_call(ASTNode* tree, Scanner* s);
+int check_function_call(ASTNode* tree, Scanner* s, SymTable** table, char* functionName);
 
 const SSValue parse_table[9][9] = {
     //            +    -    *    /    //   (    )   ID   end
@@ -366,7 +366,7 @@ int check_expression(ASTNode* tree, Scanner* s, SymTable** table, char* func_nam
         if (par.type == OPEN_PARENTHES) {
             scanner_unget(s, par);
             scanner_unget(s, t);
-            return check_function_call(tree, s);
+            return check_function_call(tree, s, table, func_name);
         } else if (par.type == ERROR) {
             return 1;
         } else {
@@ -447,7 +447,7 @@ int check_expression(ASTNode* tree, Scanner* s, SymTable** table, char* func_nam
     return 0;
 }
 
-int check_function_call(ASTNode* tree, Scanner* s) {
+int check_function_call(ASTNode* tree, Scanner* s, SymTable** table, char* functionName) {
     printf("kontrola volani funkce\n");
     Token t = get_next_token(s);
     if(t.type == ERROR){
@@ -468,9 +468,15 @@ int check_function_call(ASTNode* tree, Scanner* s) {
             case ERROR:
                 free_tree(param);
                 return 1;
-            case ID:
+            case ID:;
+                SymTable* tb = searchST(table, t.stringValue, functionName);
+                if(tb == NULL){
+                    free_tree(root_tree);
+                    return 3;
+                }
+                free(t.stringValue);
                 param->node_type = IDENTIFICATOR;
-                param->str_val = t.stringValue;
+                param->str_val = tb->id;
                 break;
             case NONE:
                 param->node_type = VALUE;
@@ -815,7 +821,7 @@ int check_block(ASTNode* tree, Scanner* s, bool is_inside_function, char* func_n
                 case OPEN_PARENTHES:
                     scanner_unget(s, after);
                     scanner_unget(s, t);
-                    return check_function_call(tree, s);
+                    return check_function_call(tree, s, table, func_name);
                 case ERROR:
                     return 1;
                 default:
