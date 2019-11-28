@@ -9,5 +9,6 @@
 
 int check_semantics(ASTNode* tree);
 int check_types(ASTNode* tree);
+int check_division_by_zero(ASTNode* tree);
 
 #endif //IFJ_SEMANTIC_ANALYZER_H
