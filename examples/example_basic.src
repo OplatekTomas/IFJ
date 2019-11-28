@@ -1,2 +1,5 @@
-x = 10 +20 * 30
-print("a")
+def my_new_func(a,b,c):
+    print('ahoj')
+
+def my_new_func(a,b):
+    return b
