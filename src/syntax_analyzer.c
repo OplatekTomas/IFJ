@@ -317,6 +317,9 @@ int check_expression(ASTNode* tree, Scanner* s) {
 int check_function_call(ASTNode* tree, Scanner* s) {
     printf("kontrola volani funkce\n");
     Token t = get_next_token(s);
+    if(t.type == ERROR){
+        return 1;
+    }
     ASTNode *root_tree = node_new();
     root_tree->str_val = t.stringValue;
     root_tree->node_type = FUNCITON_CALL;
@@ -329,6 +332,9 @@ int check_function_call(ASTNode* tree, Scanner* s) {
     while(t.type != CLOSE_PARENTHES){
         ASTNode *param = node_new();
         switch(t.type){
+            case ERROR:
+                free_tree(param);
+                return 1;
             case ID:
                 param->node_type = IDENTIFICATOR;
                 param->str_val = t.stringValue;
@@ -418,6 +424,10 @@ bool check_cond(ASTNode* tree, Scanner* s){
         return false;
     }
     Token t = get_next_token(s);
+    if(t.type == ERROR){
+        free_tree(comp);
+        return 1;
+    }
     if(!is_comp(t, &optype)){
         free_tree(comp);
         return false;
@@ -433,6 +443,9 @@ bool check_cond(ASTNode* tree, Scanner* s){
 
 int check_keyword_helper(ASTNode* tree, Scanner* s, bool is_inside_definition){
     Token t = get_next_token(s);
+    if(t.type == ERROR){
+        return 1;
+    }
     if(t.type != COLON){ // if x < y:
         return 2;
     }
@@ -448,6 +461,10 @@ int check_keyword_helper(ASTNode* tree, Scanner* s, bool is_inside_definition){
     block_node->node_type = BLOCK;
     while(true){ // Read inside block
         t = get_next_token(s);
+        if(t.type == ERROR){
+            free_tree(block_node);
+            return 1;
+        }
         if(t.type == DEDENT){
             break;
         }
@@ -464,11 +481,17 @@ int check_keyword_helper(ASTNode* tree, Scanner* s, bool is_inside_definition){
 
 int check_args(ASTNode* tree, Scanner* s){
     Token t = get_next_token(s);
+    if(t.type == ERROR){
+        return 1;
+    }
     if(t.type != OPEN_PARENTHES){
         return 1;
     }
     Token prev_t = t;
     t = get_next_token(s);
+    if(t.type == ERROR){
+        return 1;
+    }
     while(t.type != CLOSE_PARENTHES){
         if(t.type != ID){
             return 2;
@@ -479,6 +502,10 @@ int check_args(ASTNode* tree, Scanner* s){
         node_insert(tree, param);
         prev_t = t;
         t = get_next_token(s);
+        if(t.type == ERROR){
+            free_tree(param);
+            return 1;
+        }
         if(t.type == CLOSE_PARENTHES){
             break;
         }
@@ -488,6 +515,10 @@ int check_args(ASTNode* tree, Scanner* s){
         }
         prev_t = t;
         t = get_next_token(s);
+        if(t.type == ERROR){
+            free_tree(param);
+            return 1;
+        }
     }
     if(prev_t.type == COMMA){
         return 2;
@@ -509,6 +540,10 @@ int check_if(ASTNode* tree, Scanner* s, bool is_inside_definition) {
         return result;
     }
     Token t = get_next_token(s);
+    if(t.type == ERROR){
+        free_tree(root_node);
+        return 1;
+    }
     printf("Kontrola else\n");
     if(t.type != KEYWORD || t.keywordValue != ELSE){
         free_tree(root_node);
@@ -545,6 +580,9 @@ int check_definition(ASTNode* tree, Scanner* s) {
     //TODO: pouzit tabulku
     printf("kontrola defu\n");
     Token token = get_next_token(s);
+    if(token.type == ERROR){
+        return 1;
+    }
     ASTNode* root_tree = node_new();
     root_tree->node_type = FUNCTION_DEFINITION;
     int result = check_args(root_tree, s);
@@ -580,6 +618,7 @@ int check_return(ASTNode* tree, Scanner* s){
 int check_block(ASTNode* tree, Scanner* s, bool is_inside_function) {
     Token t = get_next_token(s);
 
+
     printf("kontrola bloku\n");
 
     switch (t.type) {
@@ -605,7 +644,7 @@ int check_block(ASTNode* tree, Scanner* s, bool is_inside_function) {
                 case WHILE:
                     return check_while(tree, s, is_inside_function);
                 case PASS:
-                    break;
+                    return 0;
                 case DEF:
                     return check_definition(tree,s);
                 case RETURN:
