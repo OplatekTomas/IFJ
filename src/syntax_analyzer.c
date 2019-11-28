@@ -605,7 +605,7 @@ int check_block(ASTNode* tree, Scanner* s, bool is_inside_function) {
                 case WHILE:
                     return check_while(tree, s, is_inside_function);
                 case PASS:
-                    break;
+                    return 0;
                 case DEF:
                     return check_definition(tree,s);
                 case RETURN:
@@ -632,7 +632,7 @@ int check_block(ASTNode* tree, Scanner* s, bool is_inside_function) {
 ///         1 - kdyz nastala lexikalni chyba
 ///         2 - kdyz nastala syntakticka chyba
 ///         3 - kdyz nastal konec souboru
-int check_root_block(ASTNode* tree, Scanner *s) {
+int check_root_block(ASTNode* tree, Scanner *s, SymTable* table) {
     Token t = get_next_token(s);
     switch (t.type) {
         case KEYWORD:
@@ -648,7 +648,7 @@ int check_root_block(ASTNode* tree, Scanner *s) {
             return 1;
         default:
             scanner_unget(s, t);
-            return check_block(tree, s, true);
+            return check_block(tree, s, false);
     }
 }
 
@@ -666,7 +666,7 @@ int get_derivation_tree(FILE *source, ASTNode** tree) {
     root->node_type = PROGRAM_ROOT;
     int result = 0;
     while (result != 3) {
-        result = check_root_block(root ,&s);
+        result = check_root_block(root ,&s, table);
         switch (result) {
             case 1:
                 free_tree(root);
