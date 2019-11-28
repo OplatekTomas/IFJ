@@ -107,6 +107,7 @@ const char *node_types[100] = {
         "FUNCTION_DEFINITION",
         "FUNCTION_CALL",
         "RETURN_VALUE",
+        "KEYWORD_PASS",
         NULL
 };
 

@@ -2,8 +2,15 @@ def fn(x,y):
     if x < y:
         return x	
     else:
-        return y
+        cislo = fn(2)
+        return cislo
         
+def fn2(y):
+    if y < 10:
+        pass
+    else:
+        return y
+
 cislo = fn(10,5)
 
 print(cislo)

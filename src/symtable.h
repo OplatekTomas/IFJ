@@ -17,7 +17,8 @@ typedef enum {
     TYPE_NONE,
     TYPE_INT,
     TYPE_FLOAT,
-    TYPE_STRING
+    TYPE_STRING,
+    TYPE_FUNCTION
 } typeValue;
 
 struct arguments{

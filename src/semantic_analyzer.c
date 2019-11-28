@@ -25,3 +25,8 @@ int check_types(ASTNode *tree) {
     free(exprs);
     return 0;
 }
+
+int check_fn_call(ASTNode * tree, SymTable** st){
+    
+
+}
