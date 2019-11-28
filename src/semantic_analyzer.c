@@ -68,7 +68,7 @@ int check_fn_call(ASTNode * tree, SymTable** st){
         if(arr[i]->node_type != FUNCITON_CALL){
             continue;
         }
-        SymTable* t = searchST(st, arr[i]->str_val);
+        SymTable* t = searchST(st, arr[i]->str_val, NULL);
         if(t == NULL){
             return 3;
         }

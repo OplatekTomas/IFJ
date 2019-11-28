@@ -766,7 +766,7 @@ int check_definition(ASTNode* tree, Scanner* s, SymTable** table) {
         free(root_tree);
         return result;
     }
-    result = check_keyword_helper(root_tree, s, true, tb->localTable);
+    result = check_keyword_helper(root_tree, s, true, token.stringValue, tb->localTable);
     if(result != 0){
         free_tree(root_tree);
         return result;
