@@ -17,8 +17,9 @@ typedef enum {
     TYPE_NONE,
     TYPE_INT,
     TYPE_FLOAT,
-    TYPE_STRING
-} TypeValue;
+    TYPE_STRING,
+    TYPE_FUNCTION
+} typeValue;
 
 struct arguments{
     char* id;

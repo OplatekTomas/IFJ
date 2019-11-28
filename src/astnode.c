@@ -104,31 +104,48 @@ const char *node_types[100] = {
         "FUNCTION_DEFINITION",
         "FUNCTION_CALL",
         "RETURN_VALUE",
+        "KEYWORD_PASS",
         NULL
 };
 
 
-void goLeft(ASTNode* tree,ASTNode** resultThingy, int *counter, int *currentCap){
+void goLeft(ASTNode* tree,ASTNode** resultThingy, int *counter, int *currentCap, bool isPost){
+    if(!isPost){
+        resultThingy[*counter] = tree;
+        (*counter)++;
+    }
     for(unsigned i = 0; i < tree->subnode_len; i++){
         if(*counter + 2 >= *currentCap){
             *currentCap += 100;
             resultThingy = realloc(resultThingy, sizeof(ASTNode*)* *currentCap);
         }
-        goLeft(tree->nodes[i],resultThingy, counter, currentCap);
+        goLeft(tree->nodes[i],resultThingy, counter, currentCap, isPost);
     }
-    resultThingy[*counter] = tree;
-    (*counter)++;
+    if(isPost){
+        resultThingy[*counter] = tree;
+        (*counter)++;
+    }
 }
 
-ASTNode** get_postorder(ASTNode* root){
-    int counter = 0;
+ASTNode** get_postorder(ASTNode* root, int* size){
     int cap = 100;
     ASTNode** result = malloc(sizeof(ASTNode*) * cap);
-    goLeft(root, result, &counter, &cap);
+    goLeft(root, result, size, &cap, true);
+    for(int i = 0; i < *size; i++){
+        printf("%s ",node_types[result[i]->node_type]);
+    }
     return result;
 }
 
-
+ASTNode** get_preorder(ASTNode* root, int* size){
+    int cap = 100;
+    ASTNode** result = malloc(sizeof(ASTNode*) * cap);
+    goLeft(root, result, size, &cap, false);
+    for(int i = 0; i < *size; i++){
+        printf("%s ",node_types[result[i]->node_type]);
+    }
+    return result;
+}
 
 void print_node_name(ASTNode* tree, int indent){
     for(int i = 0; i < indent*2; i++){

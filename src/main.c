@@ -37,7 +37,7 @@ int main (int argc, char *argv[]) {
         throw_err(syntax_result);
     }
     print_tree(tree);
-    int semantics_result = check_semantics(tree);
+    int semantics_result = check_semantics(tree, table);
 
     if (semantics_result != 0) {
         // semanticka chyba nebo interni chyba
