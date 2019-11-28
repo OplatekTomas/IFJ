@@ -440,6 +440,8 @@ int check_expression(ASTNode* tree, Scanner* s, SymTable** table, char* func_nam
     SSData result = syntax_stack_top(&ss);
     if (tree != NULL) {
         node_insert(tree, result.node);
+    } else {
+        free_tree(result.node);
     }
 
     return 0;
