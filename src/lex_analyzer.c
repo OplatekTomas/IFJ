@@ -68,7 +68,7 @@ void handle_word(FILE* source ,Token *token){
     if(word == NULL){
         throw_err(INTERN_ERR);
     }
-    int len = read_next_word(source, word, 256);
+    read_next_word(source, word, 256);
     token->keywordValue = is_keyword(word);
     if(token->keywordValue != NON_KEYWORD){
         //printf("Keyword: %s\n",word);

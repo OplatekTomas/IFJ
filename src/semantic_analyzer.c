@@ -4,6 +4,8 @@
 
 #include "semantic_analyzer.h"
 
+int check_fn_call(ASTNode * tree, SymTable** st);
+
 int check_division_by_zero(ASTNode* tree) {
     int size = 0;
     ASTNode** table = get_postorder(tree, &size);
@@ -11,16 +13,19 @@ int check_division_by_zero(ASTNode* tree) {
         if(table[i]->node_type == DIVISION || table[i]->node_type == INT_DIVISION){
             if(table[i]->nodes[1]->arith_type == TYPE_INT){
                 if(table[i]->nodes[1]->n.i == 0){
+                    free(table);
                     return 9;
                 }
             }
             else if(table[i]->nodes[1]->arith_type == TYPE_FLOAT){
                 if(table[i]->nodes[1]->n.d == 0.0){
+                    free(table);
                     return 9;
                 }
             }
         }
     }
+    free(table);
     return 0;
 }
 
@@ -30,6 +35,10 @@ int check_semantics(ASTNode *tree, SymTable** st) {
         return result;
     }
     result = check_fn_call(tree, st);
+    if(result != 0){
+        return result;
+    }
+    result = check_division_by_zero(tree);
     if(result != 0){
         return result;
     }
@@ -53,5 +62,6 @@ int check_types(ASTNode *tree) {
 int check_fn_call(ASTNode * tree, SymTable** st){
     int size = 0;
     ASTNode** arr = get_preorder(tree, &size);
-
+    free(arr);
+    return 0;
 }

@@ -57,17 +57,11 @@ struct node {
 
 typedef struct node ASTNode;
 
-typedef struct{
-    ASTNode* root;
-    ASTNode** current;
-} ASTIterator;
-
 ASTNode* node_new();
 void node_insert(ASTNode* node, ASTNode* new);
 void free_tree(ASTNode* tree);
 void print_tree(ASTNode* tree);
 ASTNode** get_all_expressions(ASTNode* root, unsigned* len);
-ASTNode* node_iter_next(ASTIterator* iter);
 ASTNode** get_postorder(ASTNode* root, int* size);
 ASTNode** get_preorder(ASTNode* root, int* size);
 

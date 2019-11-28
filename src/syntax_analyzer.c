@@ -66,6 +66,10 @@ bool is_token_i(Token t) {
 // 2 -> levy int konvertuje na float
 // 3 -> pravy int konvertuje na float
 int check_if_valid_op(TypeValue left, TypeValue right, NonTerm op, TypeValue* op_result) {
+    if (left == TYPE_NONE || right == TYPE_NONE) {
+        *op_result = TYPE_NONE;
+        return 0;
+    }
     switch (op) {
         case ADDITION:
             if (left == right) {
@@ -434,8 +438,9 @@ int check_expression(ASTNode* tree, Scanner* s, SymTable** table) {
         }
     } while (!(t.type == END_OF_LINE || t.type == COMMA || t.type == END_OF_FILE  || t.type == COLON || is_comp(t, NULL)) || syntax_stack_nearest_term(&ss, NULL).type != SYNTAX_END);
     SSData result = syntax_stack_top(&ss);
-
-    node_insert(tree, result.node);
+    if (tree != NULL) {
+        node_insert(tree, result.node);
+    }
 
     return 0;
 }
@@ -826,15 +831,13 @@ int check_block(ASTNode* tree, Scanner* s, bool is_inside_function, SymTable** t
                 default:
                     return 2;
             }
-        case STRING:
-            //TODO: Poresit multiline stringy
-            return 2;
         case END_OF_LINE:
             return 0;
         case ERROR:
             return 1;
         default:
-            return 2;
+            scanner_unget(s, t);
+            return check_expression(NULL, s, table);
     }
 }
 

@@ -40,16 +40,11 @@ void free_tree(ASTNode* tree) {
         return;
     }
 
-    // TODO: dodelat
     for (unsigned i = 0; i < tree->subnode_len; i++) {
         free_tree(tree->nodes[i]);
     }
     free(tree->nodes);
     free(tree);
-}
-
-ASTNode* node_iter_next(ASTIterator *iter) {
-     return NULL;
 }
 
 bool is_num_op(NonTerm type) {

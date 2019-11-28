@@ -1,0 +1,7 @@
+.IFJcode19
+DEFVAR GF@y
+MOVE GF@y int@5
+WRITE GF@y
+DEFVAR GF@newline
+MOVE GF@newline string@\010
+WRITE GF@newline
