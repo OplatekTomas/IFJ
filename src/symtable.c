@@ -127,8 +127,8 @@ void freeHT(SymTable** hashTable){  //vymaže celou hashTable
             free(item->id);
             Arguments* args = item->args;
             while(args != NULL){
-                Arguments* argsNext = item->args->nextArg;
-                free(item->args);
+                Arguments* argsNext = args->nextArg;
+                free(args);
                 args = argsNext;
             }
             if(item->localTable != NULL)
