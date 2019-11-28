@@ -458,6 +458,10 @@ int check_keyword_helper(ASTNode* tree, Scanner* s, bool is_inside_definition){
             return result;
         }
     }
+    if(block_node->subnode_len == 0){
+        free_tree(block_node);
+        return 2;
+    }
     node_insert(tree, block_node);
     return 0;
 }
@@ -520,7 +524,6 @@ int check_if(ASTNode* tree, Scanner* s, bool is_inside_definition) {
         return result;
     }
     node_insert(tree, root_node);
-    print_tree(tree);
     return 0;
 }
 
