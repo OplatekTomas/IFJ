@@ -31,7 +31,7 @@ char token_type[][100] = {
         "DOUBLE_DIV"
 };
 
-int check_block(ASTNode* tree, Scanner* s, bool is_inside_definition, SymTable** table);
+int check_block(ASTNode* tree, Scanner* s, bool is_inside_definition, char* name, SymTable** table);
 int check_function_call(ASTNode* tree, Scanner* s);
 
 const SSValue parse_table[9][9] = {
@@ -123,7 +123,7 @@ int check_if_valid_op(TypeValue left, TypeValue right, NonTerm op, TypeValue* op
     }
 }
 
-int check_rule(SyntaxStack* ss, SymTable** table) {
+int check_rule(SyntaxStack* ss, SymTable** table, char* func_name) {
     SSData sd;
     sd.type = SYNTAX_EXPR;
 
@@ -159,7 +159,7 @@ int check_rule(SyntaxStack* ss, SymTable** table) {
                 break;
             case ID:
                 sd.node->node_type = IDENTIFICATOR;
-                SymTable* result = searchST(table, term.t.stringValue);
+                SymTable* result = searchST(table, term.t.stringValue, func_name);
                 if (result == NULL) {
                     free_tree(node);
                     return 3;
@@ -356,7 +356,7 @@ bool is_comp(Token t, CondType* type){
     return true;
 }
 
-int check_expression(ASTNode* tree, Scanner* s, SymTable** table) {
+int check_expression(ASTNode* tree, Scanner* s, SymTable** table, char* func_name) {
      printf("kontrola vyrazu\n");
 
     // zkontrolovat jestli neni volana funkce
@@ -405,7 +405,7 @@ int check_expression(ASTNode* tree, Scanner* s, SymTable** table) {
 
         switch (parse_table[A][B]) {
             case SYNTAX_GREATER:;
-                int result = check_rule(&ss, table);
+                int result = check_rule(&ss, table, func_name);
                 if (result != 0) {
                     syntax_stack_free_nodes(&ss);
                     return result;
@@ -515,7 +515,7 @@ int check_function_call(ASTNode* tree, Scanner* s) {
 }
 
 
-int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** table) {
+int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** table, char* func_name) {
     //TODO: dodelat
     printf("kontrola prirazeni\n");
     ASTNode* assign_node = node_new();
@@ -531,7 +531,7 @@ int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** tabl
     id_node->node_type = IDENTIFICATOR;
     //TODO: pridat pointer na identifikator do tabulky symbolu
 
-    SymTable* result = searchST(table, left_side);
+    SymTable* result = searchST(table, left_side, func_name);
 
     if (result == NULL) {
         SymTable* new_item = allocST(left_side);
@@ -550,7 +550,7 @@ int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** tabl
 
     node_insert(assign_node, id_node);
 
-    int expr_result = check_expression(assign_node, s, table);
+    int expr_result = check_expression(assign_node, s, table, func_name);
 
     if (expr_result == 0) {
         Token t = get_next_token(s);
@@ -569,12 +569,12 @@ int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** tabl
 }
 
 
-bool check_cond(ASTNode* tree, Scanner* s, SymTable** table){
+bool check_cond(ASTNode* tree, Scanner* s, SymTable** table, char* func_name){
     //Kontrola podmínky
     CondType optype = OP_NONE;
     ASTNode* comp = node_new();
     comp->node_type = CONDITION;
-    if(check_expression(comp, s, table)){
+    if(check_expression(comp, s, table, func_name)) {
         free_tree(comp);
         return false;
     }
@@ -588,7 +588,7 @@ bool check_cond(ASTNode* tree, Scanner* s, SymTable** table){
         return false;
     }
     comp->condType = optype;
-    if(check_expression(comp, s, table)){
+    if(check_expression(comp, s, table, func_name)){
         free_tree(comp);
         return false;
     }
@@ -596,7 +596,7 @@ bool check_cond(ASTNode* tree, Scanner* s, SymTable** table){
     return true;
 }
 
-int check_keyword_helper(ASTNode* tree, Scanner* s, bool is_inside_definition, SymTable** table){
+int check_keyword_helper(ASTNode* tree, Scanner* s, bool is_inside_definition, char* func_name, SymTable** table){
     Token t = get_next_token(s);
     if(t.type == ERROR){
         return 1;
@@ -624,7 +624,7 @@ int check_keyword_helper(ASTNode* tree, Scanner* s, bool is_inside_definition, S
             break;
         }
         scanner_unget(s, t);
-        int result = check_block(block_node, s, is_inside_definition, table);
+        int result = check_block(block_node, s, is_inside_definition, func_name, table);
         if(result != 0){
             free_tree(block_node);
             return result;
@@ -696,15 +696,15 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
     return 0;
 }
 
-int check_if(ASTNode* tree, Scanner* s, bool is_inside_definition, SymTable** table) {
+int check_if(ASTNode* tree, Scanner* s, bool is_inside_definition, char * func_name, SymTable** table) {
     printf("Kontrola ifu\n");
     ASTNode *root_node = node_new();
     root_node->node_type = IF_ELSE;
-    if(!check_cond(root_node, s, table)){ //if x < y
+    if(!check_cond(root_node, s, table, func_name)){ //if x < y
         free_tree(root_node);
         return 2;
     }
-    int result = check_keyword_helper(root_node, s, is_inside_definition, table);
+    int result = check_keyword_helper(root_node, s, is_inside_definition, func_name, table);
     if(result != 0){
         free_tree(root_node);
         return result;
@@ -719,7 +719,7 @@ int check_if(ASTNode* tree, Scanner* s, bool is_inside_definition, SymTable** ta
         free_tree(root_node);
         return 2;
     }
-    result = check_keyword_helper(root_node, s, is_inside_definition, table);
+    result = check_keyword_helper(root_node, s, is_inside_definition, func_name, table);
     if(result != 0){
         free_tree(root_node);
         return result;
@@ -728,15 +728,15 @@ int check_if(ASTNode* tree, Scanner* s, bool is_inside_definition, SymTable** ta
     return 0;
 }
 
-int check_while(ASTNode* tree, Scanner* s, bool is_inside_definition, SymTable** table) {
+int check_while(ASTNode* tree, Scanner* s, bool is_inside_definition, char* func_name, SymTable** table) {
      printf("kontrola whilu\n");
     ASTNode *while_node = node_new();
     while_node->node_type = WHILE_LOOP;
-    if(!check_cond(while_node, s, table)){
+    if(!check_cond(while_node, s, table, func_name)){
         free_tree(while_node);
         return 2;
     }
-    int result = check_keyword_helper(while_node, s, is_inside_definition, table);
+    int result = check_keyword_helper(while_node, s, is_inside_definition, func_name, table);
     if(result != 0){
         free_tree(while_node);
         return result;
@@ -749,7 +749,7 @@ int check_definition(ASTNode* tree, Scanner* s, SymTable** table) {
     //TODO: pouzit tabulku
     printf("kontrola defu\n");
     Token token = get_next_token(s);
-    if(searchST(table, token.stringValue) != NULL){
+    if(searchST(table, token.stringValue, NULL) != NULL){
         return 3;
     }
     if(token.type == ERROR){
@@ -775,11 +775,11 @@ int check_definition(ASTNode* tree, Scanner* s, SymTable** table) {
     return 0;
 }
 
-int check_return(ASTNode* tree, Scanner* s, SymTable** table){
+int check_return(ASTNode* tree, Scanner* s, SymTable** table, char* func_name){
     print_tree(tree);
     ASTNode* node = node_new();
     node->node_type = RETURN_VALUE;
-    int result = check_expression(node, s, table);
+    int result = check_expression(node, s, table, func_name);
     if(result != 0){
         free_tree(node);
         return result;
@@ -791,7 +791,7 @@ int check_return(ASTNode* tree, Scanner* s, SymTable** table){
 /// Vraci   0 - kdyz nenastala chyba
 ///         1 - kdyz nastala lexikalni chyba
 ///         2 - kdyz nastala syntakticka chyba
-int check_block(ASTNode* tree, Scanner* s, bool is_inside_function, SymTable** table) {
+int check_block(ASTNode* tree, Scanner* s, bool is_inside_function, char* func_name, SymTable** table) {
     Token t = get_next_token(s);
 
     printf("kontrola bloku\n");
@@ -802,7 +802,7 @@ int check_block(ASTNode* tree, Scanner* s, bool is_inside_function, SymTable** t
             Token after = get_next_token(s);
             switch (after.type) {
                 case ASSIGN:
-                    return check_assignment(tree, s, id, table);
+                    return check_assignment(tree, s, id, table, func_name);
                 case OPEN_PARENTHES:
                     scanner_unget(s, after);
                     scanner_unget(s, t);
@@ -815,9 +815,9 @@ int check_block(ASTNode* tree, Scanner* s, bool is_inside_function, SymTable** t
         case KEYWORD:
             switch (t.keywordValue) {
                 case IF:
-                    return check_if(tree, s, is_inside_function, table);
+                    return check_if(tree, s, is_inside_function, func_name, table);
                 case WHILE:
-                    return check_while(tree, s, is_inside_function, table);
+                    return check_while(tree, s, is_inside_function, func_name, table);
                 case PASS:
                     ;
                     ASTNode *pass = node_new();
@@ -828,7 +828,7 @@ int check_block(ASTNode* tree, Scanner* s, bool is_inside_function, SymTable** t
                     return check_definition(tree,s, table);
                 case RETURN:
                     if(is_inside_function){
-                        return check_return(tree, s, table);
+                        return check_return(tree, s, table, func_name);
                     }
                     return 2;
                 default:
@@ -840,7 +840,7 @@ int check_block(ASTNode* tree, Scanner* s, bool is_inside_function, SymTable** t
             return 1;
         default:
             scanner_unget(s, t);
-            return check_expression(NULL, s, table);
+            return check_expression(NULL, s, table, func_name);
     }
 }
 
@@ -856,7 +856,7 @@ int check_root_block(ASTNode* tree, Scanner *s, SymTable** table) {
                 return check_definition(tree, s, table);
             } else {
                 scanner_unget(s, t);
-                return check_block(tree, s, false, table);
+                return check_block(tree, s, false, NULL, table);
             }
         case END_OF_FILE:
             return -1;
@@ -864,7 +864,7 @@ int check_root_block(ASTNode* tree, Scanner *s, SymTable** table) {
             return 1;
         default:
             scanner_unget(s, t);
-            return check_block(tree, s, false, table);
+            return check_block(tree, s, false, NULL, table);
     }
 }
 
