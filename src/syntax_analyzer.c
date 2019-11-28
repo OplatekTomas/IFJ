@@ -540,8 +540,13 @@ int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** tabl
             free_tree(id_node);
             return 99;
         }
-        insertST(table, new_item);
-        result = new_item;
+        if (func_name == NULL) {
+            insertST(table, new_item);
+            result = new_item;
+        } else {
+            SymTable* func = searchST(table, func_name, NULL);
+            insertST(func->localTable, new_item);
+        }
     } else {
         free(left_side);
     }
@@ -766,7 +771,7 @@ int check_definition(ASTNode* tree, Scanner* s, SymTable** table) {
         free(root_tree);
         return result;
     }
-    result = check_keyword_helper(root_tree, s, true, token.stringValue, tb->localTable);
+    result = check_keyword_helper(root_tree, s, true, token.stringValue, table);
     if(result != 0){
         free_tree(root_tree);
         return result;
