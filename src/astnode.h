@@ -7,11 +7,11 @@
 
 #include <stdlib.h>
 #include "tokens.h"
+#include "symtable.h"
 
 #define START_CAPACITY 10
 
 typedef enum {
-    STATEMENT,
     EXPRESSION,
     ADDITION,
     SUBTRACTION,
@@ -25,14 +25,12 @@ typedef enum {
     IDENTIFICATOR,
     IF_ELSE,
     WHILE_LOOP,
-    VALUE_INT,
-    VALUE_FLOAT,
-    VALUE_STRING,
-    VALUE_NONE,
-    CONVERSION,
+    VALUE,
+    FLOAT_TO_INT,
     FUNCTION_DEFINITION,
     FUNCITON_CALL,
-    RETURN_VALUE
+    RETURN_VALUE,
+    KEYWORD_PASS
 } NonTerm;
 
 typedef enum {
@@ -49,10 +47,11 @@ struct node {
     NonTerm node_type;
     unsigned subnode_len;
     unsigned capacity;
-    void* symbol;
+    SymTable* symbol;
     NumberVal n;
     CondType condType;
     char* str_val;
+    TypeValue arith_type;
     struct node** nodes;
 };
 
@@ -69,6 +68,8 @@ void free_tree(ASTNode* tree);
 void print_tree(ASTNode* tree);
 ASTNode** get_all_expressions(ASTNode* root, unsigned* len);
 ASTNode* node_iter_next(ASTIterator* iter);
-ASTNode** get_postorder(ASTNode* root);
+ASTNode** get_postorder(ASTNode* root, int* size);
+ASTNode** get_preorder(ASTNode* root, int* size);
+
 
 #endif //IFJ_ASTNODE_H

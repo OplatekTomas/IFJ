@@ -20,8 +20,8 @@ int main (int argc, char *argv[]) {
     }
 #endif
 
-    ASTNode* tree;
-    SymTable** table;
+    ASTNode* tree = NULL;
+    SymTable** table = NULL;
 
 #ifndef NDEBUG
     int syntax_result = get_derivation_tree(f, &tree, &table);
@@ -34,11 +34,10 @@ int main (int argc, char *argv[]) {
         #ifndef NDEBUG
         fclose(f);
         #endif
-        freeHT(table);
         throw_err(syntax_result);
     }
     print_tree(tree);
-    int semantics_result = check_semantics(tree);
+    int semantics_result = check_semantics(tree, table);
 
     if (semantics_result != 0) {
         // semanticka chyba nebo interni chyba

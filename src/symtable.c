@@ -14,6 +14,9 @@ SymTable** allocHT(){
 
 Arguments* allocArgs(){
     Arguments* ptr = (Arguments*)malloc(sizeof(Arguments));
+    ptr->nextArg = NULL;
+    ptr->id = NULL;
+    ptr->type = TYPE_NONE;
     return ptr;
 }
 
@@ -88,13 +91,38 @@ SymTable* searchST(SymTable** hashTable, char* id){    //vyhledá symTable v has
     return ptr;
 }
 
+void printHT(SymTable** ht){
+    for(int i = 0; i < TABLE_SIZE; i++){
+        SymTable *item = ht[i];
+        if(item == NULL){
+            continue;
+        }
+        printf("%d.  ", i+1);
+        while(item != NULL){
+           printf("%s", item->id);
+           item = item->ptrNext;
+        }
+        printf("\n");
+    }
+}
+
+
 void freeHT(SymTable** hashTable){  //vymaže celou hashTable
+    if(hashTable == NULL)
+        return;
     for(int i = 0; i < TABLE_SIZE; i++){
         SymTable *item = hashTable[i];
         while(item != NULL){
-            struct symTable *tmp = item->ptrNext;
+            SymTable *tmpST = item->ptrNext;
+            free(item->id);
+            Arguments* args = item->args;
+            while(args != NULL){
+                Arguments* argsNext = item->args->nextArg;
+                free(item->args);
+                args = argsNext;
+            }
             free(item);
-            item = tmp;
+            item = tmpST;
         }
         hashTable[i] = NULL;
     }

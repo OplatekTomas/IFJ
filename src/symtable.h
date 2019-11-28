@@ -17,12 +17,13 @@ typedef enum {
     TYPE_NONE,
     TYPE_INT,
     TYPE_FLOAT,
-    TYPE_STRING
-} typeValue;
+    TYPE_STRING,
+    TYPE_FUNCTION
+} TypeValue;
 
 struct arguments{
     char* id;
-    typeValue type;
+    TypeValue type;
     struct arguments* nextArg;
 };
 
@@ -30,7 +31,7 @@ typedef struct arguments Arguments;
 
 struct symTable {
     char* id;
-    typeValue type;
+    TypeValue type;
     void* dataPtr;
     int argNum;
     struct arguments* args;
@@ -47,6 +48,8 @@ unsigned int htabHashFunction(const char *str);
 Arguments* allocArgs();
 
 SymTable* allocST(char* id);
+
+void printHT(SymTable** hashTable);
 
 void deleteST(SymTable** hashTable, char* id);
 

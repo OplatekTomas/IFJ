@@ -6,8 +6,10 @@
 #define IFJ_SEMANTIC_ANALYZER_H
 
 #include "astnode.h"
+#include "symtable.h"
 
-int check_semantics(ASTNode* tree);
+int check_semantics(ASTNode* tree, SymTable** st);
 int check_types(ASTNode* tree);
+int check_fn_calls(ASTNode * tree, SymTable** st);
 
 #endif //IFJ_SEMANTIC_ANALYZER_H
