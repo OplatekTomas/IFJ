@@ -4,8 +4,8 @@
 
 #include "code_gen.h"
 
-void generate_code(ASTNode *tree, SymTable **table, FILE *output) {
-    ASTNode** result = get_postorder(tree);
+    int size = 0;
+    ASTNode** result = get_postorder(tree, &size);
     printHT(table);
     free(result);
 }
