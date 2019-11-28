@@ -54,6 +54,7 @@ struct node {
     NumberVal n;
     CondType condType;
     char* str_val;
+    TypeValue arith_type;
     struct node** nodes;
 };
 

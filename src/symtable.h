@@ -18,11 +18,11 @@ typedef enum {
     TYPE_INT,
     TYPE_FLOAT,
     TYPE_STRING
-} typeValue;
+} TypeValue;
 
 struct arguments{
     char* id;
-    typeValue type;
+    TypeValue type;
     struct arguments* nextArg;
 };
 
@@ -30,7 +30,7 @@ typedef struct arguments Arguments;
 
 struct symTable {
     char* id;
-    typeValue type;
+    TypeValue type;
     void* dataPtr;
     int argNum;
     struct arguments* args;

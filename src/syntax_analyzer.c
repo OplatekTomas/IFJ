@@ -120,6 +120,7 @@ int check_rule(SyntaxStack* ss, SymTable** table) {
             ) {
         // kontrola vsech aritmetickych pravidel
         printf("E => E '%i' E\n", ss->data[ss->index -2].t.type);
+        
         switch (ss->data[ss->index - 2].t.type) {
             case ADD:
                 sd.node->node_type = ADDITION;
