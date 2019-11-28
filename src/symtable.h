@@ -58,7 +58,7 @@ void freeHT(SymTable** hashTable);
 
 void insertST(SymTable** hashTable, SymTable* ptr);
 
-SymTable* searchST(SymTable** hashTable, char* id);
+SymTable* searchST(SymTable** hashTable, char* id, char* funcID);
 
 void fill_with_fn(SymTable** hashTable);
 

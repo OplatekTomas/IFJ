@@ -32,6 +32,7 @@ SymTable* allocST(char* id){
     ptr->scope = 0;
     ptr->type = TYPE_NONE;
     ptr->localTable = NULL;
+    return ptr;
 }
 
 unsigned int htabHashFunction(const char *str) {    //funkce pro generování hashe podle id
@@ -76,18 +77,26 @@ void insertST(SymTable** hashTable, SymTable* ptr){    //vloží již alokovanou
     }
 }
 
-SymTable* searchST(SymTable** hashTable, char* id){    //vyhledá symTable v hashTable a vrátí pointer na ní
+SymTable* searchST(SymTable** hashTable, char* id, char* funcID){    //vyhledá symTable v hashTable a vrátí pointer na ní
     if(id == NULL){
         return NULL;
     }
-    int hash = htabHashFunction(id);
-    struct symTable* ptr = hashTable[hash];
+    char* searchedID = id;
+    if(funcID != NULL)
+        searchedID = funcID;
+    int hash = htabHashFunction(searchedID);
+    SymTable* ptr = hashTable[hash];
     if(ptr == NULL)
         return NULL;
-    while(strcmp(ptr->id, id)){
+    while(strcmp(ptr->id, searchedID)){
         if(ptr->ptrNext == NULL)
             return NULL;
         ptr = ptr->ptrNext;
+    }
+    if(funcID != NULL) {
+        ptr = searchST(ptr->localTable, id, NULL);
+        if(ptr == NULL)
+            ptr = searchST(hashTable, id, NULL);
     }
     return ptr;
 }
