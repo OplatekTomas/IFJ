@@ -131,5 +131,14 @@ void freeHT(SymTable** hashTable){  //vymaže celou hashTable
 }
 
 void fill_with_fn(SymTable **hashTable) {
-    char** functions = {"inputs","inputi", "inputf", "print", "len", "substr", "ord", "chr"};
+    char* functions[] = {"inputs", "inputi", "inputf", "print", "len", "substr", "ord", "chr"};
+    int argCount[] = {0, 0, 0, -1, 1, 3, 2, 1};
+    for(int i = 0; i < 8; i++){
+        char* ptr = malloc(sizeof(char)* 16);
+        strcpy(ptr, functions[i]);
+        SymTable* item = allocST(ptr);
+        item->type = TYPE_FUNCTION;
+        item->argNum = argCount[i];
+        insertST(hashTable, item);
+    }
 }
