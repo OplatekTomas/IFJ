@@ -574,14 +574,15 @@ int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** tabl
 }
 
 
-bool check_cond(ASTNode* tree, Scanner* s, SymTable** table, char* func_name){
+int check_cond(ASTNode* tree, Scanner* s, SymTable** table, char* func_name){
     //Kontrola podmínky
     CondType optype = OP_NONE;
     ASTNode* comp = node_new();
     comp->node_type = CONDITION;
-    if(check_expression(comp, s, table, func_name)) {
+    int ret = check_expression(comp, s, table, func_name);
+    if(ret != 0) {
         free_tree(comp);
-        return false;
+        return ret;
     }
     Token t = get_next_token(s);
     if(t.type == ERROR){
@@ -590,15 +591,16 @@ bool check_cond(ASTNode* tree, Scanner* s, SymTable** table, char* func_name){
     }
     if(!is_comp(t, &optype)){
         free_tree(comp);
-        return false;
+        return 1;
     }
     comp->condType = optype;
-    if(check_expression(comp, s, table, func_name)){
+    ret = check_expression(comp, s, table, func_name);
+    if(ret != 0){
         free_tree(comp);
-        return false;
+        return ret;
     }
     node_insert(tree, comp);
-    return true;
+    return 0;
 }
 
 int check_keyword_helper(ASTNode* tree, Scanner* s, bool is_inside_definition, char* func_name, SymTable** table){
@@ -705,7 +707,7 @@ int check_if(ASTNode* tree, Scanner* s, bool is_inside_definition, char * func_n
     printf("Kontrola ifu\n");
     ASTNode *root_node = node_new();
     root_node->node_type = IF_ELSE;
-    if(!check_cond(root_node, s, table, func_name)){ //if x < y
+    if(check_cond(root_node, s, table, func_name) != 0){ //if x < y
         free_tree(root_node);
         return 2;
     }
