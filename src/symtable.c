@@ -98,4 +98,5 @@ void freeHT(SymTable** hashTable){  //vymaže celou hashTable
         }
         hashTable[i] = NULL;
     }
+    free(hashTable);
 }
