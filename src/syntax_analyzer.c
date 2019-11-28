@@ -653,6 +653,14 @@ int check_keyword_helper(ASTNode* tree, Scanner* s, bool is_inside_definition, c
     return 0;
 }
 
+void addToList(Arguments* def, Arguments* new){
+    Arguments* tmp = def;
+    while(tmp->nextArg != NULL){
+        tmp = tmp->nextArg;
+    }
+    tmp->nextArg = new;
+}
+
 int check_args(ASTNode* tree, Scanner* s, SymTable* table){
     Token t = get_next_token(s);
     if(t.type == ERROR){
@@ -666,21 +674,24 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
     if(t.type == ERROR){
         return 1;
     }
-    Arguments* argsTemp = allocArgs();
-    table->args = argsTemp;
+    Arguments* tempArg = allocArgs();
+    table->args = tempArg;
     while(t.type != CLOSE_PARENTHES){
         if(t.type != ID){
             return 2;
         }
-        SymTable *tb = allocST(t.stringValue);
+        SymTable *tb = allocST(t.stringValue); //Create new item and insert into local table
         insertST(table->localTable,tb);
-        Arguments* args = allocArgs();
-        args->id = t.stringValue;
-        argsTemp->nextArg = args;
-        table->argNum++;
-        ASTNode *param = node_new();
+
+        Arguments* tmp = allocArgs();
+        tmp->type = TYPE_NONE;
+        tmp->id = t.stringValue;
+        addToList(table->args, tmp);
+
+        ASTNode *param = node_new(); //Continue creating ASTNodes
         param->node_type = IDENTIFICATOR;
         node_insert(tree, param);
+
         prev_t = t;
         t = get_next_token(s);
         if(t.type == ERROR){
