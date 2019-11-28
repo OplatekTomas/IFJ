@@ -14,6 +14,6 @@
 #include "symtable.h"
 
 
-void GenerateCode(ASTNode* tree, SymTable *table, FILE* output);
+void generate_code(ASTNode* tree, SymTable **table, FILE* output);
 
 #endif //IFJ_CODE_GEN_H
