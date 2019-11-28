@@ -246,7 +246,7 @@ int check_rule(SyntaxStack* ss, SymTable** table) {
                 break;
             case 2:
                 node_insert(sub_node, left_side.node);
-                node_insert(sd.node, right_side.node);
+                node_insert(sd.node, sub_node);
                 node_insert(sd.node, right_side.node);
                 break;
             case 3:
@@ -395,19 +395,23 @@ int check_expression(ASTNode* tree, Scanner* s, SymTable** table) {
         SSData term;
         term.type = SYNTAX_TERM;
         term.t = t;
+        term.node = NULL;
 
         int B = convert_token_to_table_index(term);
 
         switch (parse_table[A][B]) {
-            case SYNTAX_GREATER:
-                if (check_rule(&ss, table)) {
-                    return 2;
+            case SYNTAX_GREATER:;
+                int result = check_rule(&ss, table);
+                if (result != 0) {
+                    syntax_stack_free_nodes(&ss);
+                    return result;
                 }
                 break;
             case SYNTAX_EQUAL:
                 syntax_stack_push(&ss, term);
                 t = get_next_token(s);
                 if (t.type == ERROR) {
+                    syntax_stack_free_nodes(&ss);
                     return 1;
                 }
                 break;
@@ -416,6 +420,7 @@ int check_expression(ASTNode* tree, Scanner* s, SymTable** table) {
                 syntax_stack_push(&ss, term);
                 t = get_next_token(s);
                 if (t.type == ERROR) {
+                    syntax_stack_free_nodes(&ss);
                     return 1;
                 }
                 if (t.type == END_OF_LINE || t.type == END_OF_FILE || is_comp(t, NULL) || t.type == COMMA ||  t.type == COLON) {
@@ -424,6 +429,7 @@ int check_expression(ASTNode* tree, Scanner* s, SymTable** table) {
                 break;
             case SYNTAX_EMPTY:
             default:
+                syntax_stack_free_nodes(&ss);
                 return 2;
         }
     } while (!(t.type == END_OF_LINE || t.type == COMMA || t.type == END_OF_FILE  || t.type == COLON || is_comp(t, NULL)) || syntax_stack_nearest_term(&ss, NULL).type != SYNTAX_END);

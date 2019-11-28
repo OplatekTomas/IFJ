@@ -35,6 +35,7 @@ void syntax_stack_push(SyntaxStack* ss, SSData data);
 void syntax_stack_init(SyntaxStack* ss);
 void syntax_stack_shift(SyntaxStack* ss, unsigned index);
 void syntax_stack_pop(SyntaxStack* ss);
+void syntax_stack_free_nodes(SyntaxStack* ss);
 bool syntax_stack_empty(SyntaxStack* ss);
 SSData syntax_stack_nearest_term(SyntaxStack* ss, unsigned* loc);
 SSData syntax_stack_top(SyntaxStack*ss);
