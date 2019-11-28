@@ -88,6 +88,22 @@ SymTable* searchST(SymTable** hashTable, char* id){    //vyhledá symTable v has
     return ptr;
 }
 
+void printHT(SymTable** ht){
+    for(int i = 0; i < TABLE_SIZE; i++){
+        SymTable *item = ht[i];
+        if(item == NULL){
+            continue;
+        }
+        printf("%d.  ", i+1);
+        while(item != NULL){
+           printf("%s", item->id);
+           item = item->ptrNext;
+        }
+        printf("\n");
+    }
+}
+
+
 void freeHT(SymTable** hashTable){  //vymaže celou hashTable
     for(int i = 0; i < TABLE_SIZE; i++){
         SymTable *item = hashTable[i];

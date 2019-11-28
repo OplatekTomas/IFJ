@@ -6,6 +6,7 @@
 
 void generate_code(ASTNode *tree, SymTable **table, FILE *output) {
     ASTNode** result = get_postorder(tree);
+    printHT(table);
     free(result);
 }
 

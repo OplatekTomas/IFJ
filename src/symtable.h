@@ -48,6 +48,8 @@ Arguments* allocArgs();
 
 SymTable* allocST(char* id);
 
+void printHT(SymTable** hashTable);
+
 void deleteST(SymTable** hashTable, char* id);
 
 void freeHT(SymTable** hashTable);
