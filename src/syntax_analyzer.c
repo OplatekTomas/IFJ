@@ -61,6 +61,64 @@ bool is_token_i(Token t) {
     return t.type == ID || t.type == INT || t.type == FLOAT || t.type == STRING;
 }
 
+// 0 -> validni
+// 1 -> nevalidni
+// 2 -> levy int konvertuje na float
+// 3 -> pravy int konvertuje na float
+int check_if_valid_op(TypeValue left, TypeValue right, NonTerm op, TypeValue* op_result) {
+    switch (op) {
+        case ADDITION:
+            if (left == right) {
+                *op_result = left;
+                return 0;
+            } else if (left == TYPE_INT && right == TYPE_FLOAT) {
+                *op_result = right;
+                return 2;
+            } else if (left == TYPE_FLOAT && right == TYPE_INT) {
+                *op_result = left;
+                return 3;
+            } else {
+                return 1;
+            }
+        case SUBTRACTION:
+        case MULTIPLICATION:
+            if (left == right && right != TYPE_STRING) {
+                *op_result = left;
+                return 0;
+            } else if (left == TYPE_INT && right == TYPE_FLOAT) {
+                *op_result = right;
+                return 2;
+            } else if (left == TYPE_FLOAT && right == TYPE_INT) {
+                *op_result = left;
+                return 3;
+            } else {
+                return 1;
+            }
+        case DIVISION:
+            if (left == right && right != TYPE_STRING) {
+                *op_result = TYPE_FLOAT;
+                return 0;
+            } else if (left == TYPE_INT && right == TYPE_FLOAT) {
+                *op_result = right;
+                return 2;
+            } else if (left == TYPE_FLOAT && right == TYPE_INT) {
+                *op_result = left;
+                return 3;
+            } else {
+                return 1;
+            }
+        case INT_DIVISION:
+            if (left == right && right == TYPE_INT) {
+                *op_result = TYPE_INT;
+                return 0;
+            } else {
+                return 1;
+            }
+        default:
+            return 1;
+    }
+}
+
 int check_rule(SyntaxStack* ss, SymTable** table) {
     SSData sd;
     sd.type = SYNTAX_EXPR;
@@ -81,27 +139,28 @@ int check_rule(SyntaxStack* ss, SymTable** table) {
         // add info
         switch (term.t.type) {
             case INT:
-                sd.node->node_type = VALUE_INT;
+                sd.node->node_type = VALUE;
+                sd.node->arith_type = TYPE_INT;
                 sd.node->n.i = term.t.numberVal.i;
                 break;
             case FLOAT:
-                sd.node->node_type = VALUE_FLOAT;
+                sd.node->node_type = VALUE;
+                sd.node->arith_type = TYPE_FLOAT;
                 sd.node->n.d = term.t.numberVal.d;
                 break;
             case STRING:
-                sd.node->node_type = VALUE_STRING;
+                sd.node->node_type = VALUE;
+                sd.node->arith_type = TYPE_STRING;
                 sd.node->str_val = term.t.stringValue;
                 break;
             case ID:
                 sd.node->node_type = IDENTIFICATOR;
                 SymTable* result = searchST(table, term.t.stringValue);
                 if (result == NULL) {
-                    result = allocST(term.t.stringValue);
-                    if (result == NULL) {
-                        free_tree(node);
-                        return 99;
-                    }
+                    free_tree(node);
+                    return 3;
                 } else {
+                    sd.node->arith_type = result->type;
                     free(term.t.stringValue);
                 }
                 sd.node->symbol = result;
@@ -120,7 +179,10 @@ int check_rule(SyntaxStack* ss, SymTable** table) {
             ) {
         // kontrola vsech aritmetickych pravidel
         printf("E => E '%i' E\n", ss->data[ss->index -2].t.type);
-        
+
+        TypeValue right_value = ss->data[ss->index - 1].node->arith_type;
+        TypeValue left_value = ss->data[ss->index - 3].node->arith_type;
+
         switch (ss->data[ss->index - 2].t.type) {
             case ADD:
                 sd.node->node_type = ADDITION;
@@ -141,6 +203,35 @@ int check_rule(SyntaxStack* ss, SymTable** table) {
                 free_tree(node);
                 return 1;
         }
+
+        TypeValue op_result;
+
+        int result = check_if_valid_op(left_value, right_value, sd.node->node_type, &op_result);
+
+        ASTNode *sub_node = NULL;
+
+        switch (result) {
+            case 0:
+                sd.node->arith_type = op_result;
+                break;
+            case 1:
+                free_tree(node);
+                return 4;
+            case 2:
+            case 3:
+                sd.node->arith_type = op_result;
+                sub_node = node_new();
+                if (sub_node == NULL) {
+                    free_tree(node);
+                    return 99;
+                }
+                sub_node->node_type = FLOAT_TO_INT;
+                break;
+            default:
+                free_tree(node);
+                return 99;
+        }
+
         // pop left and right side, op and lesser sign
         SSData right_side = syntax_stack_top(ss);
         syntax_stack_pop(ss);
@@ -148,8 +239,25 @@ int check_rule(SyntaxStack* ss, SymTable** table) {
         SSData left_side = syntax_stack_top(ss);
         syntax_stack_pop(ss);
         syntax_stack_pop(ss);
-        node_insert(sd.node, left_side.node);
-        node_insert(sd.node, right_side.node);
+        switch (result) {
+            case 0:
+                node_insert(sd.node, left_side.node);
+                node_insert(sd.node, right_side.node);
+                break;
+            case 2:
+                node_insert(sub_node, left_side.node);
+                node_insert(sd.node, right_side.node);
+                node_insert(sd.node, right_side.node);
+                break;
+            case 3:
+                node_insert(sub_node, right_side.node);
+                node_insert(sd.node, left_side.node);
+                node_insert(sd.node, sub_node);
+                break;
+            default:
+                //nemuze nastat, je kontrolovano uz predtim, leda ze by nekde flipnul bit v pameti, ale tak v tom pripade uz stejne program nefunguje spravne
+                break;
+        }
         syntax_stack_push(ss, sd);
     } else if (
             ss->data[ss->index - 1].type == SYNTAX_TERM && ss->data[ss->index - 1].t.type == CLOSE_PARENTHES &&
@@ -352,18 +460,22 @@ int check_function_call(ASTNode* tree, Scanner* s) {
                 param->str_val = t.stringValue;
                 break;
             case NONE:
-                param->node_type = VALUE_NONE;
+                param->node_type = VALUE;
+                param->arith_type = TYPE_NONE;
                 break;
             case INT:
-                param->node_type = VALUE_INT;
+                param->node_type = VALUE;
+                param->arith_type = TYPE_INT;
                 param->n.i = t.numberVal.i;
                 break;
             case FLOAT:
-                param->node_type = VALUE_FLOAT;
+                param->node_type = VALUE;
+                param->arith_type = TYPE_FLOAT;
                 param->n.d = t.numberVal.d;
                 break;
             case STRING:
-                param->node_type = VALUE_STRING;
+                param->node_type = VALUE;
+                param->arith_type = TYPE_STRING;
                 param->str_val = t.stringValue;
                 break;
             default:
@@ -427,19 +539,22 @@ int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** tabl
 
     node_insert(assign_node, id_node);
 
-    if (check_expression(assign_node, s, table) == 0) {
+    int expr_result = check_expression(assign_node, s, table);
+
+    if (expr_result == 0) {
         Token t = get_next_token(s);
         if (t.type == ERROR) {
             free_tree(assign_node);
             return 1;
         }
         if (t.type == END_OF_LINE) {
+            result->type = assign_node->nodes[1]->arith_type;
             node_insert(tree, assign_node);
             return 0;
         }
     }
     free_tree(assign_node);
-    return 2;
+    return expr_result;
 }
 
 
@@ -701,7 +816,7 @@ int check_block(ASTNode* tree, Scanner* s, bool is_inside_function, SymTable** t
 /// Vraci   0 - kdyz nenastala chyba
 ///         1 - kdyz nastala lexikalni chyba
 ///         2 - kdyz nastala syntakticka chyba
-///         3 - kdyz nastal konec souboru
+///         -1 - kdyz nastal konec souboru
 int check_root_block(ASTNode* tree, Scanner *s, SymTable** table) {
     Token t = get_next_token(s);
     switch (t.type) {
@@ -713,7 +828,7 @@ int check_root_block(ASTNode* tree, Scanner *s, SymTable** table) {
                 return check_block(tree, s, false, table);
             }
         case END_OF_FILE:
-            return 3;
+            return -1;
         case ERROR:
             return 1;
         default:
@@ -740,17 +855,16 @@ int get_derivation_tree(FILE *source, ASTNode** tree, SymTable*** table_ptr) {
 
     root->node_type = PROGRAM_ROOT;
     int result = 0;
-    while (result != 3) {
+    while (result != -1) {
         result = check_root_block(root ,&s, table);
         switch (result) {
-            case 1:
-                free_tree(root);
-                return 1;
-            case 2:
-                free_tree(root);
-                return 2;
+            case -1:
+            case 0:
+                break;
             default:
-                continue;
+                free_tree(root);
+                freeHT(table);
+                return result;
         }
     }
     *tree = root;
