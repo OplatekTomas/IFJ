@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 #include "tokens.h"
+#include "symtable.h"
 
 #define START_CAPACITY 10
 
@@ -49,7 +50,7 @@ struct node {
     NonTerm node_type;
     unsigned subnode_len;
     unsigned capacity;
-    void* symbol;
+    SymTable* symbol;
     NumberVal n;
     CondType condType;
     char* str_val;
