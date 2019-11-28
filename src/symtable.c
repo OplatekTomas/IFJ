@@ -14,6 +14,9 @@ SymTable** allocHT(){
 
 Arguments* allocArgs(){
     Arguments* ptr = (Arguments*)malloc(sizeof(Arguments));
+    ptr->nextArg = NULL;
+    ptr->id = NULL;
+    ptr->type = TYPE_NONE;
     return ptr;
 }
 
