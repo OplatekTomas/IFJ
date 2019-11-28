@@ -33,5 +33,19 @@ int check_types(ASTNode *tree) {
 int check_fn_call(ASTNode * tree, SymTable** st){
     int size = 0;
     ASTNode** arr = get_preorder(tree, &size);
-
+    printHT(st);
+    for(int i = 0; i < size; i++){
+        ASTNode * test = arr[i];
+        if(arr[i]->node_type != FUNCITON_CALL){
+            continue;
+        }
+        SymTable* t = searchST(st, arr[i]->str_val);
+        if(t == NULL){
+            return 3;
+        }
+        if(t->argNum != test->subnode_len - 1 && t->argNum != -1){
+            return 5;
+        }
+    }
+    return 0;
 }

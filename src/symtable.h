@@ -37,6 +37,7 @@ struct symTable {
     struct arguments* args;
     int scope;
     struct symTable* ptrNext;
+    struct symTable** localTable; //Yes. We do hate ourselves.
 };
 
 typedef struct symTable SymTable;
@@ -58,5 +59,7 @@ void freeHT(SymTable** hashTable);
 void insertST(SymTable** hashTable, SymTable* ptr);
 
 SymTable* searchST(SymTable** hashTable, char* id);
+
+void fill_with_fn(SymTable** hashTable);
 
 #endif //IFJ_SYMTABLE_H

@@ -646,13 +646,15 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
     if(t.type == ERROR){
         return 1;
     }
-    Arguments* argsTemp = malloc(sizeof(Arguments));
+    Arguments* argsTemp = allocArgs();
     table->args = argsTemp;
     while(t.type != CLOSE_PARENTHES){
         if(t.type != ID){
             return 2;
         }
-        Arguments* args = malloc(sizeof(Arguments));
+        SymTable *tb = allocST(t.stringValue);
+        insertST(table->localTable,tb);
+        Arguments* args = allocArgs();
         args->id = t.stringValue;
         argsTemp->nextArg = args;
         table->argNum++;
@@ -752,13 +754,14 @@ int check_definition(ASTNode* tree, Scanner* s, SymTable** table) {
     root_tree->node_type = FUNCTION_DEFINITION;
     SymTable *tb = allocST(token.stringValue);
     tb->type = TYPE_FUNCTION;
+    tb->localTable = allocHT();
     insertST(table, tb);
     int result = check_args(root_tree, s, tb);
     if(result != 0){
         free(root_tree);
         return result;
     }
-    result = check_keyword_helper(root_tree, s, true, table);
+    result = check_keyword_helper(root_tree, s, true, tb->localTable);
     if(result != 0){
         free_tree(root_tree);
         return result;
@@ -872,7 +875,7 @@ int get_derivation_tree(FILE *source, ASTNode** tree, SymTable*** table_ptr) {
     }
 
     SymTable** table = allocHT();
-
+    fill_with_fn(table);
     if (table == NULL) {
         free_tree(root);
         return 99;
