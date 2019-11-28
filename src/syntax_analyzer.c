@@ -601,6 +601,9 @@ int check_definition(ASTNode* tree, Scanner* s, SymTable** table) {
     //TODO: pouzit tabulku
     printf("kontrola defu\n");
     Token token = get_next_token(s);
+    if(searchST(table, token.stringValue) != NULL){
+        return 3;
+    }
     if(token.type == ERROR){
         return 1;
     }
