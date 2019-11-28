@@ -70,9 +70,11 @@ int check_fn_call(ASTNode * tree, SymTable** st){
         }
         SymTable* t = searchST(st, arr[i]->str_val, NULL);
         if(t == NULL){
+            free(arr);
             return 3;
         }
         if(t->argNum != test->subnode_len - 1 && t->argNum != -1){
+            free(arr);
             return 5;
         }
     }
