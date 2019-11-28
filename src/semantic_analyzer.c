@@ -4,9 +4,13 @@
 
 #include "semantic_analyzer.h"
 
-int check_semantics(ASTNode *tree) {
+int check_semantics(ASTNode *tree, SymTable** st) {
     int result = check_types(tree);
     if (result != 0) {
+        return result;
+    }
+    result = check_fn_call(tree, st);
+    if(result != 0){
         return result;
     }
     return 0;
@@ -24,4 +28,10 @@ int check_types(ASTNode *tree) {
 
     free(exprs);
     return 0;
+}
+
+int check_fn_call(ASTNode * tree, SymTable** st){
+    int size = 0;
+    ASTNode** arr = get_preorder(tree, &size);
+
 }

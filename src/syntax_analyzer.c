@@ -633,7 +633,7 @@ int check_keyword_helper(ASTNode* tree, Scanner* s, bool is_inside_definition, S
     return 0;
 }
 
-int check_args(ASTNode* tree, Scanner* s){
+int check_args(ASTNode* tree, Scanner* s, SymTable* table){
     Token t = get_next_token(s);
     if(t.type == ERROR){
         return 1;
@@ -646,13 +646,18 @@ int check_args(ASTNode* tree, Scanner* s){
     if(t.type == ERROR){
         return 1;
     }
+    Arguments* argsTemp = malloc(sizeof(Arguments));
+    table->args = argsTemp;
     while(t.type != CLOSE_PARENTHES){
         if(t.type != ID){
             return 2;
         }
+        Arguments* args = malloc(sizeof(Arguments));
+        args->id = t.stringValue;
+        argsTemp->nextArg = args;
+        table->argNum++;
         ASTNode *param = node_new();
         param->node_type = IDENTIFICATOR;
-        param->str_val = t.stringValue;
         node_insert(tree, param);
         prev_t = t;
         t = get_next_token(s);
@@ -677,6 +682,10 @@ int check_args(ASTNode* tree, Scanner* s){
     if(prev_t.type == COMMA){
         return 2;
     }
+    Arguments * arTmp = table->args;
+    table->args = arTmp->nextArg;
+    table->argNum--;
+    free(arTmp);
     return 0;
 }
 
@@ -733,12 +742,18 @@ int check_definition(ASTNode* tree, Scanner* s, SymTable** table) {
     //TODO: pouzit tabulku
     printf("kontrola defu\n");
     Token token = get_next_token(s);
+    if(searchST(table, token.stringValue) != NULL){
+        return 3;
+    }
     if(token.type == ERROR){
         return 1;
     }
     ASTNode* root_tree = node_new();
     root_tree->node_type = FUNCTION_DEFINITION;
-    int result = check_args(root_tree, s);
+    SymTable *tb = allocST(token.stringValue);
+    tb->type = TYPE_FUNCTION;
+    insertST(table, tb);
+    int result = check_args(root_tree, s, tb);
     if(result != 0){
         free(root_tree);
         return result;
@@ -796,6 +811,10 @@ int check_block(ASTNode* tree, Scanner* s, bool is_inside_function, SymTable** t
                 case WHILE:
                     return check_while(tree, s, is_inside_function, table);
                 case PASS:
+                    ;
+                    ASTNode *pass = node_new();
+                    pass->node_type = KEYWORD_PASS;
+                    node_insert(tree, pass);
                     return 0;
                 case DEF:
                     return check_definition(tree,s, table);
