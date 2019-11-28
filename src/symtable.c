@@ -139,6 +139,7 @@ void freeHT(SymTable** hashTable){  //vymaže celou hashTable
         hashTable[i] = NULL;
     }
     free(hashTable);
+    hashTable = NULL;
 }
 
 void fill_with_fn(SymTable **hashTable) {
