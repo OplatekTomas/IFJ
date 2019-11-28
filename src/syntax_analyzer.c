@@ -542,11 +542,11 @@ int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** tabl
         }
         if (func_name == NULL) {
             insertST(table, new_item);
-            result = new_item;
         } else {
             SymTable* func = searchST(table, func_name, NULL);
             insertST(func->localTable, new_item);
         }
+        result = new_item;
     } else {
         free(left_side);
     }
