@@ -16,6 +16,7 @@ ASTNode* node_new() {
     node->str_val = NULL;
     node->symbol = NULL;
     node->condType = OP_NONE;
+    node->arith_type = TYPE_NONE;
     node->nodes = malloc(START_CAPACITY * sizeof(ASTNode*));
     if (node->nodes == NULL) {
         free(node);
@@ -85,7 +86,6 @@ ASTNode** get_all_expressions(ASTNode* root, unsigned* len) {
 
 
 const char *node_types[100] = {
-        "STATEMENT",
         "EXPRESSION",
         "ADDITION",
         "SUBTRACTION",
@@ -99,11 +99,8 @@ const char *node_types[100] = {
         "IDENTIFICATOR",
         "IF_ELSE",
         "WHILE_LOOP",
-        "VALUE_INT",
-        "VALUE_FLOAT",
-        "VALUE_STRING",
-        "VALUE_NONE",
-        "CONVERSION",
+        "VALUE",
+        "FLOAT_TO_INT",
         "FUNCTION_DEFINITION",
         "FUNCTION_CALL",
         "RETURN_VALUE",
