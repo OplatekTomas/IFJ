@@ -31,7 +31,7 @@ char token_type[][100] = {
         "DOUBLE_DIV"
 };
 
-int check_block(ASTNode* tree, Scanner* s, bool is_inside_definition);
+int check_block(ASTNode* tree, Scanner* s, bool is_inside_definition, SymTable** table);
 int check_function_call(ASTNode* tree, Scanner* s);
 
 const SSValue parse_table[9][9] = {
@@ -380,7 +380,7 @@ int check_function_call(ASTNode* tree, Scanner* s) {
 }
 
 
-int check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
+int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** table) {
     //TODO: dodelat
     printf("kontrola prirazeni\n");
     ASTNode* assign_node = node_new();
@@ -395,6 +395,15 @@ int check_assignment(ASTNode* tree, Scanner* s, char* left_side) {
     }
     id_node->node_type = IDENTIFICATOR;
     //TODO: pridat pointer na identifikator do tabulky symbolu
+
+    SymTable* result = searchST(table, left_side);
+
+    if (result == NULL) {
+        SymTable* new_item = allocST(left_side);
+        insertST(table, new_item);
+    } else {
+        free(left_side);
+    }
 
     node_insert(assign_node, id_node);
 
@@ -441,7 +450,7 @@ bool check_cond(ASTNode* tree, Scanner* s){
     return true;
 }
 
-int check_keyword_helper(ASTNode* tree, Scanner* s, bool is_inside_definition){
+int check_keyword_helper(ASTNode* tree, Scanner* s, bool is_inside_definition, SymTable** table){
     Token t = get_next_token(s);
     if(t.type == ERROR){
         return 1;
@@ -469,11 +478,15 @@ int check_keyword_helper(ASTNode* tree, Scanner* s, bool is_inside_definition){
             break;
         }
         scanner_unget(s, t);
-        int result = check_block(block_node, s, is_inside_definition) ;
+        int result = check_block(block_node, s, is_inside_definition, table);
         if(result != 0){
             free_tree(block_node);
             return result;
         }
+    }
+    if(block_node->subnode_len == 0){
+        free_tree(block_node);
+        return 2;
     }
     node_insert(tree, block_node);
     return 0;
@@ -526,7 +539,7 @@ int check_args(ASTNode* tree, Scanner* s){
     return 0;
 }
 
-int check_if(ASTNode* tree, Scanner* s, bool is_inside_definition) {
+int check_if(ASTNode* tree, Scanner* s, bool is_inside_definition, SymTable** table) {
     printf("Kontrola ifu\n");
     ASTNode *root_node = node_new();
     root_node->node_type = IF_ELSE;
@@ -534,7 +547,7 @@ int check_if(ASTNode* tree, Scanner* s, bool is_inside_definition) {
         free_tree(root_node);
         return 2;
     }
-    int result = check_keyword_helper(root_node, s, is_inside_definition);
+    int result = check_keyword_helper(root_node, s, is_inside_definition, table);
     if(result != 0){
         free_tree(root_node);
         return result;
@@ -549,17 +562,16 @@ int check_if(ASTNode* tree, Scanner* s, bool is_inside_definition) {
         free_tree(root_node);
         return 2;
     }
-    result = check_keyword_helper(root_node, s, is_inside_definition);
+    result = check_keyword_helper(root_node, s, is_inside_definition, table);
     if(result != 0){
         free_tree(root_node);
         return result;
     }
     node_insert(tree, root_node);
-    print_tree(tree);
     return 0;
 }
 
-int check_while(ASTNode* tree, Scanner* s, bool is_inside_definition) {
+int check_while(ASTNode* tree, Scanner* s, bool is_inside_definition, SymTable** table) {
      printf("kontrola whilu\n");
     ASTNode *while_node = node_new();
     while_node->node_type = WHILE_LOOP;
@@ -567,7 +579,7 @@ int check_while(ASTNode* tree, Scanner* s, bool is_inside_definition) {
         free_tree(while_node);
         return 2;
     }
-    int result = check_keyword_helper(while_node, s, is_inside_definition);
+    int result = check_keyword_helper(while_node, s, is_inside_definition, table);
     if(result != 0){
         free_tree(while_node);
         return result;
@@ -576,7 +588,7 @@ int check_while(ASTNode* tree, Scanner* s, bool is_inside_definition) {
     return 0;
 }
 
-int check_definition(ASTNode* tree, Scanner* s) {
+int check_definition(ASTNode* tree, Scanner* s, SymTable** table) {
     //TODO: pouzit tabulku
     printf("kontrola defu\n");
     Token token = get_next_token(s);
@@ -590,7 +602,7 @@ int check_definition(ASTNode* tree, Scanner* s) {
         free(root_tree);
         return result;
     }
-    result = check_keyword_helper(root_tree, s, true);
+    result = check_keyword_helper(root_tree, s, true, table);
     if(result != 0){
         free_tree(root_tree);
         return result;
@@ -615,7 +627,7 @@ int check_return(ASTNode* tree, Scanner* s){
 /// Vraci   0 - kdyz nenastala chyba
 ///         1 - kdyz nastala lexikalni chyba
 ///         2 - kdyz nastala syntakticka chyba
-int check_block(ASTNode* tree, Scanner* s, bool is_inside_function) {
+int check_block(ASTNode* tree, Scanner* s, bool is_inside_function, SymTable** table) {
     Token t = get_next_token(s);
 
 
@@ -627,7 +639,7 @@ int check_block(ASTNode* tree, Scanner* s, bool is_inside_function) {
             Token after = get_next_token(s);
             switch (after.type) {
                 case ASSIGN:
-                    return check_assignment(tree, s, id);
+                    return check_assignment(tree, s, id, table);
                 case OPEN_PARENTHES:
                     scanner_unget(s, after);
                     scanner_unget(s, t);
@@ -640,13 +652,13 @@ int check_block(ASTNode* tree, Scanner* s, bool is_inside_function) {
         case KEYWORD:
             switch (t.keywordValue) {
                 case IF:
-                    return check_if(tree, s, is_inside_function);
+                    return check_if(tree, s, is_inside_function, table);
                 case WHILE:
-                    return check_while(tree, s, is_inside_function);
+                    return check_while(tree, s, is_inside_function, table);
                 case PASS:
                     return 0;
                 case DEF:
-                    return check_definition(tree,s);
+                    return check_definition(tree,s, table);
                 case RETURN:
                     if(is_inside_function){
                         return check_return(tree, s);
@@ -671,15 +683,15 @@ int check_block(ASTNode* tree, Scanner* s, bool is_inside_function) {
 ///         1 - kdyz nastala lexikalni chyba
 ///         2 - kdyz nastala syntakticka chyba
 ///         3 - kdyz nastal konec souboru
-int check_root_block(ASTNode* tree, Scanner *s, SymTable* table) {
+int check_root_block(ASTNode* tree, Scanner *s, SymTable** table) {
     Token t = get_next_token(s);
     switch (t.type) {
         case KEYWORD:
             if (t.keywordValue  == DEF) {
-                return check_definition(tree, s);
+                return check_definition(tree, s, table);
             } else {
                 scanner_unget(s, t);
-                return check_block(tree, s, false);
+                return check_block(tree, s, false, table);
             }
         case END_OF_FILE:
             return 3;
@@ -687,11 +699,11 @@ int check_root_block(ASTNode* tree, Scanner *s, SymTable* table) {
             return 1;
         default:
             scanner_unget(s, t);
-            return check_block(tree, s, false);
+            return check_block(tree, s, false, table);
     }
 }
 
-int get_derivation_tree(FILE *source, ASTNode** tree) {
+int get_derivation_tree(FILE *source, ASTNode** tree, SymTable*** table_ptr) {
     Scanner s;
     scanner_init(&s, source);
 
@@ -700,7 +712,7 @@ int get_derivation_tree(FILE *source, ASTNode** tree) {
         return 99;
     }
 
-    SymTable* table = allocHT();
+    SymTable** table = allocHT();
 
     root->node_type = PROGRAM_ROOT;
     int result = 0;
@@ -718,5 +730,6 @@ int get_derivation_tree(FILE *source, ASTNode** tree) {
         }
     }
     *tree = root;
+    *table_ptr = table;
     return 0;
 }

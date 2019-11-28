@@ -4,14 +4,30 @@
 
 #include "symtable.h"
 
-SymTable* allocHT(){
-    SymTable* ptr = (SymTable*)malloc(TABLE_SIZE* sizeof(SymTable));
+SymTable** allocHT(){
+    SymTable** ptr = (SymTable**)malloc(TABLE_SIZE* sizeof(SymTable*));
+    for(int i = 0; i < TABLE_SIZE; i++){
+        ptr[i] = NULL;
+    }
     return ptr;
 }
 
 Arguments* allocArgs(){
     Arguments* ptr = (Arguments*)malloc(sizeof(Arguments));
     return ptr;
+}
+
+SymTable* allocST(char* id){
+    SymTable* ptr = (SymTable*)malloc(sizeof(SymTable));
+    if(ptr == NULL)
+        return NULL;
+    ptr->ptrNext = NULL;
+    ptr->id = id;
+    ptr->argNum = 0;
+    ptr->args = NULL;
+    ptr->dataPtr = NULL;
+    ptr->scope = 0;
+    ptr->type = TYPE_NONE;
 }
 
 unsigned int htabHashFunction(const char *str) {    //funkce pro generování hashe podle id
@@ -82,4 +98,5 @@ void freeHT(SymTable** hashTable){  //vymaže celou hashTable
         }
         hashTable[i] = NULL;
     }
+    free(hashTable);
 }
