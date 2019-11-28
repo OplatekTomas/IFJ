@@ -108,6 +108,8 @@ void printHT(SymTable** ht){
 
 
 void freeHT(SymTable** hashTable){  //vymaže celou hashTable
+    if(hashTable == NULL)
+        return;
     for(int i = 0; i < TABLE_SIZE; i++){
         SymTable *item = hashTable[i];
         while(item != NULL){
