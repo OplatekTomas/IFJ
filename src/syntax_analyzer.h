@@ -7,6 +7,6 @@
 #include "symtable.h"
 
 /// Vraci kod chyby, ktery je stejny jako kod chyby kompilatoru
-int get_derivation_tree(FILE *source, ASTNode** tree);
+int get_derivation_tree(FILE *source, ASTNode** tree, SymTable*** table);
 
 #endif //IFJ_SYNTAX_ANALYZER_H
