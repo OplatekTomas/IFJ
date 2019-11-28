@@ -6,6 +6,9 @@
 
 SymTable** allocHT(){
     SymTable** ptr = (SymTable**)malloc(TABLE_SIZE* sizeof(SymTable*));
+    for(int i = 0; i < TABLE_SIZE; i++){
+        ptr[i] = NULL;
+    }
     return ptr;
 }
 
