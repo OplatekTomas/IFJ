@@ -758,7 +758,7 @@ int check_while(ASTNode* tree, Scanner* s, bool is_inside_definition, char* func
      printf("kontrola whilu\n");
     ASTNode *while_node = node_new();
     while_node->node_type = WHILE_LOOP;
-    if(!check_cond(while_node, s, table, func_name)){
+    if(check_cond(while_node, s, table, func_name) != 0){
         free_tree(while_node);
         return 2;
     }
@@ -802,7 +802,6 @@ int check_definition(ASTNode* tree, Scanner* s, SymTable** table) {
 }
 
 int check_return(ASTNode* tree, Scanner* s, SymTable** table, char* func_name){
-    print_tree(tree);
     ASTNode* node = node_new();
     node->node_type = RETURN_VALUE;
     int result = check_expression(node, s, table, func_name);

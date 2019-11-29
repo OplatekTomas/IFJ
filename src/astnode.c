@@ -39,6 +39,9 @@ void free_tree(ASTNode* tree) {
     if (tree == NULL) {
         return;
     }
+    if (tree->str_val != NULL && tree->node_type == VALUE) {
+        free(tree->str_val);
+    }
 
     for (unsigned i = 0; i < tree->subnode_len; i++) {
         free_tree(tree->nodes[i]);

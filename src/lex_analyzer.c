@@ -115,11 +115,12 @@ int handle_indent(Scanner* s, Token* t){
     }
 }
 
-void handle_singleline_comments(FILE * source) {
+void handle_singleline_comments(FILE * source, Scanner* s) {
     do {
         char c = (char)getc(source);
         if (c == EOF || c == '\n') {
-            ungetc(c, source);
+            //ungetc(c, source);
+            s->first_on_line = true;
             return;
         }
     } while (true);
@@ -371,9 +372,10 @@ Token get_new_token(Scanner* s) {
                 handle_comparison(source, &t, c);
                 return t;
             case '#':
-                handle_singleline_comments(source);
-                s->first_on_line = false;
-                break;
+                handle_singleline_comments(source, s);
+                s->first_on_line = true;
+                t.type = END_OF_LINE;
+                return t;
             case '"':
                 ungetc(c, source);
                 handle_multline_string(source, &t);
