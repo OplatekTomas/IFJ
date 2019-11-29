@@ -380,6 +380,21 @@ int check_expression(ASTNode* tree, Scanner* s, SymTable** table, char* func_nam
         scanner_unget(s, t);
     }
 
+    //check for none
+    t = get_next_token(s);
+    if (t.type == KEYWORD && t.keywordValue == NONE) {
+        ASTNode* none = node_new();
+        if (none == NULL) {
+            return 99;
+        }
+        none->arith_type = TYPE_NONE;
+        none->node_type = VALUE;
+        node_insert(tree, none);
+        return 0;
+    } else {
+        scanner_unget(s, t);
+    }
+
     SyntaxStack ss;
     syntax_stack_init(&ss);
 
