@@ -620,12 +620,14 @@ int check_keyword_helper(ASTNode* tree, Scanner* s, bool is_inside_definition, c
         return 2;
     }
     t = get_next_token(s);
-    if(t.type != END_OF_LINE){ //if x < y: EOL
-        return 2;
+    while(t.type == END_OF_LINE) {
+        t = get_next_token(s);
+        if (t.type == ERROR) {
+            return 1;
+        }
     }
-    t = get_next_token(s);
     if(t.type != INDENT){ //if x < y: EOL a nějaké hovado by to nechalo prázdné
-        return 1;
+        return 2;
     }
     ASTNode *block_node = node_new();
     block_node->node_type = BLOCK;
