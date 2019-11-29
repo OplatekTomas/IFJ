@@ -69,6 +69,8 @@ int check_fn_call(ASTNode * tree, SymTable** st){
             continue;
         }
         SymTable* t = searchST(st, arr[i]->str_val, NULL);
+        test->symbol = t;
+        free(test->str_val);
         if(t == NULL){
             free(arr);
             return 3;
