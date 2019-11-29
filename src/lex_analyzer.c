@@ -68,7 +68,7 @@ void handle_word(FILE* source ,Token *token){
     if(word == NULL){
         throw_err(INTERN_ERR);
     }
-    int len = read_next_word(source, word, 256);
+    read_next_word(source, word, 256);
     token->keywordValue = is_keyword(word);
     if(token->keywordValue != NON_KEYWORD){
         //printf("Keyword: %s\n",word);
@@ -115,11 +115,12 @@ int handle_indent(Scanner* s, Token* t){
     }
 }
 
-void handle_singleline_comments(FILE * source) {
+void handle_singleline_comments(FILE * source, Scanner* s) {
     do {
         char c = (char)getc(source);
         if (c == EOF || c == '\n') {
-            ungetc(c, source);
+            //ungetc(c, source);
+            s->first_on_line = true;
             return;
         }
     } while (true);
@@ -371,9 +372,10 @@ Token get_new_token(Scanner* s) {
                 handle_comparison(source, &t, c);
                 return t;
             case '#':
-                handle_singleline_comments(source);
-                s->first_on_line = false;
-                break;
+                handle_singleline_comments(source, s);
+                s->first_on_line = true;
+                t.type = END_OF_LINE;
+                return t;
             case '"':
                 ungetc(c, source);
                 handle_multline_string(source, &t);

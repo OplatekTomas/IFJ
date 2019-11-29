@@ -13,6 +13,7 @@ void syntax_stack_init(SyntaxStack* ss) {
     ss->index = 1;
     SSData data;
     data.type = SYNTAX_END;
+    data.node = NULL;
     ss->data[0] = data;
 }
 
@@ -47,4 +48,13 @@ void syntax_stack_shift(SyntaxStack* ss, unsigned index) {
 
 SSData syntax_stack_top(SyntaxStack* ss) {
     return ss->data[ss->index - 1];
+}
+
+void syntax_stack_free_nodes(SyntaxStack *ss) {
+    while (!syntax_stack_empty(ss)) {
+        if (ss->data[ss->index - 1].node != NULL) {
+            free_tree(ss->data[ss->index - 1].node);
+        }
+        ss->index--;
+    }
 }

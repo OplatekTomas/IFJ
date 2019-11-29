@@ -14,6 +14,9 @@ SymTable** allocHT(){
 
 Arguments* allocArgs(){
     Arguments* ptr = (Arguments*)malloc(sizeof(Arguments));
+    ptr->nextArg = NULL;
+    ptr->id = NULL;
+    ptr->type = TYPE_NONE;
     return ptr;
 }
 
@@ -28,6 +31,8 @@ SymTable* allocST(char* id){
     ptr->dataPtr = NULL;
     ptr->scope = 0;
     ptr->type = TYPE_NONE;
+    ptr->localTable = NULL;
+    return ptr;
 }
 
 unsigned int htabHashFunction(const char *str) {    //funkce pro generování hashe podle id
@@ -72,18 +77,26 @@ void insertST(SymTable** hashTable, SymTable* ptr){    //vloží již alokovanou
     }
 }
 
-SymTable* searchST(SymTable** hashTable, char* id){    //vyhledá symTable v hashTable a vrátí pointer na ní
+SymTable* searchST(SymTable** hashTable, char* id, char* funcID){    //vyhledá symTable v hashTable a vrátí pointer na ní
     if(id == NULL){
         return NULL;
     }
-    int hash = htabHashFunction(id);
-    struct symTable* ptr = hashTable[hash];
+    char* searchedID = id;
+    if(funcID != NULL)
+        searchedID = funcID;
+    int hash = htabHashFunction(searchedID);
+    SymTable* ptr = hashTable[hash];
     if(ptr == NULL)
         return NULL;
-    while(strcmp(ptr->id, id)){
+    while(strcmp(ptr->id, searchedID)){
         if(ptr->ptrNext == NULL)
             return NULL;
         ptr = ptr->ptrNext;
+    }
+    if(funcID != NULL) {
+        ptr = searchST(ptr->localTable, id, NULL);
+        if(ptr == NULL)
+            ptr = searchST(hashTable, id, NULL);
     }
     return ptr;
 }
@@ -105,14 +118,39 @@ void printHT(SymTable** ht){
 
 
 void freeHT(SymTable** hashTable){  //vymaže celou hashTable
+    if(hashTable == NULL)
+        return;
     for(int i = 0; i < TABLE_SIZE; i++){
         SymTable *item = hashTable[i];
         while(item != NULL){
-            struct symTable *tmp = item->ptrNext;
+            SymTable *tmpST = item->ptrNext;
+            free(item->id);
+            Arguments* args = item->args;
+            while(args != NULL){
+                Arguments* argsNext = args->nextArg;
+                free(args);
+                args = argsNext;
+            }
+            if(item->localTable != NULL)
+                freeHT(item->localTable);
             free(item);
-            item = tmp;
+            item = tmpST;
         }
         hashTable[i] = NULL;
     }
     free(hashTable);
+    hashTable = NULL;
+}
+
+void fill_with_fn(SymTable **hashTable) {
+    char* functions[] = {"inputs", "inputi", "inputf", "print", "len", "substr", "ord", "chr"};
+    int argCount[] = {0, 0, 0, -1, 1, 3, 2, 1};
+    for(int i = 0; i < 8; i++){
+        char* ptr = malloc(sizeof(char)* 16);
+        strcpy(ptr, functions[i]);
+        SymTable* item = allocST(ptr);
+        item->type = TYPE_FUNCTION;
+        item->argNum = argCount[i];
+        insertST(hashTable, item);
+    }
 }

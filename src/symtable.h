@@ -17,12 +17,13 @@ typedef enum {
     TYPE_NONE,
     TYPE_INT,
     TYPE_FLOAT,
-    TYPE_STRING
-} typeValue;
+    TYPE_STRING,
+    TYPE_FUNCTION
+} TypeValue;
 
 struct arguments{
     char* id;
-    typeValue type;
+    TypeValue type;
     struct arguments* nextArg;
 };
 
@@ -30,12 +31,13 @@ typedef struct arguments Arguments;
 
 struct symTable {
     char* id;
-    typeValue type;
+    TypeValue type;
     void* dataPtr;
     int argNum;
     struct arguments* args;
     int scope;
     struct symTable* ptrNext;
+    struct symTable** localTable; //Yes. We do hate ourselves.
 };
 
 typedef struct symTable SymTable;
@@ -56,6 +58,8 @@ void freeHT(SymTable** hashTable);
 
 void insertST(SymTable** hashTable, SymTable* ptr);
 
-SymTable* searchST(SymTable** hashTable, char* id);
+SymTable* searchST(SymTable** hashTable, char* id, char* funcID);
+
+void fill_with_fn(SymTable** hashTable);
 
 #endif //IFJ_SYMTABLE_H
