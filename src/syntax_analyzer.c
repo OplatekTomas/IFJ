@@ -135,7 +135,7 @@ int check_rule(SyntaxStack* ss, SymTable** table, char* func_name) {
     sd.node = node;
 
     if (ss->data[ss->index - 1].type == SYNTAX_TERM && is_token_i(ss->data[ss->index - 1].t) && ss->data[ss->index - 2].type == SYNTAX_LESSER) {
-        printf("ID => E\n");
+        fprintf(stderr,"ID => E\n");
         SSData term = syntax_stack_top(ss);
         // pop term and lessen sign
         syntax_stack_pop(ss);
@@ -161,6 +161,7 @@ int check_rule(SyntaxStack* ss, SymTable** table, char* func_name) {
                 sd.node->node_type = IDENTIFICATOR;
                 SymTable* result = searchST(table, term.t.stringValue, func_name);
                 if (result == NULL) {
+                    free(term.t.stringValue);
                     free_tree(node);
                     return 3;
                 } else {
@@ -182,7 +183,7 @@ int check_rule(SyntaxStack* ss, SymTable** table, char* func_name) {
             ss->data[ss->index - 4].type == SYNTAX_LESSER
             ) {
         // kontrola vsech aritmetickych pravidel
-        printf("E => E '%i' E\n", ss->data[ss->index -2].t.type);
+        fprintf(stderr,"E => E '%i' E\n", ss->data[ss->index -2].t.type);
 
         TypeValue right_value = ss->data[ss->index - 1].node->arith_type;
         TypeValue left_value = ss->data[ss->index - 3].node->arith_type;
@@ -269,7 +270,7 @@ int check_rule(SyntaxStack* ss, SymTable** table, char* func_name) {
             ss->data[ss->index - 3].type == SYNTAX_TERM && ss->data[ss->index - 3].t.type == OPEN_PARENTHES &&
             ss->data[ss->index - 4].type == SYNTAX_LESSER
             ) {
-        printf("E => (E)\n");
+        fprintf(stderr,"E => (E)\n");
         // pop parenthesis and  expression
         syntax_stack_pop(ss);
         SSData term = syntax_stack_top(ss);
@@ -357,7 +358,7 @@ bool is_comp(Token t, CondType* type){
 }
 
 int check_expression(ASTNode* tree, Scanner* s, SymTable** table, char* func_name) {
-     printf("kontrola vyrazu\n");
+     fprintf(stderr,"kontrola vyrazu\n");
 
     // zkontrolovat jestli neni volana funkce
     Token t = get_next_token(s);
@@ -463,7 +464,7 @@ int check_expression(ASTNode* tree, Scanner* s, SymTable** table, char* func_nam
 }
 
 int check_function_call(ASTNode* tree, Scanner* s, SymTable** table, char* functionName) {
-    printf("kontrola volani funkce\n");
+    fprintf(stderr,"kontrola volani funkce\n");
     Token t = get_next_token(s);
     if(t.type == ERROR){
         return 1;
@@ -482,6 +483,7 @@ int check_function_call(ASTNode* tree, Scanner* s, SymTable** table, char* funct
         switch(t.type){
             case ERROR:
                 free_tree(param);
+                free_tree(root_tree);
                 return 1;
             case ID:;
                 SymTable* tb = searchST(table, t.stringValue, functionName);
@@ -513,6 +515,7 @@ int check_function_call(ASTNode* tree, Scanner* s, SymTable** table, char* funct
                 param->str_val = t.stringValue;
                 break;
             default:
+                free_tree(param);
                 free_tree(root_tree);
                 return 2;
         }
@@ -540,7 +543,7 @@ int check_function_call(ASTNode* tree, Scanner* s, SymTable** table, char* funct
 
 int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** table, char* func_name) {
     //TODO: dodelat
-    printf("kontrola prirazeni\n");
+    fprintf(stderr,"kontrola prirazeni\n");
     ASTNode* assign_node = node_new();
     if (assign_node == NULL) {
         return 99;
@@ -555,6 +558,7 @@ int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** tabl
     //TODO: pridat pointer na identifikator do tabulky symbolu
 
     SymTable* result = searchST(table, left_side, func_name);
+    bool found = result != NULL;
 
     if (result == NULL) {
         SymTable* new_item = allocST(left_side);
@@ -562,12 +566,6 @@ int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** tabl
             free_tree(assign_node);
             free_tree(id_node);
             return 99;
-        }
-        if (func_name == NULL) {
-            insertST(table, new_item);
-        } else {
-            SymTable* func = searchST(table, func_name, NULL);
-            insertST(func->localTable, new_item);
         }
         result = new_item;
     } else {
@@ -589,6 +587,14 @@ int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** tabl
         if (t.type == END_OF_LINE) {
             result->type = assign_node->nodes[1]->arith_type;
             node_insert(tree, assign_node);
+            if (!found) {
+                if (func_name == NULL) {
+                    insertST(table, result);
+                } else {
+                    SymTable *func = searchST(table, func_name, NULL);
+                    insertST(func->localTable, result);
+                }
+            }
             return 0;
         }
     }
@@ -691,8 +697,8 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
     if(t.type == ERROR){
         return 1;
     }
-    Arguments* tempArg = allocArgs();
-    table->args = tempArg;
+    //Arguments* tempArg = allocArgs();
+    //table->args = tempArg;
     while(t.type != CLOSE_PARENTHES){
         if(t.type != ID){
             return 2;
@@ -700,10 +706,10 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
         SymTable *tb = allocST(t.stringValue); //Create new item and insert into local table
         insertST(table->localTable,tb);
 
-        Arguments* tmp = allocArgs();
+        /*Arguments* tmp = allocArgs();
         tmp->type = TYPE_NONE;
         tmp->id = t.stringValue;
-        addToList(table->args, tmp);
+        addToList(table->args, tmp);*/
 
         ASTNode *param = node_new(); //Continue creating ASTNodes
         param->node_type = IDENTIFICATOR;
@@ -732,17 +738,18 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
     if(prev_t.type == COMMA){
         return 2;
     }
-    Arguments * arTmp = table->args;
-    table->args = arTmp->nextArg;
-    table->argNum--;
-    free(arTmp);
+    //Arguments * arTmp = table->args;
+    //table->args = arTmp->nextArg;
+    //table->argNum--;
+    //free(arTmp);
     return 0;
 }
 
 int check_if(ASTNode* tree, Scanner* s, bool is_inside_definition, char * func_name, SymTable** table) {
-    printf("Kontrola ifu\n");
+    fprintf(stderr,"Kontrola ifu\n");
     ASTNode *root_node = node_new();
     root_node->node_type = IF_ELSE;
+    printHT(table);
     if(check_cond(root_node, s, table, func_name) != 0){ //if x < y
         free_tree(root_node);
         return 2;
@@ -757,7 +764,7 @@ int check_if(ASTNode* tree, Scanner* s, bool is_inside_definition, char * func_n
         free_tree(root_node);
         return 1;
     }
-    printf("Kontrola else\n");
+    fprintf(stderr,"Kontrola else\n");
     if(t.type != KEYWORD || t.keywordValue != ELSE){
         free_tree(root_node);
         return 2;
@@ -772,7 +779,7 @@ int check_if(ASTNode* tree, Scanner* s, bool is_inside_definition, char * func_n
 }
 
 int check_while(ASTNode* tree, Scanner* s, bool is_inside_definition, char* func_name, SymTable** table) {
-     printf("kontrola whilu\n");
+     fprintf(stderr,"kontrola whilu\n");
     ASTNode *while_node = node_new();
     while_node->node_type = WHILE_LOOP;
     if(check_cond(while_node, s, table, func_name) != 0){
@@ -790,7 +797,7 @@ int check_while(ASTNode* tree, Scanner* s, bool is_inside_definition, char* func
 
 int check_definition(ASTNode* tree, Scanner* s, SymTable** table) {
     //TODO: pouzit tabulku
-    printf("kontrola defu\n");
+    fprintf(stderr,"kontrola defu\n");
     Token token = get_next_token(s);
     if(searchST(table, token.stringValue, NULL) != NULL){
         return 3;
@@ -809,16 +816,23 @@ int check_definition(ASTNode* tree, Scanner* s, SymTable** table) {
     ASTNode* root_tree = node_new();
     root_tree->node_type = FUNCTION_DEFINITION;
     SymTable *tb = allocST(token.stringValue);
+    if (tb == NULL) {
+        return 99;
+    }
     tb->type = TYPE_FUNCTION;
     tb->localTable = allocHT();
     insertST(table, tb);
     int result = check_args(root_tree, s, tb);
     if(result != 0){
+        freeHT(tb->localTable);
+        tb->localTable = NULL;
         free(root_tree);
         return result;
     }
     result = check_keyword_helper(root_tree, s, true, token.stringValue, table);
     if(result != 0){
+        freeHT(tb->localTable);
+        tb->localTable = NULL;
         free_tree(root_tree);
         return result;
     }
@@ -844,7 +858,7 @@ int check_return(ASTNode* tree, Scanner* s, SymTable** table, char* func_name){
 int check_block(ASTNode* tree, Scanner* s, bool is_inside_function, char* func_name, SymTable** table) {
     Token t = get_next_token(s);
 
-    printf("kontrola bloku\n");
+    fprintf(stderr,"kontrola bloku\n");
 
     switch (t.type) {
         case ID:;

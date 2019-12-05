@@ -61,7 +61,7 @@ void deleteST(SymTable** hashTable, char* id){    //odstraní symTable z hashTab
     }
     if(item == hashTable[hash]){
         hashTable[hash] = item->ptrNext;
-    }else{
+    } else {
         prev->ptrNext = item->ptrNext;
     }
     free(item);
@@ -69,6 +69,10 @@ void deleteST(SymTable** hashTable, char* id){    //odstraní symTable z hashTab
 
 void insertST(SymTable** hashTable, SymTable* ptr){    //vloží již alokovanou a vypněnou symTable do hashTable
     if(ptr != NULL){
+        SymTable* temp = searchST(hashTable, ptr->id,NULL);
+        if(temp != NULL){ //Fucking band-aid
+            return;
+        }
         int hash = htabHashFunction(ptr->id);
         if(&hashTable[hash] != NULL){
             ptr->ptrNext = hashTable[hash];
@@ -82,6 +86,7 @@ SymTable* searchST(SymTable** hashTable, char* id, char* funcID){    //vyhledá 
         return NULL;
     }
     char* searchedID = id;
+    printHT(hashTable);
     if(funcID != NULL)
         searchedID = funcID;
     int hash = htabHashFunction(searchedID);
@@ -95,8 +100,9 @@ SymTable* searchST(SymTable** hashTable, char* id, char* funcID){    //vyhledá 
     }
     if(funcID != NULL) {
         ptr = searchST(ptr->localTable, id, NULL);
-        if(ptr == NULL)
+        if(ptr == NULL){
             ptr = searchST(hashTable, id, NULL);
+        }
     }
     return ptr;
 }
@@ -107,12 +113,17 @@ void printHT(SymTable** ht){
         if(item == NULL){
             continue;
         }
-        printf("%d.  ", i+1);
+        fprintf(stderr,"%d.  ", i+1);
+        SymTable* prev = NULL;
         while(item != NULL){
-           printf("%s", item->id);
+           fprintf(stderr,"%s ->", item->id);
+           if(prev == item){
+               break;
+           }
+           prev = item;
            item = item->ptrNext;
         }
-        printf("\n");
+        fprintf(stderr,"\n");
     }
 }
 
@@ -120,6 +131,7 @@ void printHT(SymTable** ht){
 void freeHT(SymTable** hashTable){  //vymaže celou hashTable
     if(hashTable == NULL)
         return;
+    printHT(hashTable);
     for(int i = 0; i < TABLE_SIZE; i++){
         SymTable *item = hashTable[i];
         while(item != NULL){
@@ -131,8 +143,12 @@ void freeHT(SymTable** hashTable){  //vymaže celou hashTable
                 free(args);
                 args = argsNext;
             }
-            if(item->localTable != NULL)
+            if(item->localTable != NULL){
+
                 freeHT(item->localTable);
+                item->localTable = NULL;
+            }
+
             free(item);
             item = tmpST;
         }

@@ -1,0 +1,19 @@
+#0
+cislo = 10
+def zmena(cislo):
+    if cislo > 20:
+        cislo = 80
+        return 20
+    else:
+        cislo = zmena_odecteni()
+        return cislo
+
+def zmena_odecteni():
+    print('zmena_odecteni')
+    i = 10
+    while i > 5:
+        test = 5
+        print(test)
+        i = i - 1
+zmena(cislo)
+print(cislo)

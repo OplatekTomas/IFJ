@@ -26,7 +26,7 @@ int main (int argc, char *argv[]) {
 #ifndef NDEBUG
     int syntax_result = get_derivation_tree(f, &tree, &table);
 #else
-    int syntax_result = get_derivation_tree(stdin, &tree);
+    int syntax_result = get_derivation_tree(stdin, &tree, &table);
 #endif
 
     if (syntax_result != 0) {
@@ -45,6 +45,7 @@ int main (int argc, char *argv[]) {
         fclose(f);
 #endif
         free_tree(tree);
+        printHT(table);
         freeHT(table);
         throw_err(semantics_result);
     }
