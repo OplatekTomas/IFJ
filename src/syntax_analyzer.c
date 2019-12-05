@@ -563,12 +563,6 @@ int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** tabl
             free_tree(id_node);
             return 99;
         }
-        if (func_name == NULL) {
-            insertST(table, new_item);
-        } else {
-            SymTable* func = searchST(table, func_name, NULL);
-            insertST(func->localTable, new_item);
-        }
         result = new_item;
     } else {
         free(left_side);
@@ -589,6 +583,12 @@ int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** tabl
         if (t.type == END_OF_LINE) {
             result->type = assign_node->nodes[1]->arith_type;
             node_insert(tree, assign_node);
+            if (func_name == NULL) {
+                insertST(table, result);
+            } else {
+                SymTable* func = searchST(table, func_name, NULL);
+                insertST(func->localTable, result);
+            }
             return 0;
         }
     }
