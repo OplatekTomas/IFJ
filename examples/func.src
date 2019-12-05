@@ -1,0 +1,5 @@
+def zmena(cislo):
+    if cislo > 0:
+        cislo = 10
+    else:
+        pass

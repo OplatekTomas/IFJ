@@ -126,13 +126,19 @@ void handle_singleline_comments(FILE * source, Scanner* s) {
     } while (true);
 }
 
-void handle_eof(FILE* source, IndentStack* is, Token* t) {
-    if (stack_top(is) == 0) {
+void handle_eof(Scanner* s, Token* t) {
+    if (!s->first_on_line) {
+        t->type = END_OF_LINE;
+        ungetc(EOF, s->source);
+        s->first_on_line = true;
+        return;
+    }
+    if (stack_top(&s->is) == 0) {
         t->type = END_OF_FILE;
     } else {
-        stack_pop(is);
+        stack_pop(&s->is);
         t->type = DEDENT;
-        ungetc(EOF, source);
+        ungetc(EOF, s->source);
     }
 }
 
@@ -381,7 +387,7 @@ Token get_new_token(Scanner* s) {
                 handle_multline_string(source, &t);
                 return t;
             case EOF:
-                handle_eof(source, &s->is, &t);
+                handle_eof(s, &t);
                 return t;
             default:
                 //Všechny znaky kterými může začínát indentifier

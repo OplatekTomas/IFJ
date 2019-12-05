@@ -45,6 +45,7 @@ int main (int argc, char *argv[]) {
         fclose(f);
 #endif
         free_tree(tree);
+        printHT(table);
         freeHT(table);
         throw_err(semantics_result);
     }
