@@ -107,12 +107,12 @@ void printHT(SymTable** ht){
         if(item == NULL){
             continue;
         }
-        printf("%d.  ", i+1);
+        fprintf(stderr,"%d.  ", i+1);
         while(item != NULL){
-           printf("%s", item->id);
+           fprintf(stderr,"%s", item->id);
            item = item->ptrNext;
         }
-        printf("\n");
+        fprintf(stderr,"\n");
     }
 }
 

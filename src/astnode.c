@@ -130,7 +130,7 @@ ASTNode** get_postorder(ASTNode* root, int* size){
     ASTNode** result = malloc(sizeof(ASTNode*) * cap);
     goLeft(root, result, size, &cap, true);
     for(int i = 0; i < *size; i++){
-        printf("%s ",node_types[result[i]->node_type]);
+        fprintf(stderr,"%s ",node_types[result[i]->node_type]);
     }
     return result;
 }
@@ -140,16 +140,16 @@ ASTNode** get_preorder(ASTNode* root, int* size){
     ASTNode** result = malloc(sizeof(ASTNode*) * cap);
     goLeft(root, result, size, &cap, false);
     for(int i = 0; i < *size; i++){
-        printf("%s ",node_types[result[i]->node_type]);
+        fprintf(stderr,"%s ",node_types[result[i]->node_type]);
     }
     return result;
 }
 
 void print_node_name(ASTNode* tree, int indent){
     for(int i = 0; i < indent*2; i++){
-        printf(" ");
+        fprintf(stderr," ");
     }
-    printf("%s\n", node_types[tree->node_type]);
+    fprintf(stderr,"%s\n", node_types[tree->node_type]);
 }
 void print_tree_private(ASTNode* tree, int indent){
     indent += 1;
@@ -160,7 +160,7 @@ void print_tree_private(ASTNode* tree, int indent){
 }
 
 void print_tree(ASTNode* tree){
-    printf("Vypis binarniho stromu:\n");
+    fprintf(stderr,"Vypis binarniho stromu:\n");
     print_tree_private(tree, -1);
-    printf("Konec stromu\n");
+    fprintf(stderr,"Konec stromu\n");
 }
