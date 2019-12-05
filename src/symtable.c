@@ -61,7 +61,7 @@ void deleteST(SymTable** hashTable, char* id){    //odstraní symTable z hashTab
     }
     if(item == hashTable[hash]){
         hashTable[hash] = item->ptrNext;
-    }else{
+    } else {
         prev->ptrNext = item->ptrNext;
     }
     free(item);
@@ -109,7 +109,7 @@ void printHT(SymTable** ht){
         }
         fprintf(stderr,"%d.  ", i+1);
         while(item != NULL){
-           fprintf(stderr,"%s", item->id);
+           fprintf(stderr,"%s | ", item->id);
            item = item->ptrNext;
         }
         fprintf(stderr,"\n");
@@ -124,7 +124,10 @@ void freeHT(SymTable** hashTable){  //vymaže celou hashTable
         SymTable *item = hashTable[i];
         while(item != NULL){
             SymTable *tmpST = item->ptrNext;
-            free(item->id);
+            if (item->id != NULL) {
+                free(item->id);
+                item->id = NULL;
+            }
             Arguments* args = item->args;
             while(args != NULL){
                 Arguments* argsNext = args->nextArg;

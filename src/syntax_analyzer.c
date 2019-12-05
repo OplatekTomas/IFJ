@@ -161,6 +161,7 @@ int check_rule(SyntaxStack* ss, SymTable** table, char* func_name) {
                 sd.node->node_type = IDENTIFICATOR;
                 SymTable* result = searchST(table, term.t.stringValue, func_name);
                 if (result == NULL) {
+                    free(term.t.stringValue);
                     free_tree(node);
                     return 3;
                 } else {
@@ -482,6 +483,7 @@ int check_function_call(ASTNode* tree, Scanner* s, SymTable** table, char* funct
         switch(t.type){
             case ERROR:
                 free_tree(param);
+                free_tree(root_tree);
                 return 1;
             case ID:;
                 SymTable* tb = searchST(table, t.stringValue, functionName);
@@ -513,6 +515,7 @@ int check_function_call(ASTNode* tree, Scanner* s, SymTable** table, char* funct
                 param->str_val = t.stringValue;
                 break;
             default:
+                free_tree(param);
                 free_tree(root_tree);
                 return 2;
         }
@@ -555,6 +558,7 @@ int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** tabl
     //TODO: pridat pointer na identifikator do tabulky symbolu
 
     SymTable* result = searchST(table, left_side, func_name);
+    bool found = result != NULL;
 
     if (result == NULL) {
         SymTable* new_item = allocST(left_side);
@@ -583,11 +587,13 @@ int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** tabl
         if (t.type == END_OF_LINE) {
             result->type = assign_node->nodes[1]->arith_type;
             node_insert(tree, assign_node);
-            if (func_name == NULL) {
-                insertST(table, result);
-            } else {
-                SymTable* func = searchST(table, func_name, NULL);
-                insertST(func->localTable, result);
+            if (!found) {
+                if (func_name == NULL) {
+                    insertST(table, result);
+                } else {
+                    SymTable *func = searchST(table, func_name, NULL);
+                    insertST(func->localTable, result);
+                }
             }
             return 0;
         }
@@ -691,8 +697,8 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
     if(t.type == ERROR){
         return 1;
     }
-    Arguments* tempArg = allocArgs();
-    table->args = tempArg;
+    //Arguments* tempArg = allocArgs();
+    //table->args = tempArg;
     while(t.type != CLOSE_PARENTHES){
         if(t.type != ID){
             return 2;
@@ -700,10 +706,10 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
         SymTable *tb = allocST(t.stringValue); //Create new item and insert into local table
         insertST(table->localTable,tb);
 
-        Arguments* tmp = allocArgs();
+        /*Arguments* tmp = allocArgs();
         tmp->type = TYPE_NONE;
         tmp->id = t.stringValue;
-        addToList(table->args, tmp);
+        addToList(table->args, tmp);*/
 
         ASTNode *param = node_new(); //Continue creating ASTNodes
         param->node_type = IDENTIFICATOR;
@@ -732,10 +738,10 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
     if(prev_t.type == COMMA){
         return 2;
     }
-    Arguments * arTmp = table->args;
-    table->args = arTmp->nextArg;
-    table->argNum--;
-    free(arTmp);
+    //Arguments * arTmp = table->args;
+    //table->args = arTmp->nextArg;
+    //table->argNum--;
+    //free(arTmp);
     return 0;
 }
 
@@ -801,16 +807,23 @@ int check_definition(ASTNode* tree, Scanner* s, SymTable** table) {
     ASTNode* root_tree = node_new();
     root_tree->node_type = FUNCTION_DEFINITION;
     SymTable *tb = allocST(token.stringValue);
+    if (tb == NULL) {
+        return 99;
+    }
     tb->type = TYPE_FUNCTION;
     tb->localTable = allocHT();
     insertST(table, tb);
     int result = check_args(root_tree, s, tb);
     if(result != 0){
+        freeHT(tb->localTable);
+        tb->localTable = NULL;
         free(root_tree);
         return result;
     }
     result = check_keyword_helper(root_tree, s, true, token.stringValue, table);
     if(result != 0){
+        freeHT(tb->localTable);
+        tb->localTable = NULL;
         free_tree(root_tree);
         return result;
     }
