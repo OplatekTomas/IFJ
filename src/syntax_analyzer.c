@@ -697,8 +697,8 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
     if(t.type == ERROR){
         return 1;
     }
-    //Arguments* tempArg = allocArgs();
-    //table->args = tempArg;
+    Arguments* tempArg = allocArgs();
+    table->args = tempArg;
     while(t.type != CLOSE_PARENTHES){
         if(t.type != ID){
             return 2;
@@ -706,10 +706,10 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
         SymTable *tb = allocST(t.stringValue); //Create new item and insert into local table
         insertST(table->localTable,tb);
 
-        /*Arguments* tmp = allocArgs();
+        Arguments* tmp = allocArgs();
         tmp->type = TYPE_NONE;
         tmp->id = t.stringValue;
-        addToList(table->args, tmp);*/
+        addToList(table->args, tmp);
 
         ASTNode *param = node_new(); //Continue creating ASTNodes
         param->node_type = IDENTIFICATOR;
@@ -738,10 +738,10 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
     if(prev_t.type == COMMA){
         return 2;
     }
-    //Arguments * arTmp = table->args;
-    //table->args = arTmp->nextArg;
-    //table->argNum--;
-    //free(arTmp);
+    Arguments * arTmp = table->args;
+    table->args = arTmp->nextArg;
+    table->argNum--;
+    free(arTmp);
     return 0;
 }
 
