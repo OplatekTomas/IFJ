@@ -86,7 +86,7 @@ SymTable* searchST(SymTable** hashTable, char* id, char* funcID){    //vyhledá 
         return NULL;
     }
     char* searchedID = id;
-    printHT(hashTable);
+    //printHT(hashTable);
     if(funcID != NULL)
         searchedID = funcID;
     int hash = htabHashFunction(searchedID);
@@ -131,7 +131,7 @@ void printHT(SymTable** ht){
 void freeHT(SymTable** hashTable){  //vymaže celou hashTable
     if(hashTable == NULL)
         return;
-    printHT(hashTable);
+    //printHT(hashTable);
     for(int i = 0; i < TABLE_SIZE; i++){
         SymTable *item = hashTable[i];
         while(item != NULL){

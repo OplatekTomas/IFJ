@@ -743,7 +743,7 @@ int check_if(ASTNode* tree, Scanner* s, bool is_inside_definition, char * func_n
     fprintf(stderr,"Kontrola ifu\n");
     ASTNode *root_node = node_new();
     root_node->node_type = IF_ELSE;
-    printHT(table);
+    //printHT(table);
     if(check_cond(root_node, s, table, func_name) != 0){ //if x < y
         free_tree(root_node);
         return 2;
