@@ -628,6 +628,10 @@ int check_cond(ASTNode* tree, Scanner* s, SymTable** table, char* func_name){
         free_tree(comp);
         return ret;
     }
+    if(!(comp->nodes[0]->arith_type == TYPE_STRING ^ comp->nodes[1]->arith_type == TYPE_STRING)){
+        free_tree(comp);
+        return 4;
+    }
     node_insert(tree, comp);
     return 0;
 }
@@ -750,11 +754,12 @@ int check_if(ASTNode* tree, Scanner* s, bool is_inside_definition, char * func_n
     ASTNode *root_node = node_new();
     root_node->node_type = IF_ELSE;
     //printHT(table);
-    if(check_cond(root_node, s, table, func_name) != 0){ //if x < y
+    int result = check_cond(root_node, s, table, func_name);
+    if(result != 0){ //if x < y
         free_tree(root_node);
-        return 2;
+        return result;
     }
-    int result = check_keyword_helper(root_node, s, is_inside_definition, func_name, table);
+    result = check_keyword_helper(root_node, s, is_inside_definition, func_name, table);
     if(result != 0){
         free_tree(root_node);
         return result;
