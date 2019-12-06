@@ -795,10 +795,16 @@ int check_while(ASTNode* tree, Scanner* s, bool is_inside_definition, char* func
     return 0;
 }
 
-int check_definition(ASTNode* tree, Scanner* s, SymTable** table) {
+int check_definition(ASTNode* tree, Scanner* s, SymTable** table, char* func_name) {
     //TODO: pouzit tabulku
     fprintf(stderr,"kontrola defu\n");
+    if(func_name != NULL){
+        return 2;
+    }
     Token token = get_next_token(s);
+    if(token.type != ID){
+        return 2;
+    }
     if(searchST(table, token.stringValue, NULL) != NULL){
         return 3;
     }
@@ -818,7 +824,7 @@ int check_definition(ASTNode* tree, Scanner* s, SymTable** table) {
     if(result != 0){
         freeHT(tb->localTable);
         tb->localTable = NULL;
-        free(root_tree);
+        //free(root_tree);
         return result;
     }
     result = check_keyword_helper(root_tree, s, true, token.stringValue, table);
@@ -879,9 +885,14 @@ int check_block(ASTNode* tree, Scanner* s, bool is_inside_function, char* func_n
                     ASTNode *pass = node_new();
                     pass->node_type = KEYWORD_PASS;
                     node_insert(tree, pass);
+                    t = get_next_token(s);
+                    if(t.type != END_OF_LINE){
+                        return 2;
+                    }
+                    scanner_unget(s,t);
                     return 0;
                 case DEF:
-                    return check_definition(tree,s, table);
+                    return check_definition(tree,s, table, func_name);
                 case RETURN:
                     if(is_inside_function){
                         return check_return(tree, s, table, func_name);
@@ -909,7 +920,7 @@ int check_root_block(ASTNode* tree, Scanner *s, SymTable** table) {
     switch (t.type) {
         case KEYWORD:
             if (t.keywordValue  == DEF) {
-                return check_definition(tree, s, table);
+                return check_definition(tree, s, table, NULL);
             } else {
                 scanner_unget(s, t);
                 return check_block(tree, s, false, NULL, table);
