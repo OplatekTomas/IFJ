@@ -7,7 +7,7 @@
 
 unsigned int counter = 0;
 
-void handle_next_block(ASTNode* tree, SymTable** table){
+void handle_next_block(ASTNode* root, SymTable** table){
 
     ASTNode* tree;
     for(unsigned i = 0; i < root->subnode_len; i++){
