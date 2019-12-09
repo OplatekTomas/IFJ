@@ -1,3 +1,4 @@
+#0
 #vypise se nope, pokud nesouhlasi pocty
 def func(x):
     i = 0

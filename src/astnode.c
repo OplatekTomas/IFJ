@@ -9,6 +9,7 @@ ASTNode* node_new() {
     if (node == NULL) {
         return NULL;
     }
+    addPtr(node);
     node->node_type = PROGRAM_ROOT;
     node->subnode_len = 0;
     node->capacity = START_CAPACITY;
@@ -18,8 +19,8 @@ ASTNode* node_new() {
     node->condType = OP_NONE;
     node->arith_type = TYPE_NONE;
     node->nodes = malloc(START_CAPACITY * sizeof(ASTNode*));
+    addPtr(node->nodes);
     if (node->nodes == NULL) {
-        free(node);
         return NULL;
     } else {
         return node;
@@ -36,18 +37,18 @@ void node_insert(ASTNode* node, ASTNode* new) {
 }
 
 void free_tree(ASTNode* tree) {
-    if (tree == NULL) {
+    /*if (tree == NULL) {
         return;
     }
     if (tree->str_val != NULL && tree->node_type == VALUE) {
-        free(tree->str_val);
+        //free(tree->str_val);
     }
 
     for (unsigned i = 0; i < tree->subnode_len; i++) {
         free_tree(tree->nodes[i]);
     }
-    free(tree->nodes);
-    free(tree);
+    //free(tree->nodes);
+    //free(tree);*/
 }
 
 bool is_num_op(NonTerm type) {
@@ -73,6 +74,7 @@ void check_for_expr(ASTNode* root, ASTNode** expressions, unsigned* expr_len, un
 ASTNode** get_all_expressions(ASTNode* root, unsigned* len) {
     unsigned expression_capacity = 20;
     ASTNode** expressions = malloc(sizeof(ASTNode*) * expression_capacity);
+    addPtr(expressions);
     unsigned expressions_len = 0;
 
     check_for_expr(root, expressions, &expressions_len, &expression_capacity);
@@ -128,9 +130,10 @@ void goLeft(ASTNode* tree,ASTNode** resultThingy, int *counter, int *currentCap,
 ASTNode** get_postorder(ASTNode* root, int* size){
     int cap = 100;
     ASTNode** result = malloc(sizeof(ASTNode*) * cap);
+    addPtr(result);
     goLeft(root, result, size, &cap, true);
     for(int i = 0; i < *size; i++){
-        printf("%s ",node_types[result[i]->node_type]);
+        fprintf(stderr,"%s ",node_types[result[i]->node_type]);
     }
     return result;
 }
@@ -138,18 +141,19 @@ ASTNode** get_postorder(ASTNode* root, int* size){
 ASTNode** get_preorder(ASTNode* root, int* size){
     int cap = 100;
     ASTNode** result = malloc(sizeof(ASTNode*) * cap);
+    addPtr(result);
     goLeft(root, result, size, &cap, false);
     for(int i = 0; i < *size; i++){
-        printf("%s ",node_types[result[i]->node_type]);
+        fprintf(stderr,"%s ",node_types[result[i]->node_type]);
     }
     return result;
 }
 
 void print_node_name(ASTNode* tree, int indent){
     for(int i = 0; i < indent*2; i++){
-        printf(" ");
+        fprintf(stderr," ");
     }
-    printf("%s\n", node_types[tree->node_type]);
+    fprintf(stderr,"%s\n", node_types[tree->node_type]);
 }
 void print_tree_private(ASTNode* tree, int indent){
     indent += 1;
@@ -160,7 +164,7 @@ void print_tree_private(ASTNode* tree, int indent){
 }
 
 void print_tree(ASTNode* tree){
-    printf("Vypis binarniho stromu:\n");
+    fprintf(stderr,"Vypis binarniho stromu:\n");
     print_tree_private(tree, -1);
-    printf("Konec stromu\n");
+    fprintf(stderr,"Konec stromu\n");
 }

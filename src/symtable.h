@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include "ptr_list.h"
 
 #define TABLE_SIZE 97
 

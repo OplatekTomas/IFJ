@@ -1,3 +1,4 @@
+#0
 if 1>0:
 #chyba by nastat nemela
     print('cajk')

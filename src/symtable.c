@@ -6,9 +6,11 @@
 
 SymTable** allocHT(){
     SymTable** ptr = (SymTable**)malloc(TABLE_SIZE* sizeof(SymTable*));
+    addPtr(ptr);
     for(int i = 0; i < TABLE_SIZE; i++){
         ptr[i] = NULL;
     }
+    //addPtr(ptr);
     return ptr;
 }
 
@@ -17,6 +19,7 @@ Arguments* allocArgs(){
     ptr->nextArg = NULL;
     ptr->id = NULL;
     ptr->type = TYPE_NONE;
+    addPtr(ptr);
     return ptr;
 }
 
@@ -32,6 +35,7 @@ SymTable* allocST(char* id){
     ptr->scope = 0;
     ptr->type = TYPE_NONE;
     ptr->localTable = NULL;
+    addPtr(ptr);
     return ptr;
 }
 
@@ -61,14 +65,18 @@ void deleteST(SymTable** hashTable, char* id){    //odstraní symTable z hashTab
     }
     if(item == hashTable[hash]){
         hashTable[hash] = item->ptrNext;
-    }else{
+    } else {
         prev->ptrNext = item->ptrNext;
     }
-    free(item);
+    ////free(item);
 }
 
 void insertST(SymTable** hashTable, SymTable* ptr){    //vloží již alokovanou a vypněnou symTable do hashTable
     if(ptr != NULL){
+        SymTable* temp = searchST(hashTable, ptr->id,NULL);
+        if(temp != NULL){ //Fucking band-aid
+            return;
+        }
         int hash = htabHashFunction(ptr->id);
         if(&hashTable[hash] != NULL){
             ptr->ptrNext = hashTable[hash];
@@ -82,6 +90,7 @@ SymTable* searchST(SymTable** hashTable, char* id, char* funcID){    //vyhledá 
         return NULL;
     }
     char* searchedID = id;
+    //printHT(hashTable);
     if(funcID != NULL)
         searchedID = funcID;
     int hash = htabHashFunction(searchedID);
@@ -95,8 +104,9 @@ SymTable* searchST(SymTable** hashTable, char* id, char* funcID){    //vyhledá 
     }
     if(funcID != NULL) {
         ptr = searchST(ptr->localTable, id, NULL);
-        if(ptr == NULL)
+        if(ptr == NULL){
             ptr = searchST(hashTable, id, NULL);
+        }
     }
     return ptr;
 }
@@ -107,39 +117,49 @@ void printHT(SymTable** ht){
         if(item == NULL){
             continue;
         }
-        printf("%d.  ", i+1);
+        fprintf(stderr,"%d.  ", i+1);
+        SymTable* prev = NULL;
         while(item != NULL){
-           printf("%s", item->id);
+           fprintf(stderr,"%s ->", item->id);
+           if(prev == item){
+               break;
+           }
+           prev = item;
            item = item->ptrNext;
         }
-        printf("\n");
+        fprintf(stderr,"\n");
     }
 }
 
 
 void freeHT(SymTable** hashTable){  //vymaže celou hashTable
-    if(hashTable == NULL)
+    /*if(hashTable == NULL)
         return;
+    //printHT(hashTable);
     for(int i = 0; i < TABLE_SIZE; i++){
         SymTable *item = hashTable[i];
         while(item != NULL){
             SymTable *tmpST = item->ptrNext;
-            free(item->id);
+            //free(item->id);
             Arguments* args = item->args;
             while(args != NULL){
                 Arguments* argsNext = args->nextArg;
-                free(args);
+                //free(args);
                 args = argsNext;
             }
-            if(item->localTable != NULL)
+            if(item->localTable != NULL){
+
                 freeHT(item->localTable);
-            free(item);
+                item->localTable = NULL;
+            }
+
+            //free(item);
             item = tmpST;
         }
         hashTable[i] = NULL;
     }
-    free(hashTable);
-    hashTable = NULL;
+    //free(hashTable);
+    hashTable = NULL;*/
 }
 
 void fill_with_fn(SymTable **hashTable) {
@@ -147,6 +167,7 @@ void fill_with_fn(SymTable **hashTable) {
     int argCount[] = {0, 0, 0, -1, 1, 3, 2, 1};
     for(int i = 0; i < 8; i++){
         char* ptr = malloc(sizeof(char)* 16);
+        addPtr(ptr);
         strcpy(ptr, functions[i]);
         SymTable* item = allocST(ptr);
         item->type = TYPE_FUNCTION;
