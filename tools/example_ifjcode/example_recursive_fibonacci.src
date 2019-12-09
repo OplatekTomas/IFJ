@@ -14,7 +14,6 @@ DEFVAR TF@n
 
 SUB TF@n LF@n int@1
 CALL fibonacci
-
 ADD TF@n LF@n int@-2
 CALL fibonacci
 

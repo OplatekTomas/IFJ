@@ -836,6 +836,7 @@ int check_definition(ASTNode* tree, Scanner* s, SymTable** table, char* func_nam
     }
     tb->type = TYPE_FUNCTION;
     tb->localTable = allocHT();
+    root_tree->symbol = tb;
     insertST(table, tb);
     int result = check_args(root_tree, s, tb);
     if(result != 0){
