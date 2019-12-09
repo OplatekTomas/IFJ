@@ -7,7 +7,7 @@
 
 unsigned int counter = 0;
 
-void handle_next_block(ASTNode* tree, SymTable** table){
+void handle_next_block(ASTNode* root, SymTable** table){
 
     ASTNode* tree;
     for(unsigned i = 0; i < root->subnode_len; i++){
@@ -35,7 +35,6 @@ void handle_next_block(ASTNode* tree, SymTable** table){
 }
 
 void generate_definition(ASTNode* tree, SymTable** table){
-    printf("told ya\n");
     printf("LABEL $%s\n", tree->symbol->id);
     printf("PUSHFRAME\n");
     handle_next_block(tree->nodes[0], table);

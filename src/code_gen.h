@@ -15,7 +15,6 @@
 
 
 void generate_code(ASTNode* tree, SymTable **table, FILE* output);
-void generate_definition(ASTNode* tree, SymTable** table);
 
 void generate_read(char* frame, char* id, char* type);
 
