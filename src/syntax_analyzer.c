@@ -569,7 +569,11 @@ int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** tabl
         }
         result = new_item;
     } else {
-        ////free(left_side);
+        if (result->type == TYPE_FUNCTION) {
+            free_tree(assign_node);
+            free_tree(id_node);
+            return 3;
+        }
     }
 
     id_node->symbol = result;
@@ -620,7 +624,7 @@ int check_cond(ASTNode* tree, Scanner* s, SymTable** table, char* func_name){
     }
     if(!is_comp(t, &optype)){
         free_tree(comp);
-        return 1;
+        return 2;
     }
     comp->condType = optype;
     ret = check_expression(comp, s, table, func_name);
@@ -628,7 +632,7 @@ int check_cond(ASTNode* tree, Scanner* s, SymTable** table, char* func_name){
         free_tree(comp);
         return ret;
     }
-    if(!(comp->nodes[0]->arith_type == TYPE_STRING ^ comp->nodes[1]->arith_type == TYPE_STRING)){
+    if((comp->nodes[0]->arith_type == TYPE_STRING ^ comp->nodes[1]->arith_type == TYPE_STRING)){
         free_tree(comp);
         return 4;
     }
@@ -787,9 +791,10 @@ int check_while(ASTNode* tree, Scanner* s, bool is_inside_definition, char* func
      fprintf(stderr,"kontrola whilu\n");
     ASTNode *while_node = node_new();
     while_node->node_type = WHILE_LOOP;
-    if(check_cond(while_node, s, table, func_name) != 0){
+    int cond_result = check_cond(while_node, s, table, func_name);
+    if(cond_result != 0){
         free_tree(while_node);
-        return 2;
+        return cond_result;
     }
     int result = check_keyword_helper(while_node, s, is_inside_definition, func_name, table);
     if(result != 0){
