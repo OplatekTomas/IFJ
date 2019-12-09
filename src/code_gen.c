@@ -4,10 +4,12 @@
 
 #include "code_gen.h"
 
-void handle_next_block(ASTNode* tree, SymTable** table){
+void handle_next_block(ASTNode* root, SymTable** table){
 
-    for(unsigned i = 0; i < tree->subnode_len; i++){
-        switch(tree->nodes[i]->node_type){
+    ASTNode* tree;
+    for(unsigned i = 0; i < root->subnode_len; i++){
+        tree = root->nodes[i];
+        switch(tree->node_type){
             case EXPRESSION:
                 //generate_expression(tree, table);
                 break;
@@ -30,6 +32,7 @@ void handle_next_block(ASTNode* tree, SymTable** table){
 }
 
 void generate_definition(ASTNode* tree, SymTable** table){
+    printf("told ya\n");
     printf("LABEL $%s\n", tree->symbol->id);
     printf("PUSHFRAME\n");
     handle_next_block(tree->nodes[0], table);
