@@ -4,12 +4,15 @@
 
 #include "code_gen.h"
 
+
 unsigned int counter = 0;
 
 void handle_next_block(ASTNode* tree, SymTable** table){
 
-    for(unsigned i = 0; i < tree->subnode_len; i++){
-        switch(tree->nodes[i]->node_type){
+    ASTNode* tree;
+    for(unsigned i = 0; i < root->subnode_len; i++){
+        tree = root->nodes[i];
+        switch(tree->node_type){
             case EXPRESSION:
                 //generate_expression(tree, table);
                 break;
@@ -32,6 +35,7 @@ void handle_next_block(ASTNode* tree, SymTable** table){
 }
 
 void generate_definition(ASTNode* tree, SymTable** table){
+    printf("told ya\n");
     printf("LABEL $%s\n", tree->symbol->id);
     printf("PUSHFRAME\n");
     handle_next_block(tree->nodes[0], table);
@@ -100,8 +104,8 @@ void generate_code(ASTNode* tree, SymTable **table, FILE* output){
     //ASTNode** result = get_preorder(tree, &size);
     printHT(table);
     printf(".IFJcode19\n");
-
     handle_next_block(tree, table);
+
 }
 
 void generate_read(char* frame, char* id, char* type){
