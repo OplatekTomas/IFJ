@@ -7,47 +7,7 @@
 
 unsigned int counter = 0;
 
-void handle_next_block(ASTNode* tree, SymTable** table){
 
-    ASTNode* tree;
-    for(unsigned i = 0; i < root->subnode_len; i++){
-        tree = root->nodes[i];
-        switch(tree->node_type){
-            case EXPRESSION:
-                //generate_expression(tree, table);
-                break;
-            case IF_ELSE:
-                //generate_if_else(tree, table);
-                break;
-            case WHILE_LOOP:
-                //generate_while_loop(tree, table);
-                break;
-            case FUNCTION_DEFINITION:
-                generate_definition(tree, table);
-                break;
-            case FUNCITON_CALL:
-                //generate_func_call(tree, table);
-                break;
-            default:
-                break;
-        }
-    }
-}
-
-void generate_definition(ASTNode* tree, SymTable** table){
-    printf("told ya\n");
-    printf("LABEL $%s\n", tree->symbol->id);
-    printf("PUSHFRAME\n");
-    handle_next_block(tree->nodes[0], table);
-    printf("POPFRAME\n");
-    printf("RETURN\n");
-}
-
-
-void generate_mov(void* to, char* from, char from_type, bool is_global){
-    printf("MOVE ");
-
-}
 
 void generate_variable(ASTNode* tree, bool is_global){
     if(tree->symbol->has_been_defined){
@@ -63,8 +23,9 @@ void generate_variable(ASTNode* tree, bool is_global){
     tree->symbol->has_been_defined = true;
 }
 
-void generate_expression(ASTNode* tree, SymTable ** table){
+int generate_expression(ASTNode* tree, SymTable ** table){
     //TODO: This entire fucking function
+    return 0;
 }
 
 void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
@@ -96,6 +57,41 @@ void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
     }else{
         generate_expression(tree, table);
     }
+}
+
+void handle_next_block(ASTNode* root, SymTable** table){
+    ASTNode* tree;
+    for(unsigned i = 0; i < root->subnode_len; i++){
+        tree = root->nodes[i];
+        switch(tree->node_type){
+            case EXPRESSION:
+                generate_expression(tree, table);
+                break;
+            case IF_ELSE:
+                //generate_if_else(tree, table);
+                break;
+            case WHILE_LOOP:
+                //generate_while_loop(tree, table);
+                break;
+            case FUNCTION_DEFINITION:
+                generate_definition(tree, table);
+                break;
+            case FUNCITON_CALL:
+                //generate_func_call(tree, table);
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+void generate_definition(ASTNode* tree, SymTable** table){
+    printf("told ya\n");
+    printf("LABEL $%s\n", tree->symbol->id);
+    printf("PUSHFRAME\n");
+    handle_next_block(tree->nodes[0], table);
+    printf("POPFRAME\n");
+    printf("RETURN\n");
 }
 
 void generate_code(ASTNode* tree, SymTable **table, FILE* output){
