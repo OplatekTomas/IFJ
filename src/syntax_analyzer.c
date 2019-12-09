@@ -622,6 +622,10 @@ int check_cond(ASTNode* tree, Scanner* s, SymTable** table, char* func_name){
         free_tree(comp);
         return 1;
     }
+    if(t.type == COLON){
+        scanner_unget(s,t);
+        return 0;
+    }
     if(!is_comp(t, &optype)){
         free_tree(comp);
         return 2;
