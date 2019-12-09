@@ -133,7 +133,10 @@ void printHT(SymTable** ht){
 }
 
 bool is_symbol_global(SymTable* search, SymTable** table) {
-
+    if (searchST(table, search->id, NULL) == NULL) {
+        return false;
+    }
+    return true;
 }
 
 

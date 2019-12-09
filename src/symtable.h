@@ -62,6 +62,8 @@ void insertST(SymTable** hashTable, SymTable* ptr);
 
 SymTable* searchST(SymTable** hashTable, char* id, char* funcID);
 
+bool is_symbol_global(SymTable* search, SymTable** table);
+
 void fill_with_fn(SymTable** hashTable);
 
 #endif //IFJ_SYMTABLE_H

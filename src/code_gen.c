@@ -4,7 +4,10 @@
 
 #include "code_gen.h"
 
-void handle_next_block(ASTNode* root, SymTable** table){
+
+unsigned int counter = 0;
+
+void handle_next_block(ASTNode* tree, SymTable** table){
 
     ASTNode* tree;
     for(unsigned i = 0; i < root->subnode_len; i++){
@@ -105,8 +108,15 @@ void generate_code(ASTNode* tree, SymTable **table, FILE* output){
 
 }
 
+void generate_read(char* frame, char* id, char* type){
+    printf("READ %s@%s %s\n", frame, id, type);
+}
 void generate_print(ASTNode* tree, SymTable **table, FILE* output) {
     for (unsigned i = 0; i < tree->subnode_len; i++) {
-        printf("WRITE LF@%s", tree->nodes[i]->symbol->id);
+        if (is_symbol_global(tree->nodes[i]->symbol, table)) {
+            printf("WRITE GF@%s", tree->nodes[i]->symbol->id);
+        } else {
+            printf("WRITE LF@%s", tree->nodes[i]->symbol->id);
+        }
     }
 }
