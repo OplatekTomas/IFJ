@@ -19,7 +19,7 @@ ASTNode* node_new() {
     node->condType = OP_NONE;
     node->arith_type = TYPE_NONE;
     node->nodes = malloc(START_CAPACITY * sizeof(ASTNode*));
-    addPtr(node->nodes);
+    //addPtr(node->nodes);
     if (node->nodes == NULL) {
         return NULL;
     } else {
