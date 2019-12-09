@@ -161,12 +161,12 @@ int check_rule(SyntaxStack* ss, SymTable** table, char* func_name) {
                 sd.node->node_type = IDENTIFICATOR;
                 SymTable* result = searchST(table, term.t.stringValue, func_name);
                 if (result == NULL) {
-                    free(term.t.stringValue);
+                    ////free(term.t.stringValue);
                     free_tree(node);
                     return 3;
                 } else {
                     sd.node->arith_type = result->type;
-                    free(term.t.stringValue);
+                    ////free(term.t.stringValue);
                 }
                 sd.node->symbol = result;
                 //TODO: pridat kontrolu symbolu
@@ -491,7 +491,7 @@ int check_function_call(ASTNode* tree, Scanner* s, SymTable** table, char* funct
                     free_tree(root_tree);
                     return 3;
                 }
-                free(t.stringValue);
+                ////free(t.stringValue);
                 param->node_type = IDENTIFICATOR;
                 param->str_val = tb->id;
                 break;
@@ -569,7 +569,7 @@ int check_assignment(ASTNode* tree, Scanner* s, char* left_side, SymTable** tabl
         }
         result = new_item;
     } else {
-        free(left_side);
+        ////free(left_side);
     }
 
     id_node->symbol = result;
@@ -741,7 +741,7 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
     Arguments * arTmp = table->args;
     table->args = arTmp->nextArg;
     table->argNum--;
-    free(arTmp);
+    ////free(arTmp);
     return 0;
 }
 
@@ -824,7 +824,7 @@ int check_definition(ASTNode* tree, Scanner* s, SymTable** table, char* func_nam
     if(result != 0){
         freeHT(tb->localTable);
         tb->localTable = NULL;
-        //free(root_tree);
+        ////free(root_tree);
         return result;
     }
     result = check_keyword_helper(root_tree, s, true, token.stringValue, table);

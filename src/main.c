@@ -6,6 +6,8 @@
 #include "symtable.h"
 
 int main (int argc, char *argv[]) {
+    initPtrList();
+
 #ifndef NDEBUG
     if (argc == 1) {
         fprintf(stderr, "neni predany zdrojovy parametr\n");
@@ -28,8 +30,9 @@ int main (int argc, char *argv[]) {
 #else
     int syntax_result = get_derivation_tree(stdin, &tree, &table);
 #endif
-
     if (syntax_result != 0) {
+        freeAllPtr();
+
         // lexikalni, syntakticka nebo interni chyba
         #ifndef NDEBUG
         fclose(f);
@@ -44,14 +47,18 @@ int main (int argc, char *argv[]) {
 #ifndef NDEBUG
         fclose(f);
 #endif
-        free_tree(tree);
-        printHT(table);
-        freeHT(table);
+        freeAllPtr();
+        //free_tree(tree);
+        //printHT(table);
+        //freeHT(table);
         throw_err(semantics_result);
     }
+    int result = getSize();
+
     generate_code(tree, table, stdout);
-    free_tree(tree);
-    freeHT(table);
+    freeAllPtr();
+    //free_tree(tree);
+    //freeHT(table);
 #ifndef NDEBUG
     fclose(f);
 #endif

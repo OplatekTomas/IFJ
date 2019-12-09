@@ -68,12 +68,13 @@ void handle_word(FILE* source ,Token *token){
     if(word == NULL){
         throw_err(INTERN_ERR);
     }
+    addPtr(word);
     read_next_word(source, word, 256);
     token->keywordValue = is_keyword(word);
     if(token->keywordValue != NON_KEYWORD){
         //fprintf(stderr,"Keyword: %s\n",word);
         token->type = KEYWORD;
-        free(word);
+        ////free(word);
     }else{
         token->type = ID;
         token->stringValue = word;
@@ -151,6 +152,7 @@ void handle_multline_string(FILE* source, Token* t){
         return;
     }
     t->stringValue = calloc(max_len, sizeof(char));
+    addPtr(t->stringValue);
     //Kontrola jestli poslední 3 znaky jsou " a poslední z nich není escape hodnota
     while(t->stringValue[len-1] != '"' || t->stringValue[len-2] != '"' || t->stringValue[len-3] != '"' || t->stringValue[len-4] == '\\'){
         if(len+2 == max_len){ //Realloc při nedostatečné velikosti původního pole
@@ -166,10 +168,11 @@ void handle_multline_string(FILE* source, Token* t){
     //Useknutí stringu tak, aby neobsahoval poslední 3 zaky (uvozovky) - ty nejsou potřeba
     t->stringValue[len-3] = 0;
     char *temp = calloc(len, sizeof(char));
+    addPtr(temp);
     for(int i = 0; i < len; i++){
         temp[i] = t->stringValue[i+4];
     }
-    free(t->stringValue);
+    ////free(t->stringValue);
     t->stringValue = temp;
     t->type = STRING;
 }
@@ -180,6 +183,7 @@ void handle_singleline_string(FILE* source, Token* t){
     int real_string_len = 0;
     char c;
     t->stringValue = calloc(string_len, sizeof(char));
+    addPtr(t->stringValue);
     if(t->stringValue == NULL){
         throw_err(INTERN_ERR);
     }
@@ -190,7 +194,7 @@ void handle_singleline_string(FILE* source, Token* t){
         }
         if(c == '\n'){      //V případě nového řádku nastala chyba z toho důvodu, že string nebyl ukončen, ale pokračuje se na další řádek
             t->type = ERROR;
-            free(t->stringValue);
+            ////free(t->stringValue);
             return;
         }
         t->stringValue[real_string_len] = c;
@@ -203,6 +207,7 @@ void handle_number(FILE* source, Token* t) {
     // 20 cisel bude snad stacit, kdyztak se prida
     int var_len = 20;
     char* variable = calloc(var_len, sizeof(char));
+    addPtr(variable);
     int num_len = 0;
     bool dot = false;
     while(is_num_char(c = (char)getc(source)) || c == '.'){
@@ -226,7 +231,7 @@ void handle_number(FILE* source, Token* t) {
         t->numberVal.i = i;
         t->type = INT;
     }
-    free(variable);
+    ////free(variable);
 }
 
 void handle_comparison(FILE* source, Token* t, char c) {
