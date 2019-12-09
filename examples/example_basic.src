@@ -1,2 +1,7 @@
-x = 10 +20 * 30
-print(x)
+x = 10
+y = 'test'
+
+if x + 10 < y:
+    pass
+else:
+    pass
