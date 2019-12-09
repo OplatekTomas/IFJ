@@ -49,7 +49,9 @@ int read_next_word(FILE* source, char* word, int size){
     while(is_ident_char(c = (char)getc(source))){
         if(counter-1 == size){
             size += 128;
+            char * t = word;
             word = realloc(word , size*sizeof(char));
+            changePtr(t, word);
             if(word == NULL){
                 throw_err(INTERN_ERR);
             }
@@ -157,7 +159,9 @@ void handle_multline_string(FILE* source, Token* t){
     while(t->stringValue[len-1] != '"' || t->stringValue[len-2] != '"' || t->stringValue[len-3] != '"' || t->stringValue[len-4] == '\\'){
         if(len+2 == max_len){ //Realloc při nedostatečné velikosti původního pole
             max_len += 128;
+            char* tmp = t->stringValue;
             t->stringValue = realloc(t->stringValue, max_len*sizeof(char));
+            changePtr(tmp, t->stringValue);
         }
         t->stringValue[len] = (char)getc(source);
         if(t->stringValue[len] == EOF){
@@ -190,7 +194,9 @@ void handle_singleline_string(FILE* source, Token* t){
     while((c = (char)getc(source)) != '\'' || t->stringValue[real_string_len-1] == '\\'){       //načítáme znak dokuď to není ' bez escape sekvence
         if(real_string_len - 1 == string_len){      //při nedostatečné velikosti původního pole ho zvětšíme.
             string_len += 128;
+            char* tmp = t->stringValue;
             t->stringValue = realloc(t->stringValue, string_len* sizeof(char));
+            changePtr(tmp, t->stringValue);
         }
         if(c == '\n'){      //V případě nového řádku nastala chyba z toho důvodu, že string nebyl ukončen, ale pokračuje se na další řádek
             t->type = ERROR;
@@ -213,7 +219,9 @@ void handle_number(FILE* source, Token* t) {
     while(is_num_char(c = (char)getc(source)) || c == '.'){
         if (num_len + 1 == var_len) {
             var_len *= 10;
+            void* tmp = variable;
             variable = realloc(variable, var_len*sizeof(char));
+            changePtr(tmp, variable);
         }
         if(c == '.'){ //v pripadě detekování '.' bude číslo konvertováno na float místo int
             dot = true;

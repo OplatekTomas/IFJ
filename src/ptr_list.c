@@ -14,6 +14,15 @@ void initPtrList(){
     }
 }
 
+void changePtr(void *old, void *new){
+    for(int i = 0; i < ptrArrSize; i++){
+        if(arr[i] == old){
+            arr[i] = new;
+            break;
+        }
+    }
+}
+
 void addPtr(void *ptr){
     if(ptrArrSize >= maxPtrArrSize){
         maxPtrArrSize += 1024;

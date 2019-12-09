@@ -13,6 +13,8 @@ void initPtrList();
 
 void addPtr(void *ptr);
 
+void changePtr(void *old, void *new);
+
 int getSize();
 
 void freeAllPtr();
