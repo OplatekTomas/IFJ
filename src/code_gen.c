@@ -28,7 +28,7 @@ void generate_def(ASTNode* tree, SymTable** table){
     printf("LABEL $%s\n", tree->symbol->id);
     printf("PUSHFRAME\n");
 
-    
+
     //handle_next_block(tree, table);
 
     printf("POPFRAME\n");
