@@ -632,10 +632,12 @@ int check_cond(ASTNode* tree, Scanner* s, SymTable** table, char* func_name){
         free_tree(comp);
         return ret;
     }
-    if((comp->nodes[0]->arith_type == TYPE_STRING ^ comp->nodes[1]->arith_type == TYPE_STRING)){
-        free_tree(comp);
+    TypeValue op_result;
+    ret = check_if_valid_op(comp->nodes[0]->arith_type, comp->nodes[1]->arith_type , ADDITION, &op_result);
+    if(ret != 0){
         return 4;
     }
+    comp->arith_type = op_result;
     node_insert(tree, comp);
     return 0;
 }
