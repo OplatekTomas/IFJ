@@ -4,6 +4,8 @@
 
 #include "code_gen.h"
 
+unsigned int counter = 0;
+
 void handle_next_block(ASTNode* tree, SymTable** table){
     switch(tree->node_type){
         case EXPRESSION:
