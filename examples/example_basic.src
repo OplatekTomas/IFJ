@@ -1,8 +1,7 @@
+def foo():
+    x = 5
+    y = 6
+    z = x + y
+    print(z)
 
-x = 10
-y = 'test'
-
-if x + 10 < y:
-    pass
-else:
-    pass
+foo()
