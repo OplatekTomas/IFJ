@@ -131,6 +131,10 @@ void printHT(SymTable** ht){
     }
 }
 
+bool is_symbol_global(SymTable* search, SymTable** table) {
+    
+}
+
 
 void freeHT(SymTable** hashTable){  //vymaže celou hashTable
     /*if(hashTable == NULL)

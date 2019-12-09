@@ -13,3 +13,8 @@ void generate_code(ASTNode* tree, SymTable **table, FILE* output){
     printf(".IFJcode19\n");
 }
 
+void generate_print(ASTNode* tree, SymTable **table, FILE* output) {
+    for (unsigned i = 0; i < tree->subnode_len; i++) {
+        printf("WRITE LF@%s", tree->nodes[i]->symbol->id);
+    }
+}
