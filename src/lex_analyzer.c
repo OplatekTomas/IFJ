@@ -76,7 +76,7 @@ void handle_word(FILE* source ,Token *token){
     if(token->keywordValue != NON_KEYWORD){
         //fprintf(stderr,"Keyword: %s\n",word);
         token->type = KEYWORD;
-        ////free(word);
+        //free(word);
     }else{
         token->type = ID;
         token->stringValue = word;

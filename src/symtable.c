@@ -27,6 +27,7 @@ SymTable* allocST(char* id){
     SymTable* ptr = (SymTable*)malloc(sizeof(SymTable));
     if(ptr == NULL)
         return NULL;
+    ptr->has_been_defined = false;
     ptr->ptrNext = NULL;
     ptr->id = id;
     ptr->argNum = 0;
@@ -129,6 +130,10 @@ void printHT(SymTable** ht){
         }
         fprintf(stderr,"\n");
     }
+}
+
+bool is_symbol_global(SymTable* search, SymTable** table) {
+
 }
 
 
