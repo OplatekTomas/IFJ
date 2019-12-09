@@ -107,6 +107,10 @@ void generate_read(char* frame, char* id, char* type){
 }
 void generate_print(ASTNode* tree, SymTable **table, FILE* output) {
     for (unsigned i = 0; i < tree->subnode_len; i++) {
-        printf("WRITE LF@%s", tree->nodes[i]->symbol->id);
+        if (is_symbol_global(tree->nodes[i]->symbol, table)) {
+            printf("WRITE GF@%s", tree->nodes[i]->symbol->id);
+        } else {
+            printf("WRITE LF@%s", tree->nodes[i]->symbol->id);
+        }
     }
 }
