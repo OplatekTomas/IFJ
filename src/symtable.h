@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include "ptr_list.h"
 
 #define TABLE_SIZE 97
 
@@ -30,6 +31,7 @@ struct arguments{
 typedef struct arguments Arguments;
 
 struct symTable {
+    bool has_been_defined;
     char* id;
     TypeValue type;
     void* dataPtr;
@@ -59,6 +61,8 @@ void freeHT(SymTable** hashTable);
 void insertST(SymTable** hashTable, SymTable* ptr);
 
 SymTable* searchST(SymTable** hashTable, char* id, char* funcID);
+
+bool is_symbol_global(SymTable* search, SymTable** table);
 
 void fill_with_fn(SymTable** hashTable);
 

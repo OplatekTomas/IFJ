@@ -51,10 +51,10 @@ SSData syntax_stack_top(SyntaxStack* ss) {
 }
 
 void syntax_stack_free_nodes(SyntaxStack *ss) {
-    while (!syntax_stack_empty(ss)) {
+    /*while (!syntax_stack_empty(ss)) {
         if (ss->data[ss->index - 1].node != NULL) {
             free_tree(ss->data[ss->index - 1].node);
         }
         ss->index--;
-    }
+    }*/
 }

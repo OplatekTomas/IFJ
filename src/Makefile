@@ -8,6 +8,9 @@ LFLAGS	 =
 
 all: $(OBJS)
 	$(CC) -g $(OBJS) -o $(OUT) $(LFLAGS)
+	
+tests: FORCE
+	python3 run_tests.py
 
 astnode.o: astnode.c
 	$(CC) $(FLAGS) astnode.c -std=c99
@@ -48,3 +51,5 @@ tokens.o: tokens.c
 
 clean:
 	rm -f $(OBJS) $(OUT)
+	
+FORCE:

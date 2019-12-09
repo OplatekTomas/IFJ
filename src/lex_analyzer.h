@@ -9,6 +9,7 @@
 #include "tokens.h"
 #include "indent_stack.h"
 #include "error.h"
+#include "ptr_list.h"
 #include <stdio.h>
 #include <stdlib.h>
 

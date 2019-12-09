@@ -62,3 +62,4 @@ workspace.xml
 .idea/deployment.xml
 
 vgcore*
+/tests
