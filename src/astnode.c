@@ -29,7 +29,9 @@ ASTNode* node_new() {
 
 void node_insert(ASTNode* node, ASTNode* new) {
     if ((node->subnode_len + 1) > node->capacity) {
+        struct node ** tmp = node->nodes;
         node->nodes = realloc(node->nodes, node->capacity * 10);
+        changePtr(tmp, node->nodes);
         node->capacity *= 10;
     }
     node->nodes[node->subnode_len] = new;
@@ -63,7 +65,9 @@ void check_for_expr(ASTNode* root, ASTNode** expressions, unsigned* expr_len, un
             expressions[*expr_len] = child;
             (*expr_len)+=1;
             if (expr_len == expr_cap) {
+                void* tmp = expressions;
                 expressions = realloc(expressions, 10 * (*expr_cap) * sizeof(ASTNode*));
+                changePtr(tmp, expressions);
             }
         } else {
             check_for_expr(child, expressions, expr_len, expr_cap);
@@ -117,7 +121,9 @@ void goLeft(ASTNode* tree,ASTNode** resultThingy, int *counter, int *currentCap,
     for(unsigned i = 0; i < tree->subnode_len; i++){
         if(*counter + 2 >= *currentCap){
             *currentCap += 100;
+            void* tmp = resultThingy;
             resultThingy = realloc(resultThingy, sizeof(ASTNode*)* *currentCap);
+            changePtr(tmp, resultThingy);
         }
         goLeft(tree->nodes[i],resultThingy, counter, currentCap, isPost);
     }

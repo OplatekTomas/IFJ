@@ -75,7 +75,7 @@ int check_fn_call(ASTNode * tree, SymTable** st){
             //free(arr);
             return 3;
         }
-        if(t->type != FUNCITON_CALL){
+        if(t->type != TYPE_FUNCTION){
             return 3;
         }
 
