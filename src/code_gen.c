@@ -7,7 +7,39 @@
 
 unsigned int counter = 0;
 
-
+void generate_func_call(ASTNode* node) {
+    printf("CREATEFRAME\n");
+    for (unsigned i = 0; i < (unsigned)node->subnode_len; i++) {
+        printf("DEFVAR TF@%i\n", i);
+        printf("MOVE TF@%i ", i);
+        switch (node->nodes[i]->node_type) {
+            case IDENTIFICATOR:
+                // wut
+                break;
+            case VALUE:
+            default:
+                switch (node->nodes[i]->arith_type) {
+                    case TYPE_NONE:
+                        printf("nil@nil\n");
+                        break;
+                    case TYPE_FLOAT:
+                        printf("float@%a\n", node->nodes[i]->n.d);
+                        break;
+                    case TYPE_INT:
+                        printf("int@%d\n", node->nodes[i]->n.i);
+                        break;
+                    case TYPE_STRING:
+                        printf("string@%s\n", node->nodes[i]->str_val);
+                        break;
+                    default:
+                        // wut
+                        break;
+                }
+                break;
+        }
+    }
+    printf("CALL $%s\n", node->symbol->id);
+}
 
 void generate_variable(ASTNode* tree, bool is_global){
     if(tree->symbol->has_been_defined){
@@ -77,7 +109,7 @@ void handle_next_block(ASTNode* root, SymTable** table){
                 generate_definition(tree, table);
                 break;
             case FUNCITON_CALL:
-                //generate_func_call(tree, table);
+                generate_func_call(tree);
                 break;
             default:
                 break;
