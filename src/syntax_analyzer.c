@@ -827,13 +827,6 @@ int check_definition(ASTNode* tree, Scanner* s, SymTable** table, char* func_nam
     if(token.type == ERROR){
         return 1;
     }
-    if(searchST(table, token.stringValue) == NULL){
-        SymTable *item = allocST(token.stringValue);
-        insertST(table, item);
-    }
-    else{
-        return 3;
-    }
 
     ASTNode* root_tree = node_new();
     root_tree->node_type = FUNCTION_DEFINITION;

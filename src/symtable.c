@@ -132,7 +132,7 @@ void printHT(SymTable** ht){
 }
 
 bool is_symbol_global(SymTable* search, SymTable** table) {
-    
+
 }
 
 
