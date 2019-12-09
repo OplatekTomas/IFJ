@@ -31,6 +31,7 @@ struct arguments{
 typedef struct arguments Arguments;
 
 struct symTable {
+    bool has_been_defined;
     char* id;
     TypeValue type;
     void* dataPtr;
