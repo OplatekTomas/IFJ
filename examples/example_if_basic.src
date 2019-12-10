@@ -1,6 +1,8 @@
 x=3
 y=2
 if x < y:
-    pass
+    x = x + 3
 else:
-    pass
+    y = y + 4
+print(x)
+print(y)
