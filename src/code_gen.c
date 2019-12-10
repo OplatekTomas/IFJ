@@ -130,10 +130,14 @@ unsigned int generate_exp(ASTNode* tree, SymTable ** table, bool is_global){
     return counter - 1;
 }
 
-unsigned int generate_expression(ASTNode* tree, SymTable ** table, bool is_global) {
+void generate_expression(ASTNode* tree, SymTable ** table, bool is_global) {
     printf("PUSHFRAME\nCREATEFRAME\n");
-    unsigned int result = generate_exp(tree, table, is_global);
-    return result;
+    if(tree->node_type == IDENTIFICATOR){
+        printf("PUSHS\n %s", get_expression_arg(tree, table));
+    }else{
+        printf("PUSHS TF@%%%d\n", generate_exp(tree, table, is_global));
+    }
+    printf("POPFRAME\n");
 }
 
 
@@ -163,20 +167,21 @@ void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
         //TODO FUCK ITS A VARIBALE
     }else if(tree->nodes[1]->node_type == FUNCITON_CALL){
         generate_func_call(tree->nodes[1], table);
-        printf("MOVE %s@%s TF@%%retval", get_frame(is_global), tb->id);
+        printf("MOVE %s@%s TF@%%retval\n", get_frame(is_global), tb->id);
     }else{
-        int result = generate_expression(tree->nodes[1], table, is_global);
-        printf("MOVE %s@%s TF@%%%d\n", is_global ? "GF" : "LF", tb->id, result);
-        printf("POPFRAME\n");
+        generate_expression(tree->nodes[1], table, is_global);
+        printf("DEFVAR TF@%%%d\nPOPS TF@%%%d\n", counter, counter);
+        printf("MOVE %s@%s TF@%%%d\n", is_global ? "GF" : "LF", tb->id, counter);
     }
 }
 
-void generate_if_else(ASTNode* tree, SymTable **table){
+void generate_if_else(ASTNode* tree, SymTable **table, bool is_global){
     CondType condition = tree->nodes[0]->condType;
     struct node* id1 = tree->nodes[0]->nodes[0];
     struct node* id2 = tree->nodes[0]->nodes[1];
-    int a = generate_expression(id1, table);
-    int b = generate_expression(id2, table);
+    int a,b;
+    //int a = generate_expression(id1, table, is_global);
+    //int b = generate_expression(id2, table, is_global);
     switch(condition){
         case OP_EQ:
             printf("EQ <var> TF@%d TF@%d\n", a, b);
@@ -216,7 +221,7 @@ void handle_next_block(ASTNode* root, SymTable** table){
                 generate_expression(tree, table, true);
                 break;
             case IF_ELSE:
-                generate_if_else(tree, table);
+                generate_if_else(tree, table, true);
                 break;
             case WHILE_LOOP:
                 //generate_while_loop(tree, table);
