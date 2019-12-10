@@ -1,5 +1,7 @@
+def custom_print(value, value2):
+    print(value)
+
 cislo = 1
-mez = 10
-while cislo <= mez:
-    print(cislo)
+while cislo <= 10:
+    custom_print(cislo, 0)
     cislo = cislo + 1

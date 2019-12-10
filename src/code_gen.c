@@ -18,28 +18,33 @@ void generate_func_call(ASTNode* node, SymTable** table) {
         generate_print(node, table);
         return;
     }
+    printf("PUSHFRAME\n");
     printf("CREATEFRAME\n");
     for (unsigned i = 0; i < (unsigned)node->subnode_len; i++) {
-        printf("DEFVAR TF@%i\n", i);
-        printf("MOVE TF@%i ", i);
+        printf("DEFVAR TF@%%%i\n", i);
+        printf("MOVE TF@%%%i ", i);
         switch (node->nodes[i]->node_type) {
             case IDENTIFICATOR:
-                // wut
+                if (is_symbol_global(node->nodes[i]->symbol, table)) {
+                    printf("GF@%s", node[i].nodes[i]->str_val);
+                } else {
+                    printf("LF@%s", node[i].nodes[i]->str_val);
+                }
                 break;
             case VALUE:
             default:
                 switch (node->nodes[i]->arith_type) {
                     case TYPE_NONE:
-                        printf("nil@nil\n");
+                        printf("nil@nil");
                         break;
                     case TYPE_FLOAT:
-                        printf("float@%a\n", node->nodes[i]->n.d);
+                        printf("float@%a", node->nodes[i]->n.d);
                         break;
                     case TYPE_INT:
-                        printf("int@%d\n", node->nodes[i]->n.i);
+                        printf("int@%d", node->nodes[i]->n.i);
                         break;
                     case TYPE_STRING:
-                        printf("string@%s\n", node->nodes[i]->str_val);
+                        printf("string@%s", node->nodes[i]->str_val);
                         break;
                     default:
                         // wut
@@ -48,7 +53,7 @@ void generate_func_call(ASTNode* node, SymTable** table) {
                 break;
         }
     }
-    printf("CALL $%s\n", node->symbol->id);
+    printf("\nCALL $%s\n", node->symbol->id);
 }
 
 static char* get_frame(bool is_global){
@@ -227,7 +232,7 @@ void handle_next_block(ASTNode* root, SymTable** table, bool is_global){
                 generate_while_loop(tree, table);
                 break;
             case FUNCTION_DEFINITION:
-                generate_definition(tree, table);
+                //generate_definition(tree, table);
                 break;
             case FUNCITON_CALL:
                 generate_func_call(tree, table);
@@ -242,9 +247,12 @@ void handle_next_block(ASTNode* root, SymTable** table, bool is_global){
 }
 
 void generate_definition(ASTNode* tree, SymTable** table){
-    printf("told ya\n");
     printf("LABEL $%s\n", tree->symbol->id);
     printf("PUSHFRAME\n");
+    for (int i = 0; i < tree->symbol->argNum; i++) {
+        printf("DEFVAR LF@%s", tree->symbol->args[i].id);
+    }
+
     handle_next_block(tree->nodes[0], table, false);
     printf("POPFRAME\n");
     printf("RETURN\n");
@@ -254,6 +262,17 @@ void generate_code(ASTNode* tree, SymTable **table) {
     printHT(table);
     printf(".IFJcode19\nCREATEFRAME\n");
     handle_next_block(tree, table, true);
+    printf("EXIT int@0\n");
+
+    // generate definitions
+    int size = 0;
+    ASTNode** nodes = get_preorder(tree, &size);
+    for (int i = 0; i < size; i++) {
+        if (nodes[i]->node_type != FUNCTION_DEFINITION) {
+            continue;
+        }
+        generate_definition(nodes[i], table);
+    }
 }
 
 void generate_read(char* frame, char* id, char* type){
@@ -298,14 +317,24 @@ void generate_while_loop(ASTNode* tree, SymTable** table) {
     counter++;
 
     // definice promennych pred loopem
-    printf("PUSHFRAME\n");
-    printf("CREATEFRAME\n");
+
     int size = 0;
     ASTNode** nodes = get_postorder(tree->nodes[1], &size);
+    int new_assign_count = 0;
     for(int i = 0; i < size; i++) {
         if (nodes[i]->node_type == ASSIGNMENT && !nodes[i]->nodes[0]->symbol->has_been_defined) {
-            printf("DEFVAR TF@%s\n" ,tree->symbol->id);
-            nodes[i]->nodes[0]->symbol->has_been_defined = true;
+            new_assign_count++;
+        }
+    }
+
+    if (new_assign_count > 0) {
+        printf("PUSHFRAME\n");
+        printf("CREATEFRAME\n");
+        for(int i = 0; i < size; i++) {
+            if (nodes[i]->node_type == ASSIGNMENT && !nodes[i]->nodes[0]->symbol->has_been_defined) {
+                printf("DEFVAR TF@%s\n" ,tree->symbol->id);
+                nodes[i]->nodes[0]->symbol->has_been_defined = true;
+            }
         }
     }
 
@@ -327,7 +356,9 @@ void generate_while_loop(ASTNode* tree, SymTable** table) {
 
     // pokracovani
     printf("LABEL $while_end$%d\n", loop_index);
-    printf("POPFRAME\n");
+    if (new_assign_count > 0) {
+        printf("POPFRAME\n");
+    }
 }
 
 void generate_condition(ASTNode* tree, SymTable** table) {
