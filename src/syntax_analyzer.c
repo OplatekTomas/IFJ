@@ -494,6 +494,7 @@ int check_function_call(ASTNode* tree, Scanner* s, SymTable** table, char* funct
                 ////free(t.stringValue);
                 param->node_type = IDENTIFICATOR;
                 param->str_val = tb->id;
+                param->symbol = tb;
                 break;
             case NONE:
                 param->node_type = VALUE;

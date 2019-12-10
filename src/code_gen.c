@@ -4,10 +4,16 @@
 
 #include "code_gen.h"
 
+void generate_print(ASTNode* tree, SymTable **table);
+
 
 unsigned int counter = 0;
 
-void generate_func_call(ASTNode* node) {
+void generate_func_call(ASTNode* node, SymTable** table) {
+    if (strcmp(node->symbol->id, "print") == 0) {
+        generate_print(node, table);
+        return;
+    }
     printf("CREATEFRAME\n");
     for (unsigned i = 0; i < (unsigned)node->subnode_len; i++) {
         printf("DEFVAR TF@%i\n", i);
@@ -123,7 +129,8 @@ void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
     }else if(tree->nodes[1]->node_type == IDENTIFICATOR){
         //TODO FUCK ITS A VARIBALE
     }else if(tree->nodes[1]->node_type == FUNCITON_CALL){
-        //TODO: Add function call
+        generate_func_call(tree->nodes[1], table);
+        printf("MOVE %s@%s TF@%%retval", get_frame(is_global), tb->id);
     }else{
         int result = generate_expression(tree->nodes[1], table, is_global);
         printf("MOVE %s@%s tf@%%%d\n", is_global ? "GF" : "LF", tb->id, result);
@@ -148,7 +155,7 @@ void handle_next_block(ASTNode* root, SymTable** table){
                 generate_definition(tree, table);
                 break;
             case FUNCITON_CALL:
-                generate_func_call(tree);
+                generate_func_call(tree, table);
                 break;
             case ASSIGNMENT:
                 generate_assignment(tree, table, true);
@@ -181,12 +188,36 @@ void generate_code(ASTNode* tree, SymTable **table, FILE* output){
 void generate_read(char* frame, char* id, char* type){
     printf("READ %s@%s %s\n", frame, id, type);
 }
-void generate_print(ASTNode* tree, SymTable **table, FILE* output) {
+void generate_print(ASTNode* tree, SymTable **table) {
     for (unsigned i = 0; i < tree->subnode_len; i++) {
-        if (is_symbol_global(tree->nodes[i]->symbol, table)) {
-            printf("WRITE GF@%s", tree->nodes[i]->symbol->id);
-        } else {
-            printf("WRITE LF@%s", tree->nodes[i]->symbol->id);
+        switch (tree->nodes[i]->node_type) {
+            case IDENTIFICATOR:
+                if (is_symbol_global(tree->nodes[i]->symbol, table)) {
+                    printf("WRITE GF@%s", tree->nodes[i]->symbol->id);
+                } else {
+                    printf("WRITE LF@%s", tree->nodes[i]->symbol->id);
+                }
+                break;
+            case VALUE:
+            default:
+                switch (tree->nodes[i]->arith_type) {
+                    case TYPE_NONE:
+                        printf("WRITE nil@nil\n");
+                        break;
+                    case TYPE_FLOAT:
+                        printf("WRITE float@%a\n", tree->nodes[i]->n.d);
+                        break;
+                    case TYPE_INT:
+                        printf("WRITE int@%d\n", tree->nodes[i]->n.i);
+                        break;
+                    case TYPE_STRING:
+                        printf("WRITE string@%s\n", tree->nodes[i]->str_val);
+                        break;
+                    default:
+                        // wut
+                        break;
+                }
+                break;
         }
     }
 }
