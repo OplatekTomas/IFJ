@@ -7,7 +7,7 @@
 void generate_print(ASTNode* tree, SymTable **table);
 void generate_while_loop(ASTNode* tree, SymTable** table);
 void generate_condition(ASTNode* tree, SymTable** table);
-
+void handle_next_block(ASTNode* root, SymTable** table, bool is_global);
 
 unsigned int counter = 0;
 
@@ -132,7 +132,6 @@ unsigned int generate_exp(ASTNode* tree, SymTable ** table, bool is_global){
 }
 
 void generate_expression(ASTNode* tree, SymTable ** table, bool is_global) {
-    printf("PUSHFRAME\nCREATEFRAME\n");
     if(tree->node_type == IDENTIFICATOR){
         printf("PUSHS %s\n", get_expression_arg(tree, table));
     }else if(tree->node_type == VALUE){
@@ -155,9 +154,10 @@ void generate_expression(ASTNode* tree, SymTable ** table, bool is_global) {
                 break;
         }
     }else{
+        printf("PUSHFRAME\nCREATEFRAME\n");
         printf("PUSHS TF@%%%d\n", generate_exp(tree, table, is_global));
+        printf("POPFRAME\n");
     }
-    printf("POPFRAME\n");
 }
 
 
@@ -200,8 +200,14 @@ void generate_if_else(ASTNode* tree, SymTable **table, bool is_global){
     generate_condition(tree->nodes[0], table);
     printf("DEFVAR TF@%%%d\nPOPS TF@%%%d\n", counter, counter);
     counter++;
-    printf("JUMPIFNEQ IF%dFALSE TF@%%%d true", counter, counter - 1);
+    unsigned tmpCnt = counter;
+    printf("JUMPIFNEQ $IFFALSE$%d TF@%%%d true\n", counter, counter - 1);
+    counter++;
+    handle_next_block(tree->nodes[1],table,is_global);
+    printf("JUMP $IFEND$%d\n", tmpCnt);
     printf("LABEL IF%dFALSE \n", counter);
+    handle_next_block(tree->nodes[2],table,is_global);
+    printf("LABEL $IFEND$%d", tmpCnt);
 }
 
 void handle_next_block(ASTNode* root, SymTable** table, bool is_global){
