@@ -128,7 +128,6 @@ unsigned int generate_exp(ASTNode* tree, SymTable ** table, bool is_global){
         printf("%s TF@%%%d %s %s\n", get_expression_instr(tree->node_type), counter, get_expression_arg(tree->nodes[0], table), get_expression_arg(tree->nodes[1], table));
     }
     counter++;
-    //TODO: This entire fucking function
     return counter - 1;
 }
 
@@ -136,6 +135,25 @@ void generate_expression(ASTNode* tree, SymTable ** table, bool is_global) {
     printf("PUSHFRAME\nCREATEFRAME\n");
     if(tree->node_type == IDENTIFICATOR){
         printf("PUSHS\n %s", get_expression_arg(tree, table));
+    }else if(tree->node_type == VALUE){
+        printf("PUSHS ");
+        switch (tree->arith_type) {
+            case TYPE_NONE:
+                printf("nil@nil\n");
+                break;
+            case TYPE_FLOAT:
+                printf("float@%a\n", tree->n.d);
+                break;
+            case TYPE_INT:
+                printf("int@%d\n", tree->n.i);
+                break;
+            case TYPE_STRING:
+                printf("string@%s\n", tree->str_val);
+                break;
+            default:
+                // wut
+                break;
+        }
     }else{
         printf("PUSHS TF@%%%d\n", generate_exp(tree, table, is_global));
     }
@@ -174,44 +192,16 @@ void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
         generate_expression(tree->nodes[1], table, is_global);
         printf("DEFVAR TF@%%%d\nPOPS TF@%%%d\n", counter, counter);
         printf("MOVE %s@%s TF@%%%d\n", is_global ? "GF" : "LF", tb->id, counter);
+        counter++;
     }
 }
 
 void generate_if_else(ASTNode* tree, SymTable **table, bool is_global){
-    CondType condition = tree->nodes[0]->condType;
-    struct node* id1 = tree->nodes[0]->nodes[0];
-    struct node* id2 = tree->nodes[0]->nodes[1];
-    int a,b;
-    //int a = generate_expression(id1, table, is_global);
-    //int b = generate_expression(id2, table, is_global);
-    switch(condition){
-        case OP_EQ:
-            printf("EQ <var> TF@%d TF@%d\n", a, b);
-            break;
-        case OP_NEQ:
-            printf("EQ <var> TF@%d TF@%d\n", a, b);
-            printf("NOT <var> <var>\n");
-            break;
-        case OP_LS:
-            printf("LT <var> TF@%d TF@%d\n", a, b);
-            break;
-        case OP_LSEQ:
-            printf("LT <var1> TF@%d TF@%d\n", a, b);
-            printf("EQ <var2> TF@%d TF@%d\n", a, b);
-            printf("OR <var1> <var2>\n");
-            break;
-        case OP_GR:
-            printf("GT <var> TF@%d TF@%d\n", a, b);
-            break;
-        case OP_GREQ:
-            printf("GT <var> TF@%d TF@%d\n", a, b);
-            printf("EQ <var2> TF@%d TF@%d\n", a, b);
-            printf("OR <var1> <var2>\n");
-            break;
-        default:
-            break;
-    }
-    printf("LABEL IF%d\n", counter);
+    generate_condition(tree->nodes[0], table);
+    printf("DEFVAR TF@%%%d\nPOPS TF@%%%d\n", counter, counter);
+    counter++;
+    printf("JUMPIFNEQ IF%dFALSE TF@%%%d true", counter, counter - 1);
+    printf("LABEL IF%dFALSE \n", counter);
 }
 
 void handle_next_block(ASTNode* root, SymTable** table, bool is_global){
