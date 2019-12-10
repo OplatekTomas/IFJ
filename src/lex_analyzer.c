@@ -38,6 +38,36 @@ bool is_ident_char(char c) {
     return is_letter(c) || is_num_char(c) || c == '_';
 }
 
+void format_string(Token *t){
+    char* source = t->stringValue;
+    char* fixed = calloc(256, sizeof(char));
+    int size = 0;
+    int idx = 0;
+    while(source[size] != 0){
+        if(source[size] <= 32 || source[size] == 35){
+            strcat(fixed, "\\0");
+            char str[4] = {0};
+            sprintf(str, "%d", (int)source[size]);
+            strcat(fixed, str);
+            idx+=3;
+        }else if(source[size] == 92){ //Escape sequence
+            strcat(fixed, "\\0");
+            char str[4] = {0};
+            switch(source[size+1]){
+
+            }
+            idx +=3;
+            size++;
+        }else{
+            fixed[idx] = source[size];
+        }
+        idx++;
+        size++;
+    }
+    addPtr(fixed);
+    t->stringValue = fixed;
+}
+
 //Načte z stdin další alfanumerické slovo (může obsahovat i '_')
 int read_next_word(FILE* source, char* word, int size){
     if(word == NULL){
@@ -176,7 +206,6 @@ void handle_multline_string(FILE* source, Token* t){
     for(int i = 0; i < len; i++){
         temp[i] = t->stringValue[i+4];
     }
-    ////free(t->stringValue);
     t->stringValue = temp;
     t->type = STRING;
 }
@@ -383,6 +412,7 @@ Token get_new_token(Scanner* s) {
             case '\'':
                 t.type = STRING;
                 handle_singleline_string(source, &t);
+                format_string(&t);
                 return t;
             case '=':
             case '<':
@@ -398,6 +428,7 @@ Token get_new_token(Scanner* s) {
             case '"':
                 ungetc(c, source);
                 handle_multline_string(source, &t);
+                format_string(&t);
                 return t;
             case EOF:
                 handle_eof(s, &t);

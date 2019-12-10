@@ -4,5 +4,4 @@ if x == y:
     x = 1
 else:
     y = 0
-print(x)
-print(y)
+print(x,'\n',y,'\n','BIGGUS DICKUS\n')
