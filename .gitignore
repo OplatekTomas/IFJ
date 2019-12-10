@@ -63,3 +63,5 @@ workspace.xml
 
 vgcore*
 /tests
+
+test.sh

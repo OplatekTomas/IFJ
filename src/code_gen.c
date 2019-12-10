@@ -5,6 +5,8 @@
 #include "code_gen.h"
 
 void generate_print(ASTNode* tree, SymTable **table);
+void generate_while_loop(ASTNode* tree, SymTable** table);
+void generate_condition(ASTNode* tree, SymTable** table);
 
 
 unsigned int counter = 0;
@@ -212,19 +214,19 @@ void generate_if_else(ASTNode* tree, SymTable **table, bool is_global){
     printf("LABEL IF%d\n", counter);
 }
 
-void handle_next_block(ASTNode* root, SymTable** table){
+void handle_next_block(ASTNode* root, SymTable** table, bool is_global){
     ASTNode* tree;
     for(unsigned i = 0; i < root->subnode_len; i++){
         tree = root->nodes[i];
         switch(tree->node_type){
             case EXPRESSION:
-                generate_expression(tree, table, true);
+                generate_expression(tree, table, is_global);
                 break;
             case IF_ELSE:
                 generate_if_else(tree, table, true);
                 break;
             case WHILE_LOOP:
-                //generate_while_loop(tree, table);
+                generate_while_loop(tree, table);
                 break;
             case FUNCTION_DEFINITION:
                 generate_definition(tree, table);
@@ -233,7 +235,7 @@ void handle_next_block(ASTNode* root, SymTable** table){
                 generate_func_call(tree, table);
                 break;
             case ASSIGNMENT:
-                generate_assignment(tree, table, true);
+                generate_assignment(tree, table, is_global);
                 break;
             default:
                 break;
@@ -245,7 +247,7 @@ void generate_definition(ASTNode* tree, SymTable** table){
     printf("told ya\n");
     printf("LABEL $%s\n", tree->symbol->id);
     printf("PUSHFRAME\n");
-    handle_next_block(tree->nodes[0], table);
+    handle_next_block(tree->nodes[0], table, false);
     printf("POPFRAME\n");
     printf("RETURN\n");
 }
@@ -256,7 +258,7 @@ void generate_code(ASTNode* tree, SymTable **table, FILE* output){
     //ASTNode** result = get_preorder(tree, &size);
     printHT(table);
     printf(".IFJcode19\nCREATEFRAME\n");
-    handle_next_block(tree, table);
+    handle_next_block(tree, table, true);
 
 }
 
@@ -268,9 +270,9 @@ void generate_print(ASTNode* tree, SymTable **table) {
         switch (tree->nodes[i]->node_type) {
             case IDENTIFICATOR:
                 if (is_symbol_global(tree->nodes[i]->symbol, table)) {
-                    printf("WRITE GF@%s", tree->nodes[i]->symbol->id);
+                    printf("WRITE GF@%s\n", tree->nodes[i]->symbol->id);
                 } else {
-                    printf("WRITE LF@%s", tree->nodes[i]->symbol->id);
+                    printf("WRITE LF@%s\n", tree->nodes[i]->symbol->id);
                 }
                 break;
             case VALUE:
@@ -295,4 +297,45 @@ void generate_print(ASTNode* tree, SymTable **table) {
                 break;
         }
     }
+}
+
+void generate_while_loop(ASTNode* tree, SymTable** table) {
+    int loop_index = counter;
+    counter++;
+
+    // definice promennych pred loopem
+    printf("PUSHFRAME\n");
+    printf("CREATEFRAME\n");
+    printf("PUSHFRAME\n");
+    int size = 0;
+    ASTNode** nodes = get_postorder(tree->nodes[1], &size);
+    for(int i = 0; i < size; i++) {
+        if (nodes[i]->node_type == ASSIGNMENT && !nodes[i]->nodes[0]->symbol->has_been_defined) {
+            generate_variable(nodes[i]->nodes[0], false);
+        }
+    }
+
+    printf("DEFVAR LF@comp%%d\n", counter);
+    counter ++;
+
+    // podminka
+    printf("LABEL $while$%d\n", loop_index);
+    generate_condition(tree->nodes[0], table);
+
+    printf("JUMP $while_end$%d\n", loop_index);
+
+    // loop
+    handle_next_block(tree->nodes[1], table, false);
+
+    // konec loopu, skok na podminku
+    printf("JUMP $while$%d\n", loop_index);
+
+    // pokracovani
+    printf("LABEL $while_end$%d\n", loop_index);
+    printf("POPFRAME\n");
+    printf("POPFRAME\n");
+}
+
+void generate_condition(ASTNode* tree, SymTable** table) {
+
 }
