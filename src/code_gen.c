@@ -94,7 +94,7 @@ char* get_expression_arg(ASTNode* tree, SymTable** table){
     }else{
         strcpy(arr, "float@");
         char tmp[128] = {0};
-        gcvt(tree->n.d, 8, tmp);
+        sprintf(tmp,"%a",tree->n.d);
         strcat(arr, tmp);
     }
     return arr;
@@ -102,6 +102,15 @@ char* get_expression_arg(ASTNode* tree, SymTable** table){
 
 unsigned int generate_exp(ASTNode* tree, SymTable ** table, bool is_global){
     unsigned result = 0;
+    if(tree->nodes[0]->node_type == FLOAT_TO_INT){
+        tree->nodes[0] = tree->nodes[0]->nodes[0];
+        char * tmp = get_expression_arg(tree->nodes[0], table);
+        printf("INT2FLOAT %s %s\n", tmp, tmp);
+    }else if(tree->nodes[1]->node_type == FLOAT_TO_INT){
+        tree->nodes[1] = tree->nodes[1]->nodes[0];
+        char * tmp = get_expression_arg(tree->nodes[1], table);
+        printf("INT2FLOAT %s %s\n", tmp, tmp);
+    }
     if(!(tree->nodes[0]->node_type == IDENTIFICATOR || tree->nodes[0]->node_type == VALUE)){
         result = generate_exp(tree->nodes[0], table, is_global);
         printf("DEFVAR TF@%%%d\n", counter);
@@ -123,7 +132,7 @@ unsigned int generate_exp(ASTNode* tree, SymTable ** table, bool is_global){
 
 unsigned int generate_expression(ASTNode* tree, SymTable ** table, bool is_global) {
     printf("PUSHFRAME\nCREATEFRAME\n");
-    int result = generate_exp(tree, table, is_global);
+    unsigned int result = generate_exp(tree, table, is_global);
     return result;
 }
 
@@ -144,7 +153,7 @@ void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
                 printf("MOVE %s@%s int@%d\n",get_frame(is_global), tb->id, tree->nodes[1]->n.i);
                 break;
             case TYPE_FLOAT:
-                printf("MOVE %s@%s float@%f\n", get_frame(is_global), tb->id, tree->nodes[1]->n.d);
+                printf("MOVE %s@%s float@%a\n", get_frame(is_global), tb->id, tree->nodes[1]->n.d);
                 break;
             default:
                 break;
