@@ -134,7 +134,7 @@ unsigned int generate_exp(ASTNode* tree, SymTable ** table, bool is_global){
 void generate_expression(ASTNode* tree, SymTable ** table, bool is_global) {
     printf("PUSHFRAME\nCREATEFRAME\n");
     if(tree->node_type == IDENTIFICATOR){
-        printf("PUSHS\n %s", get_expression_arg(tree, table));
+        printf("PUSHS %s\n", get_expression_arg(tree, table));
     }else if(tree->node_type == VALUE){
         printf("PUSHS ");
         switch (tree->arith_type) {
