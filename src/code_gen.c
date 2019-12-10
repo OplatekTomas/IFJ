@@ -8,8 +8,9 @@ void generate_print(ASTNode* tree, SymTable **table);
 void generate_while_loop(ASTNode* tree, SymTable** table);
 void generate_condition(ASTNode* tree, SymTable** table);
 void generate_definition(ASTNode* tree, SymTable** table);
-void generate_read(char* frame, char* id, char* type);
+void generate_read(char* frame_id, char* type);
 void handle_next_block(ASTNode* root, SymTable** table, bool is_global);
+char* get_expression_arg(ASTNode* tree, SymTable** table);
 
 unsigned int counter = 0;
 
@@ -17,6 +18,15 @@ void generate_func_call(ASTNode* node, SymTable** table) {
     if (strcmp(node->symbol->id, "print") == 0) {
         generate_print(node, table);
         return;
+    }
+    else if(strcmp(node->symbol->id, "inputi") == 0) {
+        generate_read(get_expression_arg(node, table), "int");
+    }
+    else if(strcmp(node->symbol->id, "inputf") == 0) {
+        generate_read(get_expression_arg(node, table), "float");
+    }
+    else if(strcmp(node->symbol->id, "inputs") == 0) {
+        generate_read(get_expression_arg(node, table), "string");
     }
     printf("CREATEFRAME\n");
     for (unsigned i = 0; i < (unsigned)node->subnode_len; i++) {
@@ -256,8 +266,8 @@ void generate_code(ASTNode* tree, SymTable **table) {
     handle_next_block(tree, table, true);
 }
 
-void generate_read(char* frame, char* id, char* type){
-    printf("READ %s@%s %s\n", frame, id, type);
+void generate_read(char* frame_id, char* type){
+    printf("READ %s %s\n", frame_id, type);
 }
 void generate_print(ASTNode* tree, SymTable **table) {
     for (unsigned i = 0; i < tree->subnode_len; i++) {
