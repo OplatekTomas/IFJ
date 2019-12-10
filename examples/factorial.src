@@ -1,0 +1,12 @@
+def factorial(n):
+    if n < 2.0:
+        result = 1.0
+    else:
+        decremented_n = n - 1.0
+        temp_result = factorial(decremented_n)
+        result = n * temp_result
+    return result
+
+a = inputf()
+vysl = factorial(a)
+print('Vysledek je:', vysl)
