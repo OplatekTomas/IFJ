@@ -59,6 +59,42 @@ void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
     }
 }
 
+void generate_if_else(ASTNode* tree, SymTable **table){
+    CondType condition = tree->nodes[0]->condType;
+    struct node* id1 = tree->nodes[0]->nodes[0];
+    struct node* id2 = tree->nodes[0]->nodes[1];
+    int a = generate_expression(id1, table);
+    int b = generate_expression(id2, table);
+    switch(condition){
+        case OP_EQ:
+            printf("EQ <var> TF@%d TF@%d\n", a, b);
+            break;
+        case OP_NEQ:
+            printf("EQ <var> TF@%d TF@%d\n", a, b);
+            printf("NOT <var> <var>\n");
+            break;
+        case OP_LS:
+            printf("LT <var> TF@%d TF@%d\n", a, b);
+            break;
+        case OP_LSEQ:
+            printf("LT <var1> TF@%d TF@%d\n", a, b);
+            printf("EQ <var2> TF@%d TF@%d\n", a, b);
+            printf("OR <var1> <var2>\n");
+            break;
+        case OP_GR:
+            printf("GT <var> TF@%d TF@%d\n", a, b);
+            break;
+        case OP_GREQ:
+            printf("GT <var> TF@%d TF@%d\n", a, b);
+            printf("EQ <var2> TF@%d TF@%d\n", a, b);
+            printf("OR <var1> <var2>\n");
+            break;
+        default:
+            break;
+    }
+    printf("LABEL IF%d\n", counter);
+}
+
 void handle_next_block(ASTNode* root, SymTable** table){
     ASTNode* tree;
     for(unsigned i = 0; i < root->subnode_len; i++){
@@ -68,7 +104,7 @@ void handle_next_block(ASTNode* root, SymTable** table){
                 generate_expression(tree, table);
                 break;
             case IF_ELSE:
-                //generate_if_else(tree, table);
+                generate_if_else(tree, table);
                 break;
             case WHILE_LOOP:
                 //generate_while_loop(tree, table);
