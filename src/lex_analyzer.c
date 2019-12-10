@@ -50,12 +50,21 @@ void format_string(Token *t){
             sprintf(str, "%d", (int)source[size]);
             strcat(fixed, str);
             idx+=3;
-        }else if(source[size] == 92){ //Escape sequence
+        }else if(source[size] == '\\'){ //Escape sequence
             strcat(fixed, "\\0");
             char str[4] = {0};
             switch(source[size+1]){
-
+                case '\\':
+                    sprintf(str, "%d", 92);
+                    break;
+                case '\'':
+                    sprintf(str, "%d", 39);
+                case '"':
+                    sprintf(str, "%d", 34);
+                case 'n':
+                    sprintf(str, "%d", 10);
             }
+            strcat(fixed,str);
             idx +=3;
             size++;
         }else{
