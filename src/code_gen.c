@@ -26,9 +26,9 @@ void generate_func_call(ASTNode* node, SymTable** table) {
         switch (node->nodes[i]->node_type) {
             case IDENTIFICATOR:
                 if (is_symbol_global(node->nodes[i]->symbol, table)) {
-                    printf("GF@%s", node[i].nodes[i]->str_val);
+                    printf("GF@%s", node->nodes[i]->str_val);
                 } else {
-                    printf("LF@%s", node[i].nodes[i]->str_val);
+                    printf("LF@%s", node->nodes[i]->str_val);
                 }
                 break;
             case VALUE:

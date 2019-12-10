@@ -725,7 +725,7 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
         tmp->type = TYPE_NONE;
         tmp->id = t.stringValue;
         addToList(table->args, tmp);
-
+        table->argNum++;
         prev_t = t;
         t = get_next_token(s);
         if(t.type == ERROR){
@@ -749,8 +749,6 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
     }
     Arguments * arTmp = table->args;
     table->args = arTmp->nextArg;
-    table->argNum--;
-    ////free(arTmp);
     return 0;
 }
 
