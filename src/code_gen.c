@@ -169,9 +169,6 @@ void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
     generate_variable(tree->nodes[0], is_global);
     if(tree->nodes[1]->node_type == VALUE) {
         switch (tree->nodes[1]->arith_type) {
-            case TYPE_FUNCTION:
-                //TODO: FUCK THIS
-                break;
             case TYPE_STRING:
                 printf("MOVE %s@%s string@%s\n", get_frame(is_global), tb->id, tree->nodes[1]->str_val);
                 break;
@@ -181,12 +178,15 @@ void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
             case TYPE_FLOAT:
                 printf("MOVE %s@%s float@%a\n", get_frame(is_global), tb->id, tree->nodes[1]->n.d);
                 break;
+            case TYPE_NONE:
+                printf("MOVE %s@%s nil@nil\n", get_frame(is_global), tb->id);
+                break;
             default:
                 break;
 
         }
     }else if(tree->nodes[1]->node_type == IDENTIFICATOR){
-        //TODO FUCK ITS A VARIBALE
+        printf("MOVE %s %s\n",get_expression_arg(tree->nodes[0], table), get_expression_arg(tree->nodes[1], table));
     }else if(tree->nodes[1]->node_type == FUNCITON_CALL){
         generate_func_call(tree->nodes[1], table);
         printf("MOVE %s@%s TF@%%retval\n", get_frame(is_global), tb->id);
@@ -200,16 +200,16 @@ void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
 
 void generate_if_else(ASTNode* tree, SymTable **table, bool is_global){
     generate_condition(tree->nodes[0], table);
-    printf("DEFVAR TF@%%%d\nPOPS TF@%%%d\n", counter, counter);
-    counter++;
+    //counter++;
     unsigned tmpCnt = counter;
-    printf("JUMPIFNEQ $IFFALSE$%d TF@%%%d true\n", counter, counter - 1);
+    printf("PUSHS bool@true\n");
+    printf("JUMPIFNEQS $IFFALSE$%d\n", tmpCnt);
     counter++;
     handle_next_block(tree->nodes[1],table,is_global);
     printf("JUMP $IFEND$%d\n", tmpCnt);
-    printf("LABEL IF%dFALSE \n", counter);
+    printf("LABEL $IFFALSE$%d\n", tmpCnt);
     handle_next_block(tree->nodes[2],table,is_global);
-    printf("LABEL $IFEND$%d", tmpCnt);
+    printf("LABEL $IFEND$%d\n", tmpCnt);
 }
 
 void handle_next_block(ASTNode* root, SymTable** table, bool is_global){
