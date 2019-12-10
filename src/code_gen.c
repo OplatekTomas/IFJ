@@ -303,16 +303,12 @@ void generate_while_loop(ASTNode* tree, SymTable** table) {
         }
     }
 
-    int comp_index = counter;
-    printf("DEFVAR TF@comp$%d\n", comp_index);
-    counter ++;
-
     // podminka
     printf("LABEL $while$%d\n", loop_index);
     generate_condition(tree->nodes[0], table);
-    printf("POPS TF@comp$%d\n", comp_index);
+    printf("PUSHS bool@false\n");
 
-    printf("JUMPIFEQ $while_end$%d TF@comp$%d bool@false\n", loop_index, comp_index);
+    printf("JUMPIFEQS $while_end$%d\n", loop_index);
 
     // loop
     printf("PUSHFRAME\n");

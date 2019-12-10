@@ -1,5 +1,5 @@
-cislo = 10
-mez = 5
-while cislo >= mez:
+cislo = 1
+mez = 10
+while cislo <= mez:
     print(cislo)
-    cislo = cislo - 1
+    cislo = cislo + 1
