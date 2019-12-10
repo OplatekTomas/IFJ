@@ -45,6 +45,19 @@ char* get_expression_arg(ASTNode* tree, SymTable** table){
         strcpy(arr, get_frame(is_symbol_global(tree->symbol, table)));
         strcat(arr, "@");
         strcat(arr, tree->symbol->id);
+    }else if(tree->arith_type == TYPE_STRING){
+        strcpy(arr, "string@");
+        strcat(arr, tree->str_val);
+    }else if(tree->arith_type == TYPE_INT){
+        strcpy(arr, "int@");
+        char tmp[128] = {0};
+        sprintf(tmp,"%d",tree->n.i);
+        strcat(arr, tmp);
+    }else{
+        strcpy(arr, "float@");
+        char tmp[128] = {0};
+        gcvt(tree->n.d, 8, tmp);
+        strcat(arr, tmp);
     }
     return arr;
 }
@@ -53,14 +66,14 @@ unsigned int generate_expression(ASTNode* tree, SymTable ** table, bool is_globa
     unsigned result = 0;
     if(!(tree->nodes[0]->node_type == IDENTIFICATOR || tree->nodes[0]->node_type == VALUE)){
         result = generate_expression(tree->nodes[0], table, is_global);
-        printf("%s %d\n", get_expression_instr(tree->node_type), result);
+        printf("%s TF@%d TF@%d %s\n", get_expression_instr(tree->node_type), counter, result, get_expression_arg(tree->nodes[1], table));
 
     } else if (!(tree->nodes[1]->node_type == IDENTIFICATOR || tree->nodes[1]->node_type == VALUE)){
         result = generate_expression(tree->nodes[1], table, is_global);
-        printf("%s %d\n", get_expression_instr(tree->node_type), result);
+        printf("%s TF@%d %s TF@%d\n", get_expression_instr(tree->node_type), counter, get_expression_arg(tree->nodes[0], table), result);
 
     }else{
-        printf("%s TF@%%%d %s\n", get_expression_instr(tree->node_type), counter, get_expression_arg(tree->nodes[0], table));
+        printf("%s TF@%d %s %s\n", get_expression_instr(tree->node_type), counter, get_expression_arg(tree->nodes[0], table), get_expression_arg(tree->nodes[1], table));
     }
     counter++;
     //TODO: This entire fucking function
@@ -76,7 +89,7 @@ void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
                 //TODO: FUCK THIS
                 break;
             case TYPE_STRING:
-                printf("MOVE %s@%s string@\"%s\"\n", get_frame(is_global), tb->id, tree->nodes[1]->str_val);
+                printf("MOVE %s@%s string@%s\n", get_frame(is_global), tb->id, tree->nodes[1]->str_val);
                 break;
             case TYPE_INT:
                 printf("MOVE %s@%s int@%d\n",get_frame(is_global), tb->id, tree->nodes[1]->n.i);
