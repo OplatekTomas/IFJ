@@ -191,15 +191,15 @@ void generate_if_else(ASTNode* tree, SymTable **table){
         case OP_LSEQ:
             printf("LT <var1> TF@%d TF@%d\n", a, b);
             printf("EQ <var2> TF@%d TF@%d\n", a, b);
-            printf("OR <var1> <var2>\n");
+            printf("OR <var> <var1> <var2>\n");
             break;
         case OP_GR:
             printf("GT <var> TF@%d TF@%d\n", a, b);
             break;
         case OP_GREQ:
-            printf("GT <var> TF@%d TF@%d\n", a, b);
+            printf("GT <var1> TF@%d TF@%d\n", a, b);
             printf("EQ <var2> TF@%d TF@%d\n", a, b);
-            printf("OR <var1> <var2>\n");
+            printf("OR <var> <var1> <var2>\n");
             break;
         default:
             break;
