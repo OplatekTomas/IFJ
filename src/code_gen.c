@@ -7,6 +7,8 @@
 void generate_print(ASTNode* tree, SymTable **table);
 void generate_while_loop(ASTNode* tree, SymTable** table);
 void generate_condition(ASTNode* tree, SymTable** table);
+void generate_definition(ASTNode* tree, SymTable** table);
+void generate_read(char* frame, char* id, char* type);
 
 
 unsigned int counter = 0;
@@ -242,14 +244,10 @@ void generate_definition(ASTNode* tree, SymTable** table){
     printf("RETURN\n");
 }
 
-void generate_code(ASTNode* tree, SymTable **table, FILE* output){
-
-    int size = 0;
-    //ASTNode** result = get_preorder(tree, &size);
+void generate_code(ASTNode* tree, SymTable **table) {
     printHT(table);
     printf(".IFJcode19\nCREATEFRAME\n");
     handle_next_block(tree, table, true);
-
 }
 
 void generate_read(char* frame, char* id, char* type){
@@ -296,26 +294,31 @@ void generate_while_loop(ASTNode* tree, SymTable** table) {
     // definice promennych pred loopem
     printf("PUSHFRAME\n");
     printf("CREATEFRAME\n");
-    printf("PUSHFRAME\n");
     int size = 0;
     ASTNode** nodes = get_postorder(tree->nodes[1], &size);
     for(int i = 0; i < size; i++) {
         if (nodes[i]->node_type == ASSIGNMENT && !nodes[i]->nodes[0]->symbol->has_been_defined) {
-            generate_variable(nodes[i]->nodes[0], false);
+            printf("DEFVAR TF@%s\n" ,tree->symbol->id);
+            nodes[i]->nodes[0]->symbol->has_been_defined = true;
         }
     }
 
-    printf("DEFVAR LF@comp%%d\n", counter);
+    int comp_index = counter;
+    printf("DEFVAR TF@comp$%d\n", comp_index);
     counter ++;
 
     // podminka
     printf("LABEL $while$%d\n", loop_index);
     generate_condition(tree->nodes[0], table);
+    printf("POPS TF@comp$%d\n", comp_index);
 
-    printf("JUMP $while_end$%d\n", loop_index);
+    printf("JUMPIFEQ $while_end$%d TF@comp$%d bool@false\n", loop_index, comp_index);
 
     // loop
-    handle_next_block(tree->nodes[1], table, false);
+    printf("PUSHFRAME\n");
+    printf("CREATEFRAME\n");
+    handle_next_block(tree->nodes[1], table, true);
+    printf("POPFRAME\n");
 
     // konec loopu, skok na podminku
     printf("JUMP $while$%d\n", loop_index);
@@ -323,9 +326,43 @@ void generate_while_loop(ASTNode* tree, SymTable** table) {
     // pokracovani
     printf("LABEL $while_end$%d\n", loop_index);
     printf("POPFRAME\n");
-    printf("POPFRAME\n");
 }
 
 void generate_condition(ASTNode* tree, SymTable** table) {
+    if(tree->subnode_len == 0) {
 
+    } else {
+        generate_expression(tree->nodes[0], table, false);
+        generate_expression(tree->nodes[1], table, false);
+        switch(tree->condType){
+            case OP_EQ:
+                printf("EQS\n");
+                break;
+            case OP_NEQ:
+                printf("EQS\n");
+                printf("NOTS\n");
+                break;
+            case OP_LS:
+                printf("LTS\n");
+                break;
+            case OP_LSEQ:
+                printf("LTS\n");
+                generate_expression(tree->nodes[0], table, false);
+                generate_expression(tree->nodes[1], table, false);
+                printf("EQS\n");
+                printf("ORS\n");
+                break;
+            case OP_GR:
+                printf("GTS\n");
+                break;
+            case OP_GREQ:
+            default:
+                printf("GTS\n");
+                generate_expression(tree->nodes[0], table, false);
+                generate_expression(tree->nodes[1], table, false);
+                printf("EQS\n");
+                printf("ORS\n");
+                break;
+        }
+    }
 }
