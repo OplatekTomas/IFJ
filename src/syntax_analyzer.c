@@ -726,14 +726,9 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
         tmp->id = t.stringValue;
         addToList(table->args, tmp);
 
-        ASTNode *param = node_new(); //Continue creating ASTNodes
-        param->node_type = IDENTIFICATOR;
-        node_insert(tree, param);
-
         prev_t = t;
         t = get_next_token(s);
         if(t.type == ERROR){
-            free_tree(param);
             return 1;
         }
         if(t.type == CLOSE_PARENTHES){
@@ -746,7 +741,6 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
         prev_t = t;
         t = get_next_token(s);
         if(t.type == ERROR){
-            free_tree(param);
             return 1;
         }
     }
