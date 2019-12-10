@@ -1,4 +1,5 @@
 cislo = 10
-while cislo > 5:
+mez = 5
+while cislo >= mez:
     print(cislo)
     cislo = cislo - 1

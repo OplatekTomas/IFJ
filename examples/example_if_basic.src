@@ -1,8 +1,8 @@
 x=3
-y=2
-if x < y:
-    x = x + 3
+y=x
+if x == y:
+    x = 1
 else:
-    y = y + 4
+    y = 0
 print(x)
 print(y)
