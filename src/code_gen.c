@@ -9,53 +9,92 @@ unsigned int counter = 0;
 
 
 
+static char* get_frame(bool is_global){
+    return is_global ? "GF" : "LF";
+}
+
 void generate_variable(ASTNode* tree, bool is_global){
     if(tree->symbol->has_been_defined){
        return;
     }
-    printf("DEFVAR ");
-    if(is_global){
-        printf("GF");
-    }else{
-        printf("LF");
-    }
-    printf("@%s\n", tree->symbol->id);
+    printf("DEFVAR %s@%s\n",get_frame(is_global) ,tree->symbol->id);
     tree->symbol->has_been_defined = true;
 }
 
-int generate_expression(ASTNode* tree, SymTable ** table){
+static char* get_expression_instr(NonTerm term){
+    switch(term){
+        case ADDITION:
+            return "ADD";
+        case SUBTRACTION:
+            return "SUB";
+        case MULTIPLICATION:
+            return "MUL";
+        case DIVISION:
+            return "DIV";
+        case INT_DIVISION:
+            return "IDIV";
+        default:
+            return NULL;
+    }
+}
+
+char* get_expression_arg(ASTNode* tree, SymTable** table){
+    char* arr = malloc(sizeof(char)* 256);
+    addPtr(arr);
+    if(tree->node_type == IDENTIFICATOR){
+        strcpy(arr, get_frame(is_symbol_global(tree->symbol, table)));
+        strcat(arr, "@");
+        strcat(arr, tree->symbol->id);
+    }
+    return arr;
+}
+
+unsigned int generate_expression(ASTNode* tree, SymTable ** table, bool is_global){
+    unsigned result = 0;
+    if(!(tree->nodes[0]->node_type == IDENTIFICATOR || tree->nodes[0]->node_type == VALUE)){
+        result = generate_expression(tree->nodes[0], table, is_global);
+        printf("%s %d\n", get_expression_instr(tree->node_type), result);
+
+    } else if (!(tree->nodes[1]->node_type == IDENTIFICATOR || tree->nodes[1]->node_type == VALUE)){
+        result = generate_expression(tree->nodes[1], table, is_global);
+        printf("%s %d\n", get_expression_instr(tree->node_type), result);
+
+    }else{
+        printf("%s TF@%%%d %s\n", get_expression_instr(tree->node_type), counter, get_expression_arg(tree->nodes[0], table));
+    }
+    counter++;
     //TODO: This entire fucking function
-    return 0;
+    return counter - 1;
 }
 
 void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
     SymTable* tb =  tree->nodes[0]->symbol;
     generate_variable(tree->nodes[0], is_global);
-    if(tree->nodes[1]->node_type == VALUE){
-        switch(tree->nodes[1]->arith_type){
+    if(tree->nodes[1]->node_type == VALUE) {
+        switch (tree->nodes[1]->arith_type) {
             case TYPE_FUNCTION:
                 //TODO: FUCK THIS
                 break;
             case TYPE_STRING:
-                printf("MOVE %s@%s \"%s\"", is_global ? "GF" : "LF", tb->id, tree->nodes[1]->str_val);
+                printf("MOVE %s@%s string@\"%s\"\n", get_frame(is_global), tb->id, tree->nodes[1]->str_val);
                 break;
             case TYPE_INT:
-                printf("MOVE %s@%s %d", is_global ? "GF" : "LF", tb->id, tree->nodes[1]->n.i);
+                printf("MOVE %s@%s int@%d\n",get_frame(is_global), tb->id, tree->nodes[1]->n.i);
                 break;
             case TYPE_FLOAT:
-                printf("MOVE %s@%s %f", is_global ? "GF" : "LF", tb->id, tree->nodes[1]->n.d);
+                printf("MOVE %s@%s float@%f\n", get_frame(is_global), tb->id, tree->nodes[1]->n.d);
                 break;
             default:
                 break;
 
         }
-    }
-    if(tree->nodes[1]->node_type == IDENTIFICATOR){
-        //TODO FUCK
+    }else if(tree->nodes[1]->node_type == IDENTIFICATOR){
+        //TODO FUCK ITS A VARIBALE
     }else if(tree->nodes[1]->node_type == FUNCITON_CALL){
         //TODO: Add function call
     }else{
-        generate_expression(tree, table);
+        int result = generate_expression(tree->nodes[1], table, is_global);
+        printf("MOVE %s@%s tf@%%%d\n", is_global ? "GF" : "LF", tb->id, result);
     }
 }
 
@@ -65,7 +104,7 @@ void handle_next_block(ASTNode* root, SymTable** table){
         tree = root->nodes[i];
         switch(tree->node_type){
             case EXPRESSION:
-                generate_expression(tree, table);
+                generate_expression(tree, table, true);
                 break;
             case IF_ELSE:
                 //generate_if_else(tree, table);
@@ -78,6 +117,9 @@ void handle_next_block(ASTNode* root, SymTable** table){
                 break;
             case FUNCITON_CALL:
                 //generate_func_call(tree, table);
+                break;
+            case ASSIGNMENT:
+                generate_assignment(tree, table, true);
                 break;
             default:
                 break;
