@@ -40,10 +40,15 @@ bool is_ident_char(char c) {
 
 void format_string(Token *t){
     char* source = t->stringValue;
-    char* fixed = calloc(256, sizeof(char));
+    int max = 256;
+    char* fixed = calloc(max, sizeof(char));
     int size = 0;
     int idx = 0;
     while(source[size] != 0){
+        if(idx >= max){
+            max += 256;
+            fixed = realloc(fixed, max*sizeof(char));
+        }
         if(source[size] <= 32 || source[size] == 35){
             strcat(fixed, "\\0");
             char str[4] = {0};
