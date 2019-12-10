@@ -100,23 +100,34 @@ char* get_expression_arg(ASTNode* tree, SymTable** table){
     return arr;
 }
 
-unsigned int generate_expression(ASTNode* tree, SymTable ** table, bool is_global){
+unsigned int generate_exp(ASTNode* tree, SymTable ** table, bool is_global){
     unsigned result = 0;
     if(!(tree->nodes[0]->node_type == IDENTIFICATOR || tree->nodes[0]->node_type == VALUE)){
-        result = generate_expression(tree->nodes[0], table, is_global);
-        printf("%s TF@%d TF@%d %s\n", get_expression_instr(tree->node_type), counter, result, get_expression_arg(tree->nodes[1], table));
+        result = generate_exp(tree->nodes[0], table, is_global);
+        printf("DEFVAR TF@%%%d\n", counter);
+        printf("%s TF@%%%d TF@%%%d %s\n", get_expression_instr(tree->node_type), counter, result, get_expression_arg(tree->nodes[1], table));
 
     } else if (!(tree->nodes[1]->node_type == IDENTIFICATOR || tree->nodes[1]->node_type == VALUE)){
-        result = generate_expression(tree->nodes[1], table, is_global);
-        printf("%s TF@%d %s TF@%d\n", get_expression_instr(tree->node_type), counter, get_expression_arg(tree->nodes[0], table), result);
+        result = generate_exp(tree->nodes[1], table, is_global);
+        printf("DEFVAR TF@%%%d\n", counter);
+        printf("%s TF@%%%d %s TF@%%%d\n", get_expression_instr(tree->node_type), counter, get_expression_arg(tree->nodes[0], table), result);
 
     }else{
-        printf("%s TF@%d %s %s\n", get_expression_instr(tree->node_type), counter, get_expression_arg(tree->nodes[0], table), get_expression_arg(tree->nodes[1], table));
+        printf("DEFVAR TF@%%%d\n", counter);
+        printf("%s TF@%%%d %s %s\n", get_expression_instr(tree->node_type), counter, get_expression_arg(tree->nodes[0], table), get_expression_arg(tree->nodes[1], table));
     }
     counter++;
     //TODO: This entire fucking function
     return counter - 1;
 }
+
+unsigned int generate_expression(ASTNode* tree, SymTable ** table, bool is_global) {
+    printf("PUSHFRAME\nCREATEFRAME\n");
+    int result = generate_exp(tree, table, is_global);
+    return result;
+}
+
+
 
 void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
     SymTable* tb =  tree->nodes[0]->symbol;
@@ -146,7 +157,8 @@ void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
         printf("MOVE %s@%s TF@%%retval", get_frame(is_global), tb->id);
     }else{
         int result = generate_expression(tree->nodes[1], table, is_global);
-        printf("MOVE %s@%s tf@%%%d\n", is_global ? "GF" : "LF", tb->id, result);
+        printf("MOVE %s@%s TF@%%%d\n", is_global ? "GF" : "LF", tb->id, result);
+        printf("POPFRAME\n");
     }
 }
 
@@ -193,7 +205,7 @@ void generate_code(ASTNode* tree, SymTable **table, FILE* output){
     int size = 0;
     //ASTNode** result = get_preorder(tree, &size);
     printHT(table);
-    printf(".IFJcode19\n");
+    printf(".IFJcode19\nCREATEFRAME\n");
     handle_next_block(tree, table);
 
 }
