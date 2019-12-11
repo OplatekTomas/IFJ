@@ -1,6 +1,16 @@
-//
-// Created by Petr on 26/11/2019.
-//
+/*
+ * IFJ projekt 2019
+ * **************************
+ * Tým 82, varianta II
+ * **************************
+ * Autoři:
+ * Zdeněk Kolba (xkolba01)
+ * Tomáš Oplatek (xoplat01)
+ * David Rubý (xrubyd00)
+ * Petr Volf (xvolfp00)
+ * **************************
+ * semantic_analyzer.c
+ */
 
 #include "semantic_analyzer.h"
 

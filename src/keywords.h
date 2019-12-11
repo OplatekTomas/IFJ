@@ -1,3 +1,17 @@
+/*
+ * IFJ projekt 2019
+ * **************************
+ * Tým 82, varianta II
+ * **************************
+ * Autoři:
+ * Zdeněk Kolba (xkolba01)
+ * Tomáš Oplatek (xoplat01)
+ * David Rubý (xrubyd00)
+ * Petr Volf (xvolfp00)
+ * **************************
+ * keywords.h
+ */
+
 #ifndef IFJ_KEYWORDS_H
 #define IFJ_KEYWORDS_H
 

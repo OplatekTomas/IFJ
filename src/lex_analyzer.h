@@ -1,7 +1,16 @@
-//
-// Created by tomas on 14.10.19.
-//
-
+/*
+ * IFJ projekt 2019
+ * **************************
+ * Tým 82, varianta II
+ * **************************
+ * Autoři:
+ * Zdeněk Kolba (xkolba01)
+ * Tomáš Oplatek (xoplat01)
+ * David Rubý (xrubyd00)
+ * Petr Volf (xvolfp00)
+ * **************************
+ * lex_analyzer.h
+ */
 
 #ifndef IFJ_LEX_ANALYZER_H
 #define IFJ_LEX_ANALYZER_H
