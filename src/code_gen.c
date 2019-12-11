@@ -9,18 +9,17 @@ void generate_while_loop(ASTNode* tree, SymTable** table);
 void generate_condition(ASTNode* tree, SymTable** table);
 void generate_definition(ASTNode* tree, SymTable** table);
 void generate_read(char* frame_id, char* type);
-void handle_next_block(ASTNode* root, SymTable** table, bool is_global);
+bool handle_next_block(ASTNode* root, SymTable** table, bool is_global);
 char* get_expression_arg(ASTNode* tree, SymTable** table);
 void generate_return(ASTNode* tree, SymTable** table);
 
 unsigned int counter = 0;
 
-void generate_func_call(ASTNode* node, SymTable** table) {
+void generate_func_call(ASTNode* node, SymTable** table, bool is_global) {
     if (strcmp(node->symbol->id, "print") == 0) {
         generate_print(node, table);
         return;
     }
-    printf("PUSHFRAME\n");
     printf("CREATEFRAME\n");
     for (unsigned i = 0; i < (unsigned)node->subnode_len; i++) {
         printf("DEFVAR TF@_%i\n", i);
@@ -208,7 +207,7 @@ void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
             generate_read(get_expression_arg(tree->nodes[0], table), "string");
             return;
         }
-        generate_func_call(tree->nodes[1], table);
+        generate_func_call(tree->nodes[1], table, is_global);
         printf("MOVE %s@%s TF@%%retval\n", get_frame(is_global), tb->id);
     }else{
         generate_expression(tree->nodes[1], table, is_global);
@@ -260,7 +259,8 @@ void generate_if_else(ASTNode* tree, SymTable **table, bool is_global){
     printf("LABEL $IFEND$%d\n", tmpCnt);
 }
 
-void handle_next_block(ASTNode* root, SymTable** table, bool is_global){
+bool handle_next_block(ASTNode* root, SymTable** table, bool is_global){
+    int found_return = false;
     ASTNode* tree;
     for(unsigned i = 0; i < root->subnode_len; i++){
         tree = root->nodes[i];
@@ -275,32 +275,37 @@ void handle_next_block(ASTNode* root, SymTable** table, bool is_global){
                 generate_while_loop(tree, table);
                 break;
             case FUNCITON_CALL:
-                generate_func_call(tree, table);
+                generate_func_call(tree, table, is_global);
                 break;
             case ASSIGNMENT:
                 generate_assignment(tree, table, is_global);
                 break;
             case RETURN_VALUE:
                 generate_return(tree->nodes[0], table);
+                found_return = true;
             default:
                 break;
         }
     }
+    return found_return;
 }
 
 void generate_definition(ASTNode* tree, SymTable** table){
     printf("LABEL $%s\n", tree->symbol->id);
+    printf("PUSHFRAME\n");
+    printf("CREATEFRAME\n");
     printf("DEFVAR LF@%retval\n");
     printf("MOVE LF@%retval nil@nil\n");
     Arguments* current_arg = tree->symbol->args;
     for (int i = 0; i < tree->symbol->argNum; i++) {
         printf("DEFVAR TF@%s\n", current_arg->id);
-        printf("MOVE TF@%s TF@_%d\n", current_arg->id, i);
+        printf("MOVE TF@%s LF@_%d\n", current_arg->id, i);
         current_arg = current_arg->nextArg;
     }
-    handle_next_block(tree->nodes[0], table, false);
-    printf("POPFRAME\n");
-    printf("RETURN\n");
+    if (!handle_next_block(tree->nodes[0], table, false)) {
+        printf("POPFRAME\n");
+        printf("RETURN\n");
+    }
 }
 
 void generate_code(ASTNode* tree, SymTable **table) {
@@ -446,5 +451,28 @@ void generate_condition(ASTNode* tree, SymTable** table) {
 }
 
 void generate_return(ASTNode* tree, SymTable** table) {
-    printf("MOVE LF@%retval TF@%s\n", tree->symbol->id);
+    if (tree->node_type == VALUE) {
+        switch (tree->arith_type) {
+            case TYPE_NONE:
+                printf("MOVE LF@%retval nil@nil\n");
+                break;
+            case TYPE_FLOAT:
+                printf("MOVE LF@%retval float@%a\n", tree->n.d);
+                break;
+            case TYPE_INT:
+                printf("MOVE LF@%retval int@%d\n", tree->n.i);
+                break;
+            case TYPE_STRING:
+                printf("MOVE LF@%retval string@%s\n", tree->str_val);
+                break;
+            default:
+                // wut
+                break;
+        }
+        return;
+    } else {
+        printf("MOVE LF@%retval TF@%s\n", tree->symbol->id);
+    }
+    printf("POPFRAME\n");
+    printf("RETURN\n");
 }
