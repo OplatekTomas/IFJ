@@ -132,38 +132,51 @@ char* get_expression_arg(ASTNode* tree, SymTable** table){
 }
 
 void generate_float_conversion(ASTNode* tree){
-        if(tree->nodes[0]->node_type == FLOAT_TO_INT){
-            tree->nodes[0] = tree->nodes[0]->nodes[0];
-        }else if(tree->nodes[1]->node_type == FLOAT_TO_INT){
-            tree->nodes[1] = tree->nodes[1]->nodes[0];
-        }
+
 }
 
 void generate_exp(ASTNode* tree, SymTable ** table, bool is_global){
-    if(tree->nodes[0]->arith_type == TYPE_STRING && tree->nodes[1]->arith_type == TYPE_STRING){
-        //printf("PUSHS %s\nPUSHS %s\n%s\n");
-        printf("DEFVAR TF@%%%d\n", counter);
-        printf("CONCAT TF@%%%d %s %s\n", counter, get_expression_arg(tree->nodes[0], table), get_expression_arg(tree->nodes[1], table));
-    }else if(tree->nodes[0]->node_type == FLOAT_TO_INT || !(tree->nodes[0]->node_type == IDENTIFICATOR || tree->nodes[0]->node_type == VALUE)){
-        bool shouldConvert = tree->nodes[0]->node_type == FLOAT_TO_INT;
-        generate_float_conversion(tree);
+    bool shouldConvertFirst = false;
+    bool shouldConvertSecond = false;
+    if(tree->nodes[0]->node_type == FLOAT_TO_INT){
+        shouldConvertFirst = true;
+        tree->nodes[0] = tree->nodes[0]->nodes[0];
+    }else if(tree->nodes[1]->node_type == FLOAT_TO_INT){
+        shouldConvertSecond = true;
+        tree->nodes[1] = tree->nodes[1]->nodes[0];
+    }
+    if(!(tree->nodes[0]->node_type == IDENTIFICATOR || tree->nodes[0]->node_type == VALUE)){
         generate_exp(tree->nodes[0], table, is_global);
-        printf("PUSHS %s\n%",get_expression_arg(tree->nodes[1], table));
-        if(shouldConvert){
+        if(shouldConvertFirst){
+            printf("INT2FLOATS\n");
+        }
+        printf("PUSHS %s\n",get_expression_arg(tree->nodes[1], table));
+        if(shouldConvertSecond){
             printf("INT2FLOATS\n");
         }
         printf("%s\n",get_expression_instr(tree->node_type));
-    } else if (tree->nodes[1]->node_type == FLOAT_TO_INT || !(tree->nodes[1]->node_type == IDENTIFICATOR || tree->nodes[1]->node_type == VALUE)){
-        bool shouldConvert = tree->nodes[1]->node_type == FLOAT_TO_INT;
-        generate_float_conversion(tree);
+
+    } else if (!(tree->nodes[1]->node_type == IDENTIFICATOR || tree->nodes[1]->node_type == VALUE)){
         generate_exp(tree->nodes[1], table, is_global);
+        if(shouldConvertSecond){
+            printf("INT2FLOATS\n");
+        }
         printf("PUSHS %s\n",get_expression_arg(tree->nodes[0], table));
-        if(shouldConvert){
+        if(shouldConvertFirst){
             printf("INT2FLOATS\n");
         }
         printf("%s\n",get_expression_instr(tree->node_type));
+
     }else{
-        printf("PUSHS %s\nPUSHS %s\n%s\n",get_expression_arg(tree->nodes[0], table),get_expression_arg(tree->nodes[1], table),get_expression_instr(tree->node_type));;
+         printf("PUSHS %s\n",get_expression_arg(tree->nodes[0], table));
+         if(shouldConvertFirst){
+             printf("INT2FLOATS\n");
+         }
+         printf("PUSHS %s\n",get_expression_arg(tree->nodes[1], table));
+         if(shouldConvertSecond){
+             printf("INT2FLOATS\n");
+         }
+         printf("%s\n",get_expression_instr(tree->node_type));
     }
 }
 
