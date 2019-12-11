@@ -625,6 +625,8 @@ int check_cond(ASTNode* tree, Scanner* s, SymTable** table, char* func_name){
     }
     if(t.type == COLON){
         scanner_unget(s,t);
+        comp->arith_type = comp->nodes[0]->arith_type;
+        node_insert(tree, comp);
         return 0;
     }
     if(!is_comp(t, &optype)){

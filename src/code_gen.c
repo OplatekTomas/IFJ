@@ -412,8 +412,48 @@ void generate_while_loop(ASTNode* tree, SymTable** table) {
 }
 
 void generate_condition(ASTNode* tree, SymTable** table) {
-    if(tree->subnode_len == 0) {
+    if(tree->subnode_len == 1) {
+        unsigned type_counter = counter;
+        counter++;
+        printf("DEFVAR TF@%%%d\n", type_counter);
+        printf("TYPE TF@%%%d %s\n", type_counter, get_expression_arg(tree->nodes[0], table));
+        printf("PUSHS TF@%%%d\n", type_counter);
+        printf("PUSHS string@int\n");
+        printf("JUMPIFEQS $$dyntypecheck_int$%d\n", type_counter);
+        printf("PUSHS TF@%%%d\n", type_counter);
+        printf("PUSHS string@float\n");
+        printf("JUMPIFEQS $$dyntypecheck_floatint$%d\n", type_counter);
+        printf("PUSHS TF@%%%d\n", type_counter);
+        printf("PUSHS string@string\n");
+        printf("JUMPIFEQS $$dyntypecheck_string$%d\n", type_counter);
+        printf("JUMP $$dyntypecheck_false$%d\n", type_counter);
 
+        printf("LABEL $$dyntypecheck_int$%d\n", type_counter);
+        printf("PUSHS %s\n", get_expression_arg(tree->nodes[0], table));
+        printf("PUSHS int@0\n");
+        printf("JUMPIFNEQS $$dyntypecheck_true$%d\n", type_counter);
+        printf("JUMP $$dyntypecheck_false$%d\n", type_counter);
+
+        printf("LABEL $$dyntypecheck_float$%d\n", type_counter);
+        printf("PUSHS %s\n", get_expression_arg(tree->nodes[0], table));
+        printf("PUSHS float@%a\n", 0.0);
+        printf("JUMPIFNEQS $$dyntypecheck_true$%d\n", type_counter);
+        printf("JUMP $$dyntypecheck_false$%d\n", type_counter);
+
+        printf("LABEL $$dyntypecheck_string$%d\n", type_counter);
+        printf("STRLEN TF@%%%d %s\n", type_counter, get_expression_arg(tree->nodes[0], table));
+        printf("PUSHS TF@%%%d\n", type_counter);
+        printf("PUSHS int@0\n");
+        printf("JUMPIFNEQS $$dyntypecheck_true$%d\n", type_counter);
+
+        printf("LABEL $$dyntypecheck_true$%d\n", type_counter);
+        printf("PUSHS bool@true\n");
+        printf("JUMP $$dyntypecheck_end$%d\n", type_counter);
+
+        printf("LABEL $$dyntypecheck_false$%d\n", type_counter);
+        printf("PUSHS bool@false\n");
+
+        printf("LABEL $$dyntypecheck_end$%d\n", type_counter);
     } else {
         generate_expression(tree->nodes[0], table, false);
         generate_expression(tree->nodes[1], table, false);
