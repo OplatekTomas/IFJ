@@ -14,6 +14,8 @@ char* get_expression_arg(ASTNode* tree, SymTable** table);
 void generate_return(ASTNode* tree, SymTable** table);
 void generate_strlen(char* symb);
 void generate_getchar(char* symb1, int symb2);
+void generate_stri2int(char* symb1, int symb2);
+void generate_int2char(int symb);
 
 unsigned int counter = 0;
 
@@ -220,6 +222,14 @@ void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
             }
             return;
         }
+        else if(strcmp(tree->nodes[1]->symbol->id, "ord") == 0) {
+            generate_stri2int(get_expression_arg(tree->nodes[0], table), tree->nodes[1]->nodes[1]->n.i);
+            return;
+        }
+        else if(strcmp(tree->nodes[1]->symbol->id, "chr") == 0) {
+            generate_int2char(tree->nodes[1]->nodes[0]->n.i);
+            return;
+        }
         generate_func_call(tree->nodes[1], table);
         printf("MOVE %s@%s TF@%%retval\n", get_frame(is_global), tb->id);
     }else{
@@ -342,6 +352,14 @@ void generate_strlen(char* symb){
 
 void generate_getchar(char* symb1, int symb2){
     printf("GETCHAR LF@%%retval %s %d\n", symb1, symb2);
+}
+
+void generate_stri2int(char* symb1, int symb2){
+    printf("STRI2INT LF@%%retval %s %d\n", symb1, symb2);
+}
+
+void generate_int2char(int symb) {
+    printf("INT2CHAR LF@%%retvar %d\n", symb);
 }
 
 void generate_print(ASTNode* tree, SymTable **table) {
