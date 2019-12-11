@@ -14,8 +14,8 @@ char* get_expression_arg(ASTNode* tree, SymTable** table);
 void generate_return(ASTNode* tree, SymTable** table);
 void generate_strlen(ASTNode* node, SymTable ** table,bool hasResult);
 void generate_getchar(ASTNode* node1, ASTNode* node2, ASTNode* node3, SymTable** table, bool hasResult);
-void generate_int2char(int symb);
-void generate_stri2int(char* symb1, int symb2);
+void generate_int2char(ASTNode* node, SymTable ** table, bool hasResult);
+void generate_stri2int(ASTNode* node1, ASTNode* node2, SymTable ** table, bool hasResult);
 
 
 unsigned int counter = 0;
@@ -30,7 +30,15 @@ void generate_func_call(ASTNode* node, SymTable** table) {
     }else if(strcmp(node->symbol->id, "substr") == 0) {
         generate_getchar(node->nodes[0],node->nodes[1],node->nodes[2], table, false);
         return;
+    }else if(strcmp(node->symbol->id, "ord") == 0) {
+        generate_stri2int(node->nodes[0], node->nodes[1],table ,false);
+        return;
     }
+    else if(strcmp(node->symbol->id, "chr") == 0) {
+        generate_int2char(node->nodes[0],table, false);
+        return;
+    }
+
     printf("PUSHFRAME\n");
     printf("CREATEFRAME\n");
     for (unsigned i = 0; i < (unsigned)node->subnode_len; i++) {
@@ -225,19 +233,19 @@ void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
             return;
         }
         else if(strcmp(tree->nodes[1]->symbol->id, "len") == 0) {
-            generate_strlen(tree->nodes[0], table, true);
+            generate_strlen(tree->nodes[1]->nodes[0], table, true);
             return;
         }
         else if(strcmp(tree->nodes[1]->symbol->id, "substr") == 0) {
-            generate_getchar(tree->nodes[0],tree->nodes[1],tree->nodes[2], table, false);
+            generate_getchar(tree->nodes[1]->nodes[0],tree->nodes[1]->nodes[1],tree->nodes[1]->nodes[2], table, true);
             return;
         }
         else if(strcmp(tree->nodes[1]->symbol->id, "ord") == 0) {
-            generate_stri2int(get_expression_arg(tree->nodes[0], table), tree->nodes[1]->nodes[1]->n.i);
+            generate_stri2int(tree->nodes[1]->nodes[0],tree->nodes[1]->nodes[1], table,true);
             return;
         }
         else if(strcmp(tree->nodes[1]->symbol->id, "chr") == 0) {
-            generate_int2char(tree->nodes[1]->nodes[0]->n.i);
+            generate_int2char(tree->nodes[1]->nodes[0],table,true);
             return;
         }
         generate_func_call(tree->nodes[1], table);
@@ -372,7 +380,7 @@ void generate_strlen(ASTNode* node, SymTable** table, bool hasResult){
 }
 
 void generate_getchar(ASTNode* node1, ASTNode* node2, ASTNode* node3, SymTable** table, bool hasResult){
-    int tmpCnt = counter;
+    unsigned tmpCnt = counter;
     printf("DEFVAR TF@%%%d\n", tmpCnt);
 
     printf("TYPE TF@%%%d %s\n", tmpCnt, get_expression_arg(node1, table)); //check param 1
@@ -380,12 +388,12 @@ void generate_getchar(ASTNode* node1, ASTNode* node2, ASTNode* node3, SymTable**
     printf("EXIT int@4\n");
     printf("LABEL $TYPECHECK$%d\n", counter);
     counter++;
-    printf("TYPE TF@%%%d %s\n", tmpCnt, get_expression_arg(node1, table)); //Check param 2
+    printf("TYPE TF@%%%d %s\n", tmpCnt, get_expression_arg(node2, table)); //Check param 2
     printf("JUMPIFEQ $TYPECHECK$%d TF@%%%d string@int\n", counter, tmpCnt);
     printf("EXIT int@4\n");
     printf("LABEL $TYPECHECK$%d\n", counter);
     counter++;
-    printf("TYPE TF@%%%d %s\n", tmpCnt, get_expression_arg(node1, table)); //check param 3
+    printf("TYPE TF@%%%d %s\n", tmpCnt, get_expression_arg(node3, table)); //check param 3
     printf("JUMPIFEQ $TYPECHECK$%d TF@%%%d string@int\n", counter, tmpCnt);
     printf("EXIT int@4\n");
     printf("LABEL $TYPECHECK$%d\n", counter);
@@ -397,12 +405,34 @@ void generate_getchar(ASTNode* node1, ASTNode* node2, ASTNode* node3, SymTable**
     }
 }
 
-void generate_stri2int(char* symb1, int symb2){
-    printf("STRI2INT LF@%%retval %s %d\n", symb1, symb2);
+void generate_stri2int(ASTNode* node1, ASTNode* node2, SymTable ** table, bool hasResult){
+    unsigned tmpCnt = counter;
+    printf("DEFVAR TF@%%%d\n", counter);
+    printf("TYPE TF@%%%d %s\n", tmpCnt, get_expression_arg(node1, table)); //check param 1
+    printf("JUMPIFEQ $TYPECHECK$%d TF@%%%d string@string\n", counter, tmpCnt);
+    printf("EXIT int@4\n");
+    printf("LABEL $TYPECHECK$%d\n", counter);
+    counter++;
+    printf("TYPE TF@%%%d %s\n", tmpCnt, get_expression_arg(node2, table)); //Check param 2
+    printf("JUMPIFEQ $TYPECHECK$%d TF@%%%d string@int\n", counter, tmpCnt);
+    printf("EXIT int@4\n");
+    printf("LABEL $TYPECHECK$%d\n", counter);
+    counter++;
+    if(hasResult){
+        printf("STRI2INT LF@%%retval %s %s\n", get_expression_arg(node1, table), get_expression_arg(node2, table));
+    }
 }
 
-void generate_int2char(int symb) {
-    printf("INT2CHAR LF@%%retvar %d\n", symb);
+void generate_int2char(ASTNode* node, SymTable ** table, bool hasResult) {
+    printf("DEFVAR TF@%%%d\n", counter);
+    printf("TYPE TF@%%%d %s\n", counter, get_expression_arg(node, table)); //check param 1
+    printf("JUMPIFEQ $TYPECHECK$%d TF@%%%d string@int\n", counter, counter);
+    printf("EXIT int@4\n");
+    printf("LABEL $TYPECHECK$%d\n", counter);
+    counter++;
+    if(hasResult){
+        printf("INT2CHAR LF@%%retvar %d\n", get_expression_arg(node, table));
+    }
 }
 
 
