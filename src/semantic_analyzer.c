@@ -13,19 +13,20 @@ int check_division_by_zero(ASTNode* tree) {
         if(table[i]->node_type == DIVISION || table[i]->node_type == INT_DIVISION){
             if(table[i]->nodes[1]->arith_type == TYPE_INT){
                 if(table[i]->nodes[1]->n.i == 0){
-                    ////free(table);
                     return 9;
                 }
             }
             else if(table[i]->nodes[1]->arith_type == TYPE_FLOAT){
                 if(table[i]->nodes[1]->n.d == 0.0){
-                    ////free(table);
+                    return 9;
+                }
+            }else if(table[i]->nodes[1]->node_type == FLOAT_TO_INT){
+                if(table[i]->nodes[1]->nodes[0]->n.i == 0){
                     return 9;
                 }
             }
         }
     }
-    ////free(table);
     return 0;
 }
 
@@ -55,7 +56,6 @@ int check_types(ASTNode *tree) {
         ASTNode* expr = exprs[i];
     }
 
-    ////free(exprs);
     return 0;
 }
 
@@ -79,7 +79,7 @@ int check_fn_call(ASTNode * tree, SymTable** st){
             return 3;
         }
 
-        if(t->argNum != test->subnode_len && t->argNum != -1){
+        if((unsigned)t->argNum != test->subnode_len && t->argNum != -1){
             //free(arr);
             return 5;
         }

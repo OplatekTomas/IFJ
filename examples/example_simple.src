@@ -1,2 +1,4 @@
-cislo = 60
-print(cislo)
+cislo = 2
+while cislo:
+    print(cislo)
+    cislo = cislo - 1

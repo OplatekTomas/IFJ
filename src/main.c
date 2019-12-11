@@ -53,9 +53,8 @@ int main (int argc, char *argv[]) {
         //freeHT(table);
         throw_err(semantics_result);
     }
-    int result = getSize();
 
-    generate_code(tree, table, stdout);
+    generate_code(tree, table);
     freeAllPtr();
     //free_tree(tree);
     //freeHT(table);

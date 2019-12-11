@@ -487,17 +487,14 @@ int check_function_call(ASTNode* tree, Scanner* s, SymTable** table, char* funct
                 return 1;
             case ID:;
                 SymTable* tb = searchST(table, t.stringValue, functionName);
-                if(tb == NULL){
+                if(tb == NULL ||  tb->type == TYPE_FUNCTION){
                     free_tree(root_tree);
                     return 3;
                 }
                 ////free(t.stringValue);
                 param->node_type = IDENTIFICATOR;
                 param->str_val = tb->id;
-                break;
-            case NONE:
-                param->node_type = VALUE;
-                param->arith_type = TYPE_NONE;
+                param->symbol = tb;
                 break;
             case INT:
                 param->node_type = VALUE;
@@ -514,11 +511,18 @@ int check_function_call(ASTNode* tree, Scanner* s, SymTable** table, char* funct
                 param->arith_type = TYPE_STRING;
                 param->str_val = t.stringValue;
                 break;
+            case KEYWORD:
+                if(t.keywordValue == NONE){
+                    param->node_type = VALUE;
+                    param->arith_type = TYPE_NONE;
+                    break;
+                }
             default:
                 free_tree(param);
                 free_tree(root_tree);
                 return 2;
         }
+
         node_insert(root_tree, param);
         prev_t = t;
         t = get_next_token(s);
@@ -624,6 +628,8 @@ int check_cond(ASTNode* tree, Scanner* s, SymTable** table, char* func_name){
     }
     if(t.type == COLON){
         scanner_unget(s,t);
+        comp->arith_type = comp->nodes[0]->arith_type;
+        node_insert(tree, comp);
         return 0;
     }
     if(!is_comp(t, &optype)){
@@ -724,15 +730,10 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
         tmp->type = TYPE_NONE;
         tmp->id = t.stringValue;
         addToList(table->args, tmp);
-
-        ASTNode *param = node_new(); //Continue creating ASTNodes
-        param->node_type = IDENTIFICATOR;
-        node_insert(tree, param);
-
+        table->argNum++;
         prev_t = t;
         t = get_next_token(s);
         if(t.type == ERROR){
-            free_tree(param);
             return 1;
         }
         if(t.type == CLOSE_PARENTHES){
@@ -745,7 +746,6 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
         prev_t = t;
         t = get_next_token(s);
         if(t.type == ERROR){
-            free_tree(param);
             return 1;
         }
     }
@@ -754,8 +754,6 @@ int check_args(ASTNode* tree, Scanner* s, SymTable* table){
     }
     Arguments * arTmp = table->args;
     table->args = arTmp->nextArg;
-    table->argNum--;
-    ////free(arTmp);
     return 0;
 }
 
