@@ -12,6 +12,8 @@ void generate_read(char* frame_id, char* type);
 void handle_next_block(ASTNode* root, SymTable** table, bool is_global);
 char* get_expression_arg(ASTNode* tree, SymTable** table);
 void generate_return(ASTNode* tree, SymTable** table);
+void generate_strlen(char* symb);
+void generate_getchar(char* symb1, int symb2);
 
 unsigned int counter = 0;
 
@@ -213,6 +215,16 @@ void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
             generate_read(get_expression_arg(tree->nodes[0], table), "string");
             return;
         }
+        else if(strcmp(tree->nodes[1]->symbol->id, "len") == 0) {
+            generate_strlen(get_expression_arg(tree->nodes[0], table));
+            return;
+        }
+        else if(strcmp(tree->nodes[1]->symbol->id, "substr") == 0) {
+            for(int i = tree->nodes[1]->nodes[1]->n.i; i < tree->nodes[1]->nodes[1]->n.i + tree->nodes[1]->nodes[2]->n.i; i++){
+                generate_getchar(get_expression_arg(tree->nodes[0], table), i);
+            }
+            return;
+        }
         generate_func_call(tree->nodes[1], table);
         printf("MOVE %s@%s TF@%%retval\n", get_frame(is_global), tb->id);
     }else{
@@ -331,6 +343,15 @@ void generate_code(ASTNode* tree, SymTable **table) {
 void generate_read(char* frame_id, char* type){
     printf("READ %s %s\n", frame_id, type);
 }
+
+void generate_strlen(char* symb){
+    printf("STRLEN LF@%%retval %s\n", symb);
+}
+
+void generate_getchar(char* symb1, int symb2){
+    printf("GETCHAR LF@%%retval %s %d\n", symb1, symb2);
+}
+
 void generate_print(ASTNode* tree, SymTable **table) {
     for (unsigned i = 0; i < tree->subnode_len; i++) {
         switch (tree->nodes[i]->node_type) {
