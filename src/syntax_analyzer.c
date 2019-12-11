@@ -77,10 +77,10 @@ int check_if_valid_op(TypeValue left, TypeValue right, NonTerm op, TypeValue* op
                 return 0;
             } else if (left == TYPE_INT && right == TYPE_FLOAT) {
                 *op_result = right;
-                return 2;
+                return 3;
             } else if (left == TYPE_FLOAT && right == TYPE_INT) {
                 *op_result = left;
-                return 3;
+                return 2;
             } else {
                 return 1;
             }
@@ -91,10 +91,10 @@ int check_if_valid_op(TypeValue left, TypeValue right, NonTerm op, TypeValue* op
                 return 0;
             } else if (left == TYPE_INT && right == TYPE_FLOAT) {
                 *op_result = right;
-                return 2;
+                return 3;
             } else if (left == TYPE_FLOAT && right == TYPE_INT) {
                 *op_result = left;
-                return 3;
+                return 2;
             } else {
                 return 1;
             }
@@ -104,10 +104,10 @@ int check_if_valid_op(TypeValue left, TypeValue right, NonTerm op, TypeValue* op
                 return 0;
             } else if (left == TYPE_INT && right == TYPE_FLOAT) {
                 *op_result = right;
-                return 2;
+                return 3;
             } else if (left == TYPE_FLOAT && right == TYPE_INT) {
                 *op_result = left;
-                return 3;
+                return 2;
             } else {
                 return 1;
             }
@@ -249,12 +249,12 @@ int check_rule(SyntaxStack* ss, SymTable** table, char* func_name) {
                 node_insert(sd.node, left_side.node);
                 node_insert(sd.node, right_side.node);
                 break;
-            case 2:
+            case 3:
                 node_insert(sub_node, left_side.node);
                 node_insert(sd.node, sub_node);
                 node_insert(sd.node, right_side.node);
                 break;
-            case 3:
+            case 2:
                 node_insert(sub_node, right_side.node);
                 node_insert(sd.node, left_side.node);
                 node_insert(sd.node, sub_node);
