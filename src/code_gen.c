@@ -341,7 +341,7 @@ void generate_definition(ASTNode* tree, SymTable** table){
     Arguments* current_arg = tree->symbol->args;
     for (int i = 0; i < tree->symbol->argNum; i++) {
         printf("DEFVAR TF@%s\n", current_arg->id);
-        printf("MOVE TF@%s LF@_%d\n", current_arg->id, i);
+        printf("MOVE TF@%s TF@_%d\n", current_arg->id, i);
         current_arg = current_arg->nextArg;
     }
     if (!handle_next_block(tree->nodes[0], table, false)) {
@@ -606,16 +606,16 @@ void generate_return(ASTNode* tree, SymTable** table) {
     if (tree->node_type == VALUE) {
         switch (tree->arith_type) {
             case TYPE_NONE:
-                printf("MOVE LF@%retval nil@nil\n");
+                printf("MOVE LF@%%retval nil@nil\n");
                 break;
             case TYPE_FLOAT:
-                printf("MOVE LF@%retval float@%a\n", tree->n.d);
+                printf("MOVE LF@%%retval float@%a\n", tree->n.d);
                 break;
             case TYPE_INT:
-                printf("MOVE LF@%retval int@%d\n", tree->n.i);
+                printf("MOVE LF@%%retval int@%d\n", tree->n.i);
                 break;
             case TYPE_STRING:
-                printf("MOVE LF@%retval string@%s\n", tree->str_val);
+                printf("MOVE LF@%%retval string@%s\n", tree->str_val);
                 break;
             default:
                 // wut
@@ -623,7 +623,7 @@ void generate_return(ASTNode* tree, SymTable** table) {
         }
         return;
     } else {
-        printf("MOVE LF@%retval TF@%s\n", tree->symbol->id);
+        printf("MOVE LF@%%retval TF@%s\n", tree->symbol->id);
     }
     printf("POPFRAME\n");
     printf("RETURN\n");
