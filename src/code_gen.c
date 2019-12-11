@@ -11,6 +11,7 @@ void generate_definition(ASTNode* tree, SymTable** table);
 void generate_read(char* frame_id, char* type);
 void handle_next_block(ASTNode* root, SymTable** table, bool is_global);
 char* get_expression_arg(ASTNode* tree, SymTable** table);
+void generate_return(ASTNode* tree, SymTable** table);
 
 unsigned int counter = 0;
 
@@ -19,20 +20,11 @@ void generate_func_call(ASTNode* node, SymTable** table) {
         generate_print(node, table);
         return;
     }
-    else if(strcmp(node->symbol->id, "inputi") == 0) {
-        generate_read(get_expression_arg(node, table), "int");
-    }
-    else if(strcmp(node->symbol->id, "inputf") == 0) {
-        generate_read(get_expression_arg(node, table), "float");
-    }
-    else if(strcmp(node->symbol->id, "inputs") == 0) {
-        generate_read(get_expression_arg(node, table), "string");
-    }
     printf("PUSHFRAME\n");
     printf("CREATEFRAME\n");
     for (unsigned i = 0; i < (unsigned)node->subnode_len; i++) {
-        printf("DEFVAR TF@%%%i\n", i);
-        printf("MOVE TF@%%%i ", i);
+        printf("DEFVAR TF@_%i\n", i);
+        printf("MOVE TF@_%i ", i);
         switch (node->nodes[i]->node_type) {
             case IDENTIFICATOR:
                 if (is_symbol_global(node->nodes[i]->symbol, table)) {
@@ -62,12 +54,13 @@ void generate_func_call(ASTNode* node, SymTable** table) {
                 }
                 break;
         }
+        printf("\n");
     }
-    printf("\nCALL $%s\n", node->symbol->id);
+    printf("CALL $%s\n", node->symbol->id);
 }
 
 static char* get_frame(bool is_global){
-    return is_global ? "GF" : "LF";
+    return is_global ? "GF" : "TF";
 }
 
 void generate_variable(ASTNode* tree, bool is_global){
@@ -171,9 +164,9 @@ void generate_expression(ASTNode* tree, SymTable ** table, bool is_global) {
                 break;
         }
     }else{
-        printf("PUSHFRAME\nCREATEFRAME\n");
+        //printf("PUSHFRAME\nCREATEFRAME\n");
         printf("PUSHS TF@%%%d\n", generate_exp(tree, table, is_global));
-        printf("POPFRAME\n");
+        //printf("POPFRAME\n");
     }
 }
 
@@ -203,12 +196,24 @@ void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
     }else if(tree->nodes[1]->node_type == IDENTIFICATOR){
         printf("MOVE %s %s\n",get_expression_arg(tree->nodes[0], table), get_expression_arg(tree->nodes[1], table));
     }else if(tree->nodes[1]->node_type == FUNCITON_CALL){
+        if(strcmp(tree->nodes[1]->symbol->id, "inputi") == 0) {
+            generate_read(get_expression_arg(tree->nodes[0], table), "int");
+            return;
+        }
+        else if(strcmp(tree->nodes[1]->symbol->id, "inputf") == 0) {
+            generate_read(get_expression_arg(tree->nodes[0], table), "float");
+            return;
+        }
+        else if(strcmp(tree->nodes[1]->symbol->id, "inputs") == 0) {
+            generate_read(get_expression_arg(tree->nodes[0], table), "string");
+            return;
+        }
         generate_func_call(tree->nodes[1], table);
         printf("MOVE %s@%s TF@%%retval\n", get_frame(is_global), tb->id);
     }else{
         generate_expression(tree->nodes[1], table, is_global);
         printf("DEFVAR TF@%%%d\nPOPS TF@%%%d\n", counter, counter);
-        printf("MOVE %s@%s TF@%%%d\n", is_global ? "GF" : "LF", tb->id, counter);
+        printf("MOVE %s@%s TF@%%%d\n", is_global ? "GF" : "TF", tb->id, counter);
         counter++;
     }
 }
@@ -236,13 +241,10 @@ void handle_next_block(ASTNode* root, SymTable** table, bool is_global){
                 generate_expression(tree, table, is_global);
                 break;
             case IF_ELSE:
-                generate_if_else(tree, table, true);
+                generate_if_else(tree, table, is_global);
                 break;
             case WHILE_LOOP:
                 generate_while_loop(tree, table);
-                break;
-            case FUNCTION_DEFINITION:
-                //generate_definition(tree, table);
                 break;
             case FUNCITON_CALL:
                 generate_func_call(tree, table);
@@ -250,6 +252,8 @@ void handle_next_block(ASTNode* root, SymTable** table, bool is_global){
             case ASSIGNMENT:
                 generate_assignment(tree, table, is_global);
                 break;
+            case RETURN_VALUE:
+                generate_return(tree->nodes[0], table);
             default:
                 break;
         }
@@ -258,11 +262,14 @@ void handle_next_block(ASTNode* root, SymTable** table, bool is_global){
 
 void generate_definition(ASTNode* tree, SymTable** table){
     printf("LABEL $%s\n", tree->symbol->id);
-    printf("PUSHFRAME\n");
+    printf("DEFVAR LF@%retval\n");
+    printf("MOVE LF@%retval nil@nil\n");
+    Arguments* current_arg = tree->symbol->args;
     for (int i = 0; i < tree->symbol->argNum; i++) {
-        printf("DEFVAR LF@%s", tree->symbol->args[i].id);
+        printf("DEFVAR TF@%s\n", current_arg->id);
+        printf("MOVE TF@%s TF@_%d\n", current_arg->id, i);
+        current_arg = current_arg->nextArg;
     }
-
     handle_next_block(tree->nodes[0], table, false);
     printf("POPFRAME\n");
     printf("RETURN\n");
@@ -295,7 +302,7 @@ void generate_print(ASTNode* tree, SymTable **table) {
                 if (is_symbol_global(tree->nodes[i]->symbol, table)) {
                     printf("WRITE GF@%s\n", tree->nodes[i]->symbol->id);
                 } else {
-                    printf("WRITE LF@%s\n", tree->nodes[i]->symbol->id);
+                    printf("WRITE TF@%s\n", tree->nodes[i]->symbol->id);
                 }
                 break;
             case VALUE:
@@ -356,10 +363,8 @@ void generate_while_loop(ASTNode* tree, SymTable** table) {
     printf("JUMPIFEQS $while_end$%d\n", loop_index);
 
     // loop
-    printf("PUSHFRAME\n");
     printf("CREATEFRAME\n");
     handle_next_block(tree->nodes[1], table, true);
-    printf("POPFRAME\n");
 
     // konec loopu, skok na podminku
     printf("JUMP $while$%d\n", loop_index);
@@ -408,4 +413,8 @@ void generate_condition(ASTNode* tree, SymTable** table) {
                 break;
         }
     }
+}
+
+void generate_return(ASTNode* tree, SymTable** table) {
+    printf("MOVE LF@%retval TF@%s\n", tree->symbol->id);
 }
