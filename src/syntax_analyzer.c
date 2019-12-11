@@ -487,7 +487,7 @@ int check_function_call(ASTNode* tree, Scanner* s, SymTable** table, char* funct
                 return 1;
             case ID:;
                 SymTable* tb = searchST(table, t.stringValue, functionName);
-                if(tb == NULL){
+                if(tb == NULL ||  tb->type == TYPE_FUNCTION){
                     free_tree(root_tree);
                     return 3;
                 }
@@ -495,10 +495,6 @@ int check_function_call(ASTNode* tree, Scanner* s, SymTable** table, char* funct
                 param->node_type = IDENTIFICATOR;
                 param->str_val = tb->id;
                 param->symbol = tb;
-                break;
-            case NONE:
-                param->node_type = VALUE;
-                param->arith_type = TYPE_NONE;
                 break;
             case INT:
                 param->node_type = VALUE;
@@ -515,11 +511,18 @@ int check_function_call(ASTNode* tree, Scanner* s, SymTable** table, char* funct
                 param->arith_type = TYPE_STRING;
                 param->str_val = t.stringValue;
                 break;
+            case KEYWORD:
+                if(t.keywordValue == NONE){
+                    param->node_type = VALUE;
+                    param->arith_type = TYPE_NONE;
+                    break;
+                }
             default:
                 free_tree(param);
                 free_tree(root_tree);
                 return 2;
         }
+
         node_insert(root_tree, param);
         prev_t = t;
         t = get_next_token(s);

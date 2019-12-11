@@ -114,6 +114,7 @@ char* get_expression_arg(ASTNode* tree, SymTable** table){
 
 unsigned int generate_exp(ASTNode* tree, SymTable ** table, bool is_global){
     unsigned result = 0;
+    //Handle al conversion
     if(tree->nodes[0]->node_type == FLOAT_TO_INT){
         tree->nodes[0] = tree->nodes[0]->nodes[0];
         char * tmp = get_expression_arg(tree->nodes[0], table);
@@ -123,7 +124,11 @@ unsigned int generate_exp(ASTNode* tree, SymTable ** table, bool is_global){
         char * tmp = get_expression_arg(tree->nodes[1], table);
         printf("INT2FLOAT %s %s\n", tmp, tmp);
     }
-    if(!(tree->nodes[0]->node_type == IDENTIFICATOR || tree->nodes[0]->node_type == VALUE)){
+
+    if(tree->nodes[0]->arith_type == TYPE_STRING && tree->nodes[1]->arith_type == TYPE_STRING){
+        printf("DEFVAR TF@%%%d\n", counter);
+        printf("CONCAT TF@%%%d %s %s\n", counter, get_expression_arg(tree->nodes[0], table), get_expression_arg(tree->nodes[1], table));
+    }else if(!(tree->nodes[0]->node_type == IDENTIFICATOR || tree->nodes[0]->node_type == VALUE)){
         result = generate_exp(tree->nodes[0], table, is_global);
         printf("DEFVAR TF@%%%d\n", counter);
         printf("%s TF@%%%d TF@%%%d %s\n", get_expression_instr(tree->node_type), counter, result, get_expression_arg(tree->nodes[1], table));
@@ -226,11 +231,14 @@ SymTable ** get_vars_defined_in_block(ASTNode* tree, int* size){
     SymTable** res = malloc(sizeof(SymTable*)*maxSize);
     ASTNode** post = get_postorder(tree, &orderSize);
     for(int i = 0; i < orderSize; i++){
+        if(*size >= maxSize){
+            maxSize += 256;
+            res = realloc(res, sizeof(SymTable*)*maxSize);
+        }
         if(post[i]->node_type == ASSIGNMENT && !post[i]->nodes[0]->symbol->has_been_defined){
             res[*size] = post[i]->nodes[0]->symbol;
             (*size)++;
         }
-        //printf("biggus");
     }
     addPtr(res);
     return res;
@@ -290,8 +298,8 @@ void handle_next_block(ASTNode* root, SymTable** table, bool is_global){
 
 void generate_definition(ASTNode* tree, SymTable** table){
     printf("LABEL $%s\n", tree->symbol->id);
-    printf("DEFVAR LF@%retval\n");
-    printf("MOVE LF@%retval nil@nil\n");
+    printf("DEFVAR LF@%%retval\n");
+    printf("MOVE LF@%%retval nil@nil\n");
     Arguments* current_arg = tree->symbol->args;
     for (int i = 0; i < tree->symbol->argNum; i++) {
         printf("DEFVAR TF@%s\n", current_arg->id);
@@ -444,5 +452,5 @@ void generate_condition(ASTNode* tree, SymTable** table) {
 }
 
 void generate_return(ASTNode* tree, SymTable** table) {
-    printf("MOVE LF@%retval TF@%s\n", tree->symbol->id);
+    printf("MOVE LF@%%retval TF@%s\n", tree->symbol->id);
 }
