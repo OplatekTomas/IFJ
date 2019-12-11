@@ -1,0 +1,11 @@
+.IFJcode19
+CREATEFRAME
+DEFVAR GF@a
+MOVE GF@a string@test1
+DEFVAR GF@b
+MOVE GF@b string@test2
+DEFVAR GF@c
+MOVE GF@c string@test3
+CONCAT GF@a GF@a GF@b
+CONCAT GF@c GF@a GF@c
+WRITE GF@c

@@ -1,4 +1,4 @@
 cislo = 2
-while cislo:
-    print(cislo)
+while cislo >= 0:
+    print(cislo, '\n')
     cislo = cislo - 1
