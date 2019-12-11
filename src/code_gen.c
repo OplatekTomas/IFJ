@@ -141,8 +141,19 @@ char* get_expression_arg(ASTNode* tree, SymTable** table){
     return arr;
 }
 
-void generate_float_conversion(ASTNode* tree){
-
+void generate_string_exp(ASTNode* tree, SymTable** table, bool is_global){
+    int size = 0;
+    ASTNode** arr = get_postorder(tree,&size);
+    printf("DEFVAR TF@%%%d\n", counter);
+    printf("MOVE TF@%%%d string@\n", counter);
+    for(int i = 0; i < size; i++){
+        if(arr[i]->node_type != ADDITION){
+            printf("CONCAT TF@%%%d TF@%%%d %s\n", counter, counter, get_expression_arg(arr[i], table));;
+            //printf("%s\n", arr[i]->symbol->id);
+        }
+    }
+    printf("PUSHS TF@%%%d\n", counter);
+    counter++;
 }
 
 void generate_exp(ASTNode* tree, SymTable ** table, bool is_global){
@@ -155,7 +166,11 @@ void generate_exp(ASTNode* tree, SymTable ** table, bool is_global){
         shouldConvertSecond = true;
         tree->nodes[1] = tree->nodes[1]->nodes[0];
     }
-    if(!(tree->nodes[0]->node_type == IDENTIFICATOR || tree->nodes[0]->node_type == VALUE)){
+    if(tree->arith_type == TYPE_STRING){
+        printf("PUSHFRAME\nCREATEFRAME\n");
+        generate_string_exp(tree,table, is_global);
+        printf("POPFRAME\n");
+    }else if(!(tree->nodes[0]->node_type == IDENTIFICATOR || tree->nodes[0]->node_type == VALUE)){
         generate_exp(tree->nodes[0], table, is_global);
         if(shouldConvertFirst){
             printf("INT2FLOATS\n");
@@ -457,7 +472,7 @@ void generate_int2char(ASTNode* node, SymTable ** table, bool hasResult) {
     printf("LABEL $TYPECHECK$%d\n", counter);
     counter++;
     if(hasResult){
-        printf("INT2CHAR LF@%%retvar %d\n", get_expression_arg(node, table));
+        printf("INT2CHAR LF@%%retvar %s\n", get_expression_arg(node, table));
     }
 }
 
