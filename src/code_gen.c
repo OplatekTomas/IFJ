@@ -218,6 +218,29 @@ void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
     }
 }
 
+
+SymTable ** get_vars_defined_in_block(ASTNode* tree, int* size){
+    *size = 0;
+    int orderSize = 0;
+    int maxSize = 256;
+    SymTable** res = malloc(sizeof(SymTable*)*maxSize);
+    ASTNode** post = get_postorder(tree, &orderSize);
+    for(int i = 0; i < orderSize; i++){
+        if(post[i]->node_type == ASSIGNMENT && !post[i]->nodes[0]->symbol->has_been_defined){
+            res[*size] = post[i]->nodes[0]->symbol;
+            (*size)++;
+        }
+        //printf("biggus");
+    }
+    addPtr(res);
+    return res;
+}
+void undefine_vars_from_block(SymTable** items, int size){
+    for(int i = 0; i < size; i++){
+        items[i]->has_been_defined = false;
+    }
+}
+
 void generate_if_else(ASTNode* tree, SymTable **table, bool is_global){
     generate_condition(tree->nodes[0], table);
     //counter++;
@@ -225,9 +248,14 @@ void generate_if_else(ASTNode* tree, SymTable **table, bool is_global){
     printf("PUSHS bool@true\n");
     printf("JUMPIFNEQS $IFFALSE$%d\n", tmpCnt);
     counter++;
+    int size = 0;
+    SymTable** arr = get_vars_defined_in_block(tree->nodes[1], &size);
     handle_next_block(tree->nodes[1],table,is_global);
+    undefine_vars_from_block(arr, size);
     printf("JUMP $IFEND$%d\n", tmpCnt);
     printf("LABEL $IFFALSE$%d\n", tmpCnt);
+    arr = get_vars_defined_in_block(tree->nodes[2], &size);
+    undefine_vars_from_block(arr, size);
     handle_next_block(tree->nodes[2],table,is_global);
     printf("LABEL $IFEND$%d\n", tmpCnt);
 }

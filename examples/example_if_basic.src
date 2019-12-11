@@ -2,6 +2,8 @@ x=3
 y=x
 if x == y:
     x = 1
+    z = 2
 else:
     y = 0
+    z = 1
 print(x,'\n',y,'\n','BIGGUS DICKUS\n')

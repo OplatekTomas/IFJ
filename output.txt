@@ -1,16 +1,53 @@
 .IFJcode19
 CREATEFRAME
 DEFVAR GF@a
-MOVE GF@a int@10
-DEFVAR GF@c
+READ GF@a float
+DEFVAR GF@vysl
 PUSHFRAME
 CREATEFRAME
-INT2FLOAT GF@a GF@a
-DEFVAR TF@%0
-ADD TF@%0 float@0x1.4p+2 GF@a
-PUSHS TF@%0
-POPFRAME
+DEFVAR TF@_0
+MOVE TF@_0 GF@a
+CALL $factorial
+MOVE GF@vysl TF@%retval
+WRITE string@Vysledek\032je:
+WRITE GF@vysl
+EXIT int@0
+LABEL $factorial
+DEFVAR LF@%retval
+MOVE LF@%retval nil@nil
+DEFVAR TF@n
+MOVE TF@n TF@_0
+PUSHS TF@n
+PUSHS float@0x1p+1
+LTS
+PUSHS bool@true
+JUMPIFNEQS $IFFALSE$0
+DEFVAR TF@result
+MOVE TF@result float@0x1p+0
+JUMP $IFEND$0
+LABEL $IFFALSE$0
+DEFVAR TF@decremented_n
 DEFVAR TF@%1
-POPS TF@%1
-MOVE GF@c TF@%1
-WRITE GF@c
+SUB TF@%1 TF@n float@0x1p+0
+PUSHS TF@%1
+DEFVAR TF@%2
+POPS TF@%2
+MOVE TF@decremented_n TF@%2
+DEFVAR TF@temp_result
+PUSHFRAME
+CREATEFRAME
+DEFVAR TF@_0
+MOVE TF@_0 LF@decremented_n
+CALL $factorial
+MOVE TF@temp_result TF@%retval
+DEFVAR TF@result
+DEFVAR TF@%3
+MUL TF@%3 TF@n TF@temp_result
+PUSHS TF@%3
+DEFVAR TF@%4
+POPS TF@%4
+MOVE TF@result TF@%4
+LABEL $IFEND$0
+MOVE LF@%retval TF@result
+POPFRAME
+RETURN
