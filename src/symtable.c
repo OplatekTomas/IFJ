@@ -1,9 +1,24 @@
-//
-// Created by kolba on 19.11.2019.
-//
+/*
+ * IFJ projekt 2019
+ * **************************
+ * Tým 82, varianta II
+ * **************************
+ * Autoři:
+ * Zdeněk Kolba (xkolba01)
+ * Tomáš Oplatek (xoplat01)
+ * David Rubý (xrubyd00)
+ * Petr Volf (xvolfp00)
+ * **************************
+ * symtable.c
+ */
 
 #include "symtable.h"
 
+/*
+ * Funkce allocHT nemá žádné parametry a slouží k alokaci hash tabulky,
+ * pomocí které je implementována tabulka symbolů. Inicializuje všechny ukazatele na sloupce na NULL.
+ * Funkce vrací ukazatel na první ukazatel na prvek SymTable.
+ */
 SymTable** allocHT(){
     SymTable** ptr = (SymTable**)malloc(TABLE_SIZE* sizeof(SymTable*));
     addPtr(ptr);
@@ -14,6 +29,11 @@ SymTable** allocHT(){
     return ptr;
 }
 
+/*
+ * Funkce allocArgs nemá žádné parametry a slouží k alokaci a inicializaci
+ * pole struktur Arguments v SymTable.
+ * Vrací ukazatel na první prvek pole.
+ */
 Arguments* allocArgs(){
     Arguments* ptr = (Arguments*)malloc(sizeof(Arguments));
     ptr->nextArg = NULL;
@@ -23,6 +43,11 @@ Arguments* allocArgs(){
     return ptr;
 }
 
+/*
+ * Funkce allocST má parametr ukazatel na pole znaků id.
+ * Slouží k alokaci a inicializaci struktury SymTable.
+ * Vrací ukazatel na strukturu SymTable.
+ */
 SymTable* allocST(char* id){
     SymTable* ptr = (SymTable*)malloc(sizeof(SymTable));
     if(ptr == NULL)
@@ -40,7 +65,12 @@ SymTable* allocST(char* id){
     return ptr;
 }
 
-unsigned int htabHashFunction(const char *str) {    //funkce pro generování hashe podle id
+/*
+ * Funkce htabHashFunction má parametr konstantní ukazatel na pole znaků str.
+ * Slouží ke generaci hashe pro hash tabulku.
+ * Funkce vrací hash jako bezznaménkový integer.
+ */
+unsigned int htabHashFunction(const char *str) {
     uint32_t h=0;     // musí mít 32 bitů
     const unsigned char *p;
     for(p=(const unsigned char*)str; *p!='\0'; p++)
@@ -48,7 +78,13 @@ unsigned int htabHashFunction(const char *str) {    //funkce pro generování ha
     return h % TABLE_SIZE;
 }
 
-void deleteST(SymTable** hashTable, char* id){    //odstraní symTable z hashTable
+/*
+ * Funkce deleteST má parametry ukazatel na ukazatel na první sloupec hash tabulky hashTable
+ * a ukazatel na pole znaků id.
+ * Slouží k vyhledání struktury SymTable v hash tabulce podle daného id
+ * a odstranění dané struktury.
+ */
+void deleteST(SymTable** hashTable, char* id){
     if(id == NULL)
         return;
     int hash = htabHashFunction(id);
@@ -72,7 +108,12 @@ void deleteST(SymTable** hashTable, char* id){    //odstraní symTable z hashTab
     ////free(item);
 }
 
-void insertST(SymTable** hashTable, SymTable* ptr){    //vloží již alokovanou a vypněnou symTable do hashTable
+/*
+ * Funkce insertST má parametry ukazatel na ukazatel na první sloupec hashTable
+ * a ukazatel na strukturu SymTable ptr
+ * Slouží k vloží již alokované a naplněné struktury SymTable do hashTable.
+ */
+void insertST(SymTable** hashTable, SymTable* ptr){
     if(ptr != NULL){
         SymTable* temp = searchST(hashTable, ptr->id,NULL);
         if(temp != NULL){ //Fucking band-aid
@@ -86,7 +127,13 @@ void insertST(SymTable** hashTable, SymTable* ptr){    //vloží již alokovanou
     }
 }
 
-SymTable* searchST(SymTable** hashTable, char* id, char* funcID){    //vyhledá symTable v hashTable a vrátí pointer na ní
+/*
+ * Funkce searchST má parametry ukazatel na ukazatel na první sloupec hashTable,
+ * ukazatel na pole znaků id a ukazatel na pole znaků funcID.
+ * Slouží k vyhledání struktury SymTable v hashTable podle id.
+ * Vrací ukazatel na nalezenou strukturu SymTable, pokud ji nenajde vrací NULL.
+ */
+SymTable* searchST(SymTable** hashTable, char* id, char* funcID){
     if(id == NULL){
         return NULL;
     }

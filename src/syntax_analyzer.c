@@ -1,3 +1,17 @@
+/*
+ * IFJ projekt 2019
+ * **************************
+ * Tým 82, varianta II
+ * **************************
+ * Autoři:
+ * Zdeněk Kolba (xkolba01)
+ * Tomáš Oplatek (xoplat01)
+ * David Rubý (xrubyd00)
+ * Petr Volf (xvolfp00)
+ * **************************
+ * syntax_analyzer.c
+ */
+
 #include "syntax_analyzer.h"
 
 char token_type[][100] = {
