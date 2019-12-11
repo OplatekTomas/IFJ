@@ -373,11 +373,11 @@ void generate_while_loop(ASTNode* tree, SymTable** table) {
     }
 
     if (new_assign_count > 0) {
-        printf("PUSHFRAME\n");
-        printf("CREATEFRAME\n");
+        //printf("PUSHFRAME\n");
+        //printf("CREATEFRAME\n");
         for(int i = 0; i < size; i++) {
             if (nodes[i]->node_type == ASSIGNMENT && !nodes[i]->nodes[0]->symbol->has_been_defined) {
-                printf("DEFVAR TF@%s\n" ,tree->symbol->id);
+                printf("DEFVAR TF@%s\n" ,nodes[i]->nodes[0]->symbol->id);
                 nodes[i]->nodes[0]->symbol->has_been_defined = true;
             }
         }
@@ -391,8 +391,10 @@ void generate_while_loop(ASTNode* tree, SymTable** table) {
     printf("JUMPIFEQS $while_end$%d\n", loop_index);
 
     // loop
+    //printf("PUSHFRAME\n");
     printf("CREATEFRAME\n");
     handle_next_block(tree->nodes[1], table, true);
+    //printf("POPFRAME\n");
 
     // konec loopu, skok na podminku
     printf("JUMP $while$%d\n", loop_index);
@@ -400,7 +402,7 @@ void generate_while_loop(ASTNode* tree, SymTable** table) {
     // pokracovani
     printf("LABEL $while_end$%d\n", loop_index);
     if (new_assign_count > 0) {
-        printf("POPFRAME\n");
+        //printf("POPFRAME\n");
     }
 }
 
