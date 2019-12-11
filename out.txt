@@ -1,0 +1,60 @@
+.IFJcode19
+CREATEFRAME
+WRITE string@Zadejte\032cislo\032pro\032vypocet\032faktorialu:\032
+DEFVAR GF@a
+READ GF@a int
+PUSHS GF@a
+PUSHS int@0
+LTS
+PUSHS bool@true
+JUMPIFNEQS $IFFALSE$0
+WRITE string@Faktorial\032nelze\032spocitat
+JUMP $IFEND$0
+LABEL $IFFALSE$0
+DEFVAR GF@vysl
+PUSHFRAME
+CREATEFRAME
+DEFVAR TF@_0
+MOVE TF@_0 GF@a
+CALL $factorial
+MOVE GF@vysl TF@%retval
+WRITE string@Vysledek\032je:
+WRITE GF@vysl
+WRITE string@\010
+LABEL $IFEND$0
+EXIT int@0
+LABEL $factorial
+DEFVAR LF@%retval
+MOVE LF@%retval nil@nil
+DEFVAR TF@n
+MOVE TF@n TF@_0
+PUSHS TF@n
+PUSHS int@2
+LTS
+PUSHS bool@true
+JUMPIFNEQS $IFFALSE$1
+DEFVAR TF@result
+MOVE TF@result int@1
+JUMP $IFEND$1
+LABEL $IFFALSE$1
+DEFVAR TF@decremented_n
+DEFVAR TF@%2
+SUB TF@%2 TF@n int@1
+PUSHS TF@%2
+POPS TF@decremented_n
+DEFVAR TF@temp_result
+PUSHFRAME
+CREATEFRAME
+DEFVAR TF@_0
+MOVE TF@_0 LF@decremented_n
+CALL $factorial
+MOVE TF@temp_result TF@%retval
+DEFVAR TF@result
+DEFVAR TF@%4
+MUL TF@%4 TF@n TF@temp_result
+PUSHS TF@%4
+POPS TF@result
+LABEL $IFEND$1
+MOVE LF@%retval TF@result
+POPFRAME
+RETURN

@@ -93,15 +93,15 @@ void generate_variable(ASTNode* tree, bool is_global){
 static char* get_expression_instr(NonTerm term){
     switch(term){
         case ADDITION:
-            return "ADD";
+            return "ADDS";
         case SUBTRACTION:
-            return "SUB";
+            return "SUBS";
         case MULTIPLICATION:
-            return "MUL";
+            return "MULS";
         case DIVISION:
-            return "DIV";
+            return "DIVS";
         case INT_DIVISION:
-            return "IDIV";
+            return "IDIVS";
         default:
             return NULL;
     }
@@ -131,38 +131,40 @@ char* get_expression_arg(ASTNode* tree, SymTable** table){
     return arr;
 }
 
-unsigned int generate_exp(ASTNode* tree, SymTable ** table, bool is_global){
-    unsigned result = 0;
-    //Handle al conversion
-    if(tree->nodes[0]->node_type == FLOAT_TO_INT){
-        tree->nodes[0] = tree->nodes[0]->nodes[0];
-        char * tmp = get_expression_arg(tree->nodes[0], table);
-        printf("INT2FLOAT %s %s\n", tmp, tmp);
-    }else if(tree->nodes[1]->node_type == FLOAT_TO_INT){
-        tree->nodes[1] = tree->nodes[1]->nodes[0];
-        char * tmp = get_expression_arg(tree->nodes[1], table);
-        printf("INT2FLOAT %s %s\n", tmp, tmp);
-    }
+void generate_float_conversion(ASTNode* tree){
+        if(tree->nodes[0]->node_type == FLOAT_TO_INT){
+            tree->nodes[0] = tree->nodes[0]->nodes[0];
+        }else if(tree->nodes[1]->node_type == FLOAT_TO_INT){
+            tree->nodes[1] = tree->nodes[1]->nodes[0];
+        }
+}
 
+void generate_exp(ASTNode* tree, SymTable ** table, bool is_global){
     if(tree->nodes[0]->arith_type == TYPE_STRING && tree->nodes[1]->arith_type == TYPE_STRING){
+        //printf("PUSHS %s\nPUSHS %s\n%s\n");
         printf("DEFVAR TF@%%%d\n", counter);
         printf("CONCAT TF@%%%d %s %s\n", counter, get_expression_arg(tree->nodes[0], table), get_expression_arg(tree->nodes[1], table));
-    }else if(!(tree->nodes[0]->node_type == IDENTIFICATOR || tree->nodes[0]->node_type == VALUE)){
-        result = generate_exp(tree->nodes[0], table, is_global);
-        printf("DEFVAR TF@%%%d\n", counter);
-        printf("%s TF@%%%d TF@%%%d %s\n", get_expression_instr(tree->node_type), counter, result, get_expression_arg(tree->nodes[1], table));
-
-    } else if (!(tree->nodes[1]->node_type == IDENTIFICATOR || tree->nodes[1]->node_type == VALUE)){
-        result = generate_exp(tree->nodes[1], table, is_global);
-        printf("DEFVAR TF@%%%d\n", counter);
-        printf("%s TF@%%%d %s TF@%%%d\n", get_expression_instr(tree->node_type), counter, get_expression_arg(tree->nodes[0], table), result);
-
+    }else if(tree->nodes[0]->node_type == FLOAT_TO_INT || !(tree->nodes[0]->node_type == IDENTIFICATOR || tree->nodes[0]->node_type == VALUE)){
+        bool shouldConvert = tree->nodes[0]->node_type == FLOAT_TO_INT;
+        generate_float_conversion(tree);
+        generate_exp(tree->nodes[0], table, is_global);
+        printf("PUSHS %s\n%",get_expression_arg(tree->nodes[1], table));
+        if(shouldConvert){
+            printf("INT2FLOATS\n");
+        }
+        printf("%s\n",get_expression_instr(tree->node_type));
+    } else if (tree->nodes[1]->node_type == FLOAT_TO_INT || !(tree->nodes[1]->node_type == IDENTIFICATOR || tree->nodes[1]->node_type == VALUE)){
+        bool shouldConvert = tree->nodes[1]->node_type == FLOAT_TO_INT;
+        generate_float_conversion(tree);
+        generate_exp(tree->nodes[1], table, is_global);
+        printf("PUSHS %s\n",get_expression_arg(tree->nodes[0], table));
+        if(shouldConvert){
+            printf("INT2FLOATS\n");
+        }
+        printf("%s\n",get_expression_instr(tree->node_type));
     }else{
-        printf("DEFVAR TF@%%%d\n", counter);
-        printf("%s TF@%%%d %s %s\n", get_expression_instr(tree->node_type), counter, get_expression_arg(tree->nodes[0], table), get_expression_arg(tree->nodes[1], table));
+        printf("PUSHS %s\nPUSHS %s\n%s\n",get_expression_arg(tree->nodes[0], table),get_expression_arg(tree->nodes[1], table),get_expression_instr(tree->node_type));;
     }
-    counter++;
-    return counter - 1;
 }
 
 void generate_expression(ASTNode* tree, SymTable ** table, bool is_global) {
@@ -188,9 +190,7 @@ void generate_expression(ASTNode* tree, SymTable ** table, bool is_global) {
                 break;
         }
     }else{
-        //printf("PUSHFRAME\nCREATEFRAME\n");
-        printf("PUSHS TF@%%%d\n", generate_exp(tree, table, is_global));
-        //printf("POPFRAME\n");
+        generate_exp(tree, table, is_global);
     }
 }
 
@@ -252,8 +252,7 @@ void generate_assignment(ASTNode* tree, SymTable ** table, bool is_global){
         printf("MOVE %s@%s TF@%%retval\n", get_frame(is_global), tb->id);
     }else{
         generate_expression(tree->nodes[1], table, is_global);
-        printf("DEFVAR TF@%%%d\nPOPS TF@%%%d\n", counter, counter);
-        printf("MOVE %s@%s TF@%%%d\n", is_global ? "GF" : "TF", tb->id, counter);
+        printf("POPS %s@%s\n", is_global ? "GF" : "TF", tb->id);
         counter++;
     }
 }
@@ -494,7 +493,7 @@ void generate_while_loop(ASTNode* tree, SymTable** table) {
         //printf("CREATEFRAME\n");
         for(int i = 0; i < size; i++) {
             if (nodes[i]->node_type == ASSIGNMENT && !nodes[i]->nodes[0]->symbol->has_been_defined) {
-                printf("DEFVAR TF@%s\n" ,nodes[i]->nodes[0]->symbol->id);
+                printf("DEFVAR %s\n" ,get_expression_arg(nodes[i]->nodes[0], table));
                 nodes[i]->nodes[0]->symbol->has_been_defined = true;
             }
         }
@@ -509,7 +508,7 @@ void generate_while_loop(ASTNode* tree, SymTable** table) {
 
     // loop
     //printf("PUSHFRAME\n");
-    printf("CREATEFRAME\n");
+    //printf("CREATEFRAME\n");
     handle_next_block(tree->nodes[1], table, true);
     //printf("POPFRAME\n");
 
