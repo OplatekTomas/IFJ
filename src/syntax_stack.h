@@ -1,6 +1,16 @@
-//
-// Created by petr on 30.10.19.
-//
+/*
+ * IFJ projekt 2019
+ * **************************
+ * Tým 82, varianta II
+ * **************************
+ * Autoři:
+ * Zdeněk Kolba (xkolba01)
+ * Tomáš Oplatek (xoplat01)
+ * David Rubý (xrubyd00)
+ * Petr Volf (xvolfp00)
+ * **************************
+ * syntax_stack.h
+ */
 
 #ifndef IFJ_SYNTAX_STACK_H
 #define IFJ_SYNTAX_STACK_H

@@ -1,3 +1,5 @@
-a = 10
-c = 5.0 + a
-print(c)
+a = 'fuck '
+b = 'off '
+c = 'uz'
+d = a + b + c
+print(d)

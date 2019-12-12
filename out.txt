@@ -38,9 +38,9 @@ MOVE TF@result int@1
 JUMP $IFEND$1
 LABEL $IFFALSE$1
 DEFVAR TF@decremented_n
-PUSHS TF@n
-PUSHS int@1
-SUBS
+DEFVAR TF@%2
+SUB TF@%2 TF@n int@1
+PUSHS TF@%2
 POPS TF@decremented_n
 DEFVAR TF@temp_result
 PUSHFRAME
@@ -50,9 +50,9 @@ MOVE TF@_0 LF@decremented_n
 CALL $factorial
 MOVE TF@temp_result TF@%retval
 DEFVAR TF@result
-PUSHS TF@n
-PUSHS TF@temp_result
-MULS
+DEFVAR TF@%4
+MUL TF@%4 TF@n TF@temp_result
+PUSHS TF@%4
 POPS TF@result
 LABEL $IFEND$1
 MOVE LF@%retval TF@result

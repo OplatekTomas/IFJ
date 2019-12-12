@@ -1,7 +1,7 @@
-OBJS	= astnode.o code_gen.o error.o indent_stack.o keywords.o lex_analyzer.o main.o semantic_analyzer.o symtable.o syntax_analyzer.o syntax_stack.o tokens.o
-SOURCE	= astnode.c code_gen.c error.c indent_stack.c keywords.c lex_analyzer.c main.c semantic_analyzer.c symtable.c syntax_analyzer.c syntax_stack.c tokens.c
-HEADER	= astnode.h code_gen.h error.h indent_stack.h keywords.h lex_analyzer.h semantic_analyzer.h symtable.h syntax_analyzer.h syntax_stack.h tokens.h
-OUT	= IFJ
+OBJS	= astnode.o code_gen.o error.o indent_stack.o keywords.o lex_analyzer.o main.o ptr_list.o semantic_analyzer.o symtable.o syntax_analyzer.o syntax_stack.o tokens.o
+SOURCE	= astnode.c code_gen.c error.c indent_stack.c keywords.c lex_analyzer.c main.c ptr_list.c semantic_analyzer.c symtable.c syntax_analyzer.c syntax_stack.c tokens.c
+HEADER	= astnode.h code_gen.h error.h indent_stack.h keywords.h lex_analyzer.h ptr_list.h semantic_analyzer.h symtable.h syntax_analyzer.h syntax_stack.h tokens.h
+OUT	= ifj
 CC	 = gcc
 FLAGS	 = -g -c -Wall -DNDEBUG
 LFLAGS	 = 
@@ -32,6 +32,9 @@ lex_analyzer.o: lex_analyzer.c
 
 main.o: main.c
 	$(CC) $(FLAGS) main.c -std=c99
+
+ptr_list.o: ptr_list.c
+	$(CC) $(FLAGS) ptr_list.c -std=c99
 
 semantic_analyzer.o: semantic_analyzer.c
 	$(CC) $(FLAGS) semantic_analyzer.c -std=c99

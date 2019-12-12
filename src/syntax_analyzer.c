@@ -1,3 +1,17 @@
+/*
+ * IFJ projekt 2019
+ * **************************
+ * Tým 82, varianta II
+ * **************************
+ * Autoři:
+ * Zdeněk Kolba (xkolba01)
+ * Tomáš Oplatek (xoplat01)
+ * David Rubý (xrubyd00)
+ * Petr Volf (xvolfp00)
+ * **************************
+ * syntax_analyzer.c
+ */
+
 #include "syntax_analyzer.h"
 
 char token_type[][100] = {
@@ -36,8 +50,8 @@ int check_function_call(ASTNode* tree, Scanner* s, SymTable** table, char* funct
 
 const SSValue parse_table[9][9] = {
     //            +    -    *    /    //   (    )   ID   end
-    /* + */     {'>', ' ', '<', '<', '<', '<', '>', '<', '>'},
-    /* - */     {' ', '>', '<', '<', '<', '<', '>', '<', '>'},
+    /* + */     {'>', '>', '<', '<', '<', '<', '>', '<', '>'},
+    /* - */     {'>', '>', '<', '<', '<', '<', '>', '<', '>'},
     /* * */     {'>', '>', '>', ' ', ' ', '<', '>', '<', '>'},
     /* / */     {'>', '>', ' ', '>', ' ', '<', '>', '<', '>'},
     /* // */    {'>', '>', ' ', ' ', '>', '<', '>', '<', '>'},
@@ -77,10 +91,10 @@ int check_if_valid_op(TypeValue left, TypeValue right, NonTerm op, TypeValue* op
                 return 0;
             } else if (left == TYPE_INT && right == TYPE_FLOAT) {
                 *op_result = right;
-                return 2;
+                return 3;
             } else if (left == TYPE_FLOAT && right == TYPE_INT) {
                 *op_result = left;
-                return 3;
+                return 2;
             } else {
                 return 1;
             }
@@ -91,10 +105,10 @@ int check_if_valid_op(TypeValue left, TypeValue right, NonTerm op, TypeValue* op
                 return 0;
             } else if (left == TYPE_INT && right == TYPE_FLOAT) {
                 *op_result = right;
-                return 2;
+                return 3;
             } else if (left == TYPE_FLOAT && right == TYPE_INT) {
                 *op_result = left;
-                return 3;
+                return 2;
             } else {
                 return 1;
             }
@@ -104,10 +118,10 @@ int check_if_valid_op(TypeValue left, TypeValue right, NonTerm op, TypeValue* op
                 return 0;
             } else if (left == TYPE_INT && right == TYPE_FLOAT) {
                 *op_result = right;
-                return 2;
+                return 3;
             } else if (left == TYPE_FLOAT && right == TYPE_INT) {
                 *op_result = left;
-                return 3;
+                return 2;
             } else {
                 return 1;
             }
@@ -249,12 +263,12 @@ int check_rule(SyntaxStack* ss, SymTable** table, char* func_name) {
                 node_insert(sd.node, left_side.node);
                 node_insert(sd.node, right_side.node);
                 break;
-            case 2:
+            case 3:
                 node_insert(sub_node, left_side.node);
                 node_insert(sd.node, sub_node);
                 node_insert(sd.node, right_side.node);
                 break;
-            case 3:
+            case 2:
                 node_insert(sub_node, right_side.node);
                 node_insert(sd.node, left_side.node);
                 node_insert(sd.node, sub_node);
@@ -487,7 +501,7 @@ int check_function_call(ASTNode* tree, Scanner* s, SymTable** table, char* funct
                 return 1;
             case ID:;
                 SymTable* tb = searchST(table, t.stringValue, functionName);
-                if(tb == NULL){
+                if(tb == NULL ||  tb->type == TYPE_FUNCTION){
                     free_tree(root_tree);
                     return 3;
                 }
@@ -495,10 +509,6 @@ int check_function_call(ASTNode* tree, Scanner* s, SymTable** table, char* funct
                 param->node_type = IDENTIFICATOR;
                 param->str_val = tb->id;
                 param->symbol = tb;
-                break;
-            case NONE:
-                param->node_type = VALUE;
-                param->arith_type = TYPE_NONE;
                 break;
             case INT:
                 param->node_type = VALUE;
@@ -515,11 +525,18 @@ int check_function_call(ASTNode* tree, Scanner* s, SymTable** table, char* funct
                 param->arith_type = TYPE_STRING;
                 param->str_val = t.stringValue;
                 break;
+            case KEYWORD:
+                if(t.keywordValue == NONE){
+                    param->node_type = VALUE;
+                    param->arith_type = TYPE_NONE;
+                    break;
+                }
             default:
                 free_tree(param);
                 free_tree(root_tree);
                 return 2;
         }
+
         node_insert(root_tree, param);
         prev_t = t;
         t = get_next_token(s);
@@ -625,6 +642,8 @@ int check_cond(ASTNode* tree, Scanner* s, SymTable** table, char* func_name){
     }
     if(t.type == COLON){
         scanner_unget(s,t);
+        comp->arith_type = comp->nodes[0]->arith_type;
+        node_insert(tree, comp);
         return 0;
     }
     if(!is_comp(t, &optype)){

@@ -67,3 +67,5 @@ vgcore*
 test.sh
 
 output\.txt
+
+run_test

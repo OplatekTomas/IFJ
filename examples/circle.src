@@ -1,0 +1,16 @@
+def render_circle(size):
+    size_min = 0 - size
+    x = size_min
+    while x <= size:
+        y = size_min
+        while y <= size:
+            dst = x * x + y * y
+            if dst > 10:
+                print(' ')
+            else:
+                print('#')
+            y = y + 1
+        print('\n')
+        x = x + 1
+
+render_circle(5)
